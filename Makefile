@@ -5,7 +5,6 @@
 SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))
 DEPS=$(patsubst %.o,%.d,$(OBJECTS))
-TARGET=orp
 
 all:
 	@echo "Compiler: $(CXX) $(CXXFLAGS)"

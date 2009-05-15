@@ -9,6 +9,7 @@ LIBS_STATIC=$(LIBDIR)/libSDL.a $(LIBDIR)/libSDLmain.a $(LIBDIR)/libSDL_image.a $
 LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 #LIBS=$(shell sdl-config --libs) $(shell curl-config --libs) -lSDL_image -lSDL_net -lcrypto -lavcodec -lavutil -lavformat -lswscale -lfaad
 DEFS=
+TARGET=orp
 
 release: all
 	@rm -rf ORP-1.0-BETA-OSX*
