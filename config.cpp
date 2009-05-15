@@ -72,7 +72,7 @@ int orpConfigOpen(struct orpConfigCtx_t *ctx, const char *filename)
 
 int orpConfigClose(struct orpConfigCtx_t *ctx)
 {
-	if (ctx->h_file) fclose(h_file);
+	if (ctx->h_file) fclose(ctx->h_file);
 	if (ctx->filename) free(ctx->filename);
 	memset(ctx, 0, sizeof(struct orpConfigCtx_t));
 
