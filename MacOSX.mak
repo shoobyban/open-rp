@@ -11,7 +11,7 @@ LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 DEFS=
 TARGET=orp
 
-release: all
+release: $(TARGET)
 	@rm -rf ORP-1.0-BETA-OSX*
 	@mkdir ORP-1.0-BETA-OSX
 	@cp -v README ORP-1.0-BETA-OSX/README.txt
