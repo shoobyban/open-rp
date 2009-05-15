@@ -15,11 +15,11 @@ DEFS=
 TARGET=orp
 
 release: all
-	@rm -rf ORP-1.0-BETA-Gentoo*
-	@mkdir ORP-1.0-BETA-Gentoo
-	@cp -v README ORP-1.0-BETA-Gentoo
-	@cp -rv psp/ORP_Export ORP-1.0-BETA-Gentoo
-	@cp -v orp ORP-1.0-BETA-Gentoo
-	@cp -v gui/orpui ORP-1.0-BETA-Gentoo
-	@cp keys/keys.orp ORP-1.0-BETA-Gentoo
-	@zip -r ORP-1.0-BETA-Gentoo.zip ORP-1.0-BETA-Gentoo
+	@rm -rf ORP-1.1-BETA-Gentoo*
+	@mkdir ORP-1.1-BETA-Gentoo
+	@cp -v README ORP-1.1-BETA-Gentoo
+	@cp -rv psp/ORP_Export ORP-1.1-BETA-Gentoo
+	@cp -v orp ORP-1.1-BETA-Gentoo
+	@cp -v gui/orpui ORP-1.1-BETA-Gentoo
+	@cp keys/keys.orp ORP-1.1-BETA-Gentoo
+	@zip -r ORP-1.1-BETA-Gentoo.zip ORP-1.1-BETA-Gentoo

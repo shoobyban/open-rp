@@ -19,13 +19,13 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CFBundleGetInfoString</key>
-	<string>ORPui version 1.0, http://ps3-hacks.com</string>
+	<string>ORPui version 1.1, http://ps3-hacks.com</string>
 	<key>CFBundleLongVersionString</key>
-	<string>1.0, http://ps3-hacks.com</string>
+	<string>v1.1, http://ps3-hacks.com</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>http://ps3-hacks.com</string>
 	<key>LSRequiresCarbon</key>

@@ -12,10 +12,10 @@ DEFS=
 TARGET=orp
 
 release: $(TARGET)
-	@rm -rf ORP-1.0-BETA-OSX*
-	@mkdir ORP-1.0-BETA-OSX
-	@cp -v README ORP-1.0-BETA-OSX/README.txt
-	@cp -rv psp/ORP_Export ORP-1.0-BETA-OSX
-	@cp -rv "gui/Open Remote Play.app" ORP-1.0-BETA-OSX
-	@cp keys/keys.orp ORP-1.0-BETA-OSX
-	@zip -r ORP-1.0-BETA-OSX.zip ORP-1.0-BETA-OSX
+	@rm -rf ORP-1.1-BETA-OSX*
+	@mkdir ORP-1.1-BETA-OSX
+	@cp -v README ORP-1.1-BETA-OSX/README.txt
+	@cp -rv psp/ORP_Export ORP-1.1-BETA-OSX
+	@cp -rv "gui/Open Remote Play.app" ORP-1.1-BETA-OSX
+	@cp keys/keys.orp ORP-1.1-BETA-OSX
+	@zip -r ORP-1.1-BETA-OSX.zip ORP-1.1-BETA-OSX
