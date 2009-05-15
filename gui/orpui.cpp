@@ -286,6 +286,7 @@ void orpUIFrame::OnLaunch(wxCommandEvent& WXUNUSED(event))
 	wxFileName path = sp.GetExecutablePath();
 	wxFileName orp;
 	orp.AssignDir(path.GetPath());
+#ifndef __WXMSW__
 	orp.SetFullName(_T("orp"));
 	orp.MakeAbsolute();
 	if (!::wxFileExists(orp.GetFullPath())) {
@@ -297,9 +298,14 @@ void orpUIFrame::OnLaunch(wxCommandEvent& WXUNUSED(event))
 		msg.ShowModal();
 		return;
 	}
+#else
+	orp.SetFullName(_T("orp.exe"));
+	::wxSetWorkingDirectory(path.GetPath());
+#endif
+	wxString cfg(config->filename, wxConvUTF8);
 	const wxChar *argv[4];
 	argv[0] = orp.GetFullPath().c_str();
-	argv[1] = wxString(config->filename, wxConvUTF8).c_str();
+	argv[1] = cfg.c_str();
 	argv[2] = item.GetText().c_str();
 	argv[3] = NULL;
 	::wxExecute((wxChar **)argv);

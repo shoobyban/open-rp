@@ -5,9 +5,10 @@ CXXFLAGS=$(CFLAGS)
 LDFLAGS=
 LIBS=$(shell wx-config --libs)
 DEFS=
+TARGET=orpui
 
-install: orpui
+install: $(TARGET)
 	@cp -v ../orp "Open Remote Play.app/Contents/MacOS/orp"
-	@cp -v orpui "Open Remote Play.app//Contents/MacOS/orpui"
+	@cp -v orpui "Open Remote Play.app/Contents/MacOS/orpui"
 
 # vi: ts=4

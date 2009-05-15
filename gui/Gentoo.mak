@@ -5,3 +5,4 @@ CXXFLAGS=$(CFLAGS)
 LDFLAGS=
 LIBS=$(shell wx-config --libs)
 DEFS=
+TARGET=orpui
