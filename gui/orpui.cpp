@@ -607,10 +607,10 @@ orpUIJoystickFrame::orpUIJoystickFrame(wxFrame *parent)
 
 void orpUIJoystickFrame::OnScan(wxCommandEvent& WXUNUSED(event))
 {
+#if 0
 	int jc = wxJoystick::GetNumberJoysticks();
 	std::cerr << "joysticks: " << jc << std::endl;
 		wxJoystick stick(0);
-#if 0
 	int i;
 	for (i = 0; i < jc; i++) {
 		wxJoystick stick(i);
