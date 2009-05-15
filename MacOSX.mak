@@ -18,4 +18,5 @@ release: $(TARGET)
 	@cp -rv psp/ORP_Export ORP-1.1-BETA-OSX
 	@cp -rv "gui/Open Remote Play.app" ORP-1.1-BETA-OSX
 	@cp keys/keys.orp ORP-1.1-BETA-OSX
+	@find ORP-1.1-BETA-OSX -type d -name '.svn' -print0 | xargs -0 rm -rf
 	@zip -r ORP-1.1-BETA-OSX.zip ORP-1.1-BETA-OSX
