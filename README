@@ -1,0 +1,96 @@
+                             Open Remote Play BETA
+-------------------------------------------------------------------------------
+                          Brought to you by Dashhacker
+                              http://ps3-hacks.com
+		       http://code.google.com/p/open-rp/
+
+Wouldn't be cool if you could run Remote Play from your laptop, desktop, or
+perhaps your phone?
+
+After 2 weeks of hardcore reverse-engineering, it's now possible!
+
+I would like to thank Dark_AleX for hacking the PSP.  Without his work, ORP
+would not be possible.  I would also like to thank TyRaNiD for psplink and
+prxtool.  Using psplink makes this type of work almost painless!  Thanks to
+jas0nuk for the essential PRXdecrypter utility.
+
+Controls
+-------------------------------------------------------------------------------
+
+The player currently implements these keyboard mappings:
+
+ENTER           X
+F1              Triangle
+F2              Square
+ESCAPE          Circle
+PAGE-UP         L1
+PAGE-DOWN       R1
+ARROW KEYS      D-Pad
+HOME            PS Button
+
+CTRL-Q          Quit Remote Play
+
+Not implemented, yet:
+START, SELECT, and the analog nub.
+
+Configuration
+-------------------------------------------------------------------------------
+
+After installing the application on your PC, you need to import existing RP
+settings from a registered PSP.  The steps are as follows:
+
+1 - If you have not done so already, register your PSP with your PS3 for
+    Remote Play.
+
+2 - Copy the ORP_Export folder to your PSP under /PSP/GAME
+
+3 - Run Open Remote Play Export on your PSP.  This will create a file on the
+    memory stick called export.orp.  Copy this file to your PC.
+
+4 - Run the ORP GUI and click on Import, locate and import export.orp.  You
+    will have to manually change the IP address of your PS3, by default it
+    will be set to 0.0.0.0.  I keep two profiles, one for local LAN and
+    another for when I'm connecting from the Internet.  You can create
+    multiple profiles by simply changing the Name field and clicking Save.
+
+5 - Click Import again, this time locate and import keys.orp.  You only have
+    to do this once for a new installation, or if there is a key update.
+
+6 - Select a profile, cross your fingers, and click Launch!
+
+Compilation
+-------------------------------------------------------------------------------
+
+The "build system" (if you can call it that) is very simple.  For the player
+and the GUI, edit the Makefile in each and uncomment the platform you wish to
+build for.  For the GUI, ensure there are config sym-links:
+
+        ./config.h -> ../config.h
+        ./config.cpp -> ../config.cpp
+
+If you'll be running the GUI from the gui directory, ensure you have created a
+sym-link back to the player:
+
+        ./orp -> ../orp
+
+If you change any of the logos or images, run make images to generate the
+required header file.
+
+The psp directory contains the RP key export utility.  This requires the PSPSDK
+to be installed and the $PSPDEV environment variable to be set accordingly.
+
+The keys directory contains a simple tool to save the 3 RP static keys (only 2
+are used).  I've seperated the these keys in to the configuration file in case
+we need to update them in the future.  You need to import keys.orp using the
+GUI before using ORP for the first time.
+
+Known Issues
+-------------------------------------------------------------------------------
+
+http://code.google.com/p/open-rp/issues/list
+
+TODO
+-------------------------------------------------------------------------------
+
+http://code.google.com/p/open-rp/wiki/TODO
+
