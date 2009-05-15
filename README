@@ -28,6 +28,8 @@ PAGE-DOWN       R1
 ARROW KEYS      D-Pad
 HOME            PS Button
 
+CTRL-D		Toggle through window sizes (normal, medium, and large)
+CTRL-F		Enter/exit full-screen mode
 CTRL-Q          Quit Remote Play
 
 Not implemented, yet:
