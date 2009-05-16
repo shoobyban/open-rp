@@ -1,4 +1,5 @@
 -include Gentoo.mak
+#-include Linux.mak
 #-include MacOSX.mak
 #-include MinGW32.mak
 
