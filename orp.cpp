@@ -793,6 +793,15 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	thread_video_connection(NULL), thread_video_decode(NULL),
 	thread_audio_connection(NULL), thread_audio_decode(NULL)
 {
+	view.view = NULL;
+	view.overlay = NULL;
+	view.size = VIEW_NORMAL;
+	view.scale.x = view.scale.y = 0;
+	view.scale.w = ORP_FRAME_WIDTH;
+	view.scale.h = ORP_FRAME_HEIGHT;
+	view.viewLock = SDL_CreateMutex();
+	orpAVMutex = SDL_CreateMutex();
+
 	// Copy config
 	memcpy(&this->config, config, sizeof(struct orpConfig_t));
 
@@ -846,21 +855,15 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	oc->name = "AT3";
 	oc->codec = codec;
 	this->codec.push_back(oc);
-
-	view.view = NULL;
-	view.overlay = NULL;
-	view.size = VIEW_NORMAL;
-	view.scale.x = view.scale.y = 0;
-	view.scale.w = ORP_FRAME_WIDTH;
-	view.scale.h = ORP_FRAME_HEIGHT;
-	view.viewLock = SDL_CreateMutex();
-	orpAVMutex = SDL_CreateMutex();
 }
 
 OpenRemotePlay::~OpenRemotePlay()
 {
 	SessionDestroy();
-	SDL_DestroyMutex(orpAVMutex);
+	Sint32 i;
+	for (i = 0; i < codec.size(); i++) delete codec[i];
+	if (orpAVMutex) SDL_DestroyMutex(orpAVMutex);
+	if (view.viewLock) SDL_DestroyMutex(view.viewLock);
 }
 
 bool OpenRemotePlay::SessionCreate(void)
@@ -874,21 +877,29 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Create window
 	if (!view.view) { if (!CreateView()) return false; }
 
-	// Set window caption and display splash logo
+	// Set window icon, caption, and splash logo
 	SDL_WM_SetCaption("Open Remote Play", NULL);
 	SDL_RWops *rw;
+	if ((rw = SDL_RWFromConstMem(icon_bmp, icon_bmp_len))) {
+		SDL_Surface *icon = IMG_Load_RW(rw, 0);
+		if (icon) {
+			SDL_WM_SetIcon(icon, NULL);
+			SDL_FreeSurface(icon);
+		}
+		SDL_FreeRW(rw);
+	}
 	if ((rw = SDL_RWFromConstMem(splash_png, splash_png_len))) {
 		SDL_Surface *splash = IMG_Load_RW(rw, 0);
+		if (splash) {
+			SDL_Rect rect;
+			rect.x = rect.y = 0;
+			rect.w = view.scale.w;
+			rect.h = view.scale.h;
 
-		SDL_Rect rect;
-
-		rect.x = 0;
-		rect.y = 0;
-		rect.w = view.scale.w;
-		rect.h = view.scale.h;
-
-		SDL_BlitSurface(splash, NULL, view.view, &rect);
-		SDL_UpdateRect(view.view, rect.x, rect.y, rect.w, rect.h);
+			SDL_BlitSurface(splash, NULL, view.view, &rect);
+			SDL_UpdateRect(view.view, rect.x, rect.y, rect.w, rect.h);
+			SDL_FreeSurface(splash);
+		}
 		SDL_FreeRW(rw);
 	}
 
@@ -916,9 +927,9 @@ bool OpenRemotePlay::SessionCreate(void)
 	memcpy(pkt_srch->data, &srch, sizeof(struct PktAnnounceSrch_t));
 	UDPpacket *pkt_resp = SDLNet_AllocPacket(sizeof(struct PktAnnounceResp_t));
 
-	// Fire it up!
-	Sint32 i, replies = 0, first = 1;
-	for (i = 0; i < 30; i++) {
+	// Search forand/or wait on the PS3...
+	Sint32 i, reply = 0, first = 1;
+	for (i = 0; i < ORP_SRCH_TIMEOUT; i++) {
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			cerr << "Error sending packet.\n";
 			break;
@@ -932,21 +943,22 @@ bool OpenRemotePlay::SessionCreate(void)
 
 		if (result == 0) {
 			cerr << "No reply, trying again..." << endl;
-			replies = 0;
+			reply = 0;
 			SDL_Delay(1000);
 			continue;
 		}
 
-		replies++;
+		reply++;
 		cerr << "Reply of " << pkt_resp->len << " bytes." << endl;
 
-		if (!first && replies < 5) {
+		if (!first && reply < ORP_SRCH_REPLIES) {
 			SDL_Delay(1000);
 			continue;
 		}
 
+		// Fire it up!
 		if (SessionPerform() != EVENT_RESTORE) break;
-		first = i = replies = 0;
+		i = reply = first = 0;
 	}
 
 	SDLNet_FreePacket(pkt_srch);
@@ -961,6 +973,7 @@ void OpenRemotePlay::SessionDestroy(void)
 	if (view.view && view.size == VIEW_FULLSCREEN)
 		SDL_SetVideoMode(view.scale.w, view.scale.h, 0, 0);
 	view.view = NULL;
+	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
 	view.overlay = NULL;
 	SDL_Quit();
 }
