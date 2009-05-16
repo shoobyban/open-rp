@@ -91,6 +91,9 @@ extern "C" {
 #define ORP_PAD_KEYUP		0x10000000
 #define ORP_PAD_KEYDOWN		0x20000000
 
+#define ORP_SRCH_REPLIES	5
+#define ORP_SRCH_TIMEOUT	16
+
 // UDP broadcast from PSP to *:9293
 #define ORP_ANNOUNCE_SRCH	"SRCH"
 
