@@ -1,7 +1,7 @@
 # Generic Linux build configuration
 CXX=g++
 INCLUDE=-I.
-CFLAGS=-O2 -s -pipe $(INCLUDE) $(shell sdl-config --cflags) $(shell curl-config --cflags)
+CFLAGS=-O2 -pipe $(INCLUDE) $(shell sdl-config --cflags) $(shell curl-config --cflags)
 CXXFLAGS=$(CFLAGS)
 LDFLAGS=
 LIBDIR=/usr/lib
@@ -21,4 +21,5 @@ release: all
 	@cp -v orp ORP-1.1-BETA-Linux
 	@cp -v gui/orpui ORP-1.1-BETA-Linux
 	@cp keys/keys.orp ORP-1.1-BETA-Linux
+	@find ORP-1.1-BETA-Linux -type d -name '.svn' -print0 | xargs -0 rm -rf
 	@zip -r ORP-1.1-BETA-Linux.zip ORP-1.1-BETA-Linux
