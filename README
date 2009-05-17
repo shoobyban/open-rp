@@ -22,6 +22,8 @@ The player currently implements these keyboard mappings:
 ENTER           X
 F1              Triangle
 F2              Square
+F3              Select
+F4              Start
 ESCAPE          Circle
 PAGE-UP         L1
 PAGE-DOWN       R1
@@ -33,7 +35,7 @@ CTRL-F		Enter/exit full-screen mode
 CTRL-Q          Quit Remote Play
 
 Not implemented, yet:
-START, SELECT, and the analog nub.
+The right/left analog sticks, L2, R2, L3, and R3.
 
 Configuration
 -------------------------------------------------------------------------------

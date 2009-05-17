@@ -1307,6 +1307,12 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDLK_F2:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_SQUARE;
 				break;
+			case SDLK_F3:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_SELECT;
+				break;
+			case SDLK_F4:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_START;
+				break;
 			case SDLK_PAGEUP:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_L1;
 				break;
@@ -1316,7 +1322,6 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDLK_ESCAPE:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_CIRCLE;
 				break;
-			// TODO: START/SELECT
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -1382,6 +1387,12 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDLK_F2:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_SQUARE;
 				break;
+			case SDLK_F3:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_SELECT;
+				break;
+			case SDLK_F4:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_START;
+				break;
 			case SDLK_PAGEUP:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_L1;
 				break;
@@ -1391,9 +1402,12 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDLK_HOME:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_HOME;
 				break;
-			// TODO: START/SELECT
 			}
 			break;
+//		case SDL_MOUSEMOTION:
+//			cerr << "mouse, x: " << event.motion.x;
+//			cerr << ", y: " << event.motion.y << endl;
+//			break;
 		}
 
 		if (key) {
