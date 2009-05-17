@@ -1011,6 +1011,8 @@ bool OpenRemotePlay::CreateView(void)
 		return false;
 	}
 	SDL_ShowCursor(!(view.size == VIEW_FULLSCREEN));
+	SDL_WM_GrabInput((view.size == VIEW_FULLSCREEN)
+		? SDL_GRAB_ON : SDL_GRAB_OFF);
 	return true;
 }
 
@@ -1404,10 +1406,65 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
-//		case SDL_MOUSEMOTION:
-//			cerr << "mouse, x: " << event.motion.x;
-//			cerr << ", y: " << event.motion.y << endl;
-//			break;
+		case SDL_MOUSEMOTION:
+			if (SDL_WM_GrabInput(SDL_GRAB_QUERY) != SDL_GRAB_ON) break;
+			if (abs(event.motion.xrel) < 3 && abs(event.motion.yrel) < 3) {
+				key = ORP_PAD_KEYUP;
+				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
+			} else if (abs(event.motion.xrel) > abs(event.motion.yrel)) {
+				key = ORP_PAD_KEYDOWN;
+				if (event.motion.xrel > 0)
+					key += ORP_PAD_PSP_DPRIGHT;
+				else
+					key += ORP_PAD_PSP_DPLEFT;
+			} else if (abs(event.motion.xrel) < abs(event.motion.yrel)) {
+				key = ORP_PAD_KEYDOWN;
+				if (event.motion.yrel > 0)
+					key += ORP_PAD_PSP_DPDOWN;
+				else
+					key += ORP_PAD_PSP_DPUP;
+			} else {
+				key = ORP_PAD_KEYUP;
+				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
+			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			switch (event.button.button) {
+			case SDL_BUTTON_LEFT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+				break;
+			case SDL_BUTTON_MIDDLE:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_HOME;
+				break;
+			case SDL_BUTTON_RIGHT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_TRI;
+				break;
+			case SDL_BUTTON_WHEELUP:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
+				break;
+			case SDL_BUTTON_WHEELDOWN:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
+				break;
+			}
+			break;
+		case SDL_MOUSEBUTTONUP:
+			switch (event.button.button) {
+			case SDL_BUTTON_LEFT:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_X;
+				break;
+			case SDL_BUTTON_RIGHT:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_TRI;
+				break;
+			case SDL_BUTTON_WHEELUP:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPUP;
+				SDL_Delay(50);
+				break;
+			case SDL_BUTTON_WHEELDOWN:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
+				SDL_Delay(50);
+				break;
+			}
+			break;
 		}
 
 		if (key) {
