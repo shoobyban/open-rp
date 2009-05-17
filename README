@@ -37,6 +37,19 @@ CTRL-Q          Quit Remote Play
 Not implemented, yet:
 The right/left analog sticks, L2, R2, L3, and R3.
 
+The player currently implements the following mouse support:
+
+While in full-screen mode, mouse motion deltas are send as PSP D-Pad events.
+In window-mode, mouse motion does nothing.  The mouse buttons are mapped the
+same as when you plug a USB mouse in to the PS3:
+
+LEFT BUTTON	X
+RIGHT BUTTON	Triangle
+MIDDLE BUTTON	Home
+
+WHEEL UP	D-Pad Up
+WHEEL DOWN	D-Pad Down
+
 Configuration
 -------------------------------------------------------------------------------
 
