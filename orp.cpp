@@ -1329,16 +1329,14 @@ Sint32 OpenRemotePlay::SessionControl(void)
 		case SDL_KEYDOWN:
 			switch (event.key.keysym.sym) {
 			case SDLK_q:
-				if (event.key.keysym.mod == KMOD_LCTRL ||
-					event.key.keysym.mod == KMOD_RCTRL) {
+				if (event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
 					mode.mode = CTRL_SESSION_TERM;
 					ControlPerform(curl, &mode);
 					return 0;
 				}
 				break;
 			case SDLK_d:
-				if ((event.key.keysym.mod == KMOD_LCTRL ||
-					event.key.keysym.mod == KMOD_RCTRL) &&
+				if ((event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) &&
 					view.size != VIEW_FULLSCREEN) {
 					SDL_LockMutex(view.viewLock);
 					if (view.size == VIEW_NORMAL)
@@ -1352,8 +1350,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				}
 				break;
 			case SDLK_f:
-				if (event.key.keysym.mod == KMOD_LCTRL ||
-					event.key.keysym.mod == KMOD_RCTRL) {
+				if (event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
 					SDL_LockMutex(view.viewLock);
 					if (view.size == VIEW_FULLSCREEN)
 						view.size = view.prev;
