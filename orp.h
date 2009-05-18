@@ -89,6 +89,24 @@ extern "C" {
 #define ORP_PAD_PS3_LYAXIS	0x0d
 #define ORP_PAD_PS3_LXAXIS	0x0f
 
+#define ORP_DS3_SELECT		0x00
+#define ORP_DS3_L3			0x01
+#define ORP_DS3_R3			0x02
+#define ORP_DS3_START		0x03
+#define ORP_DS3_DPUP		0x04
+#define ORP_DS3_DPRIGHT		0x05
+#define ORP_DS3_DPDOWN		0x06
+#define ORP_DS3_DPLEFT		0x07
+#define ORP_DS3_L2			0x08
+#define ORP_DS3_R2			0x09
+#define ORP_DS3_L1			0x0a
+#define ORP_DS3_R1			0x0b
+#define ORP_DS3_TRI			0x0c
+#define ORP_DS3_CIRCLE		0x0d
+#define ORP_DS3_X			0x0e
+#define ORP_DS3_SQUARE		0x0f
+#define ORP_DS3_HOME		0x10
+
 #define ORP_PAD_TIMESTAMP	0x40
 #define ORP_PAD_EVENTID		0x48
 
@@ -308,6 +326,7 @@ protected:
 	SDL_Thread *thread_video_decode;
 	SDL_Thread *thread_audio_connection;
 	SDL_Thread *thread_audio_decode;
+	SDL_Joystick *js;
 
 	bool CreateView(void);
 	bool CreateKeys(const string &nonce);

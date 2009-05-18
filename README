@@ -17,6 +17,12 @@ jas0nuk for the essential PRXdecrypter utility.
 Controls
 -------------------------------------------------------------------------------
 
+If you connect your SIXAXIS or DualShock 3 controller to your PC *before* you
+start Open Remote Play, it should be detected and automatically configured.
+
+Not implemented, yet:
+The right/left analog sticks.
+
 The player currently implements these keyboard mappings:
 
 ENTER           X
@@ -39,7 +45,7 @@ The right/left analog sticks, L2, R2, L3, and R3.
 
 The player currently implements the following mouse support:
 
-While in full-screen mode, mouse motion deltas are send as PSP D-Pad events.
+While in full-screen mode, mouse motion deltas are sent as PSP D-Pad events.
 In window-mode, mouse motion does nothing.  The mouse buttons are mapped the
 same as when you plug a USB mouse in to the PS3:
 

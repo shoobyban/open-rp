@@ -789,7 +789,7 @@ static Sint32 orpThreadAudioConnection(void *config)
 }
 
 OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
-	: ps3_nickname(NULL),
+	: ps3_nickname(NULL), js(NULL),
 	thread_video_connection(NULL), thread_video_decode(NULL),
 	thread_audio_connection(NULL), thread_audio_decode(NULL)
 {
@@ -906,6 +906,15 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Initialize event thread
 	SDL_InitSubSystem(SDL_INIT_EVENTTHREAD);
 
+	// Initialize joystick(s)
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0 &&
+		SDL_NumJoysticks() > 0) {
+		if (!strncasecmp("sony", SDL_JoystickName(0), 4) &&
+			(js = SDL_JoystickOpen(0))) {
+			cerr << "Joystick opened: " << SDL_JoystickName(0) << endl;
+		}
+	}
+
 	IPaddress addr;
 	if (SDLNet_ResolveHost(&addr,
 		config.ps3_addr, config.ps3_port) != 0) {
@@ -975,6 +984,8 @@ void OpenRemotePlay::SessionDestroy(void)
 	view.view = NULL;
 	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
 	view.overlay = NULL;
+	// TODO: This *always* crashes, not sure why...
+	//if (js && SDL_JoystickOpened(0)) SDL_JoystickClose(js);
 	SDL_Quit();
 }
 
@@ -1347,6 +1358,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 						view.size = VIEW_NORMAL;
 					CreateView();
 					SDL_UnlockMutex(view.viewLock);
+					while (SDL_PollEvent(&event) > 0);
 				}
 				break;
 			case SDLK_f:
@@ -1360,6 +1372,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					}
 					CreateView();
 					SDL_UnlockMutex(view.viewLock);
+					while (SDL_PollEvent(&event) > 0);
 				}
 				break;
 			case SDLK_UP:
@@ -1425,22 +1438,110 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
 			}
 			break;
-		case SDL_MOUSEBUTTONDOWN:
-			switch (event.button.button) {
-			case SDL_BUTTON_LEFT:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+		case SDL_JOYBUTTONUP:
+			switch (event.jbutton.button) {
+			case ORP_DS3_SELECT:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_SELECT;
 				break;
-			case SDL_BUTTON_MIDDLE:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_HOME;
+			case ORP_DS3_L3:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_L3;
 				break;
-			case SDL_BUTTON_RIGHT:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_TRI;
+			case ORP_DS3_R3:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_R3;
 				break;
-			case SDL_BUTTON_WHEELUP:
+			case ORP_DS3_START:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_START;
+				break;
+			case ORP_DS3_DPUP:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPUP;
+				break;
+			case ORP_DS3_DPRIGHT:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPRIGHT;
+				break;
+			case ORP_DS3_DPDOWN:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
+				break;
+			case ORP_DS3_DPLEFT:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPLEFT;
+				break;
+			case ORP_DS3_L2:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_L2;
+				break;
+			case ORP_DS3_R2:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_R2;
+				break;
+			case ORP_DS3_L1:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_L1;
+				break;
+			case ORP_DS3_R1:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_R1;
+				break;
+			case ORP_DS3_TRI:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_TRI;
+				break;
+			case ORP_DS3_CIRCLE:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_CIRCLE;
+				break;
+			case ORP_DS3_X:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_X;
+				break;
+			case ORP_DS3_SQUARE:
+				key = ORP_PAD_KEYUP | ORP_PAD_PSP_SQUARE;
+				break;
+			}
+			break;
+		case SDL_JOYBUTTONDOWN:
+			switch (event.jbutton.button) {
+			case ORP_DS3_SELECT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_SELECT;
+				break;
+			case ORP_DS3_L3:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_L3;
+				break;
+			case ORP_DS3_R3:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_R3;
+				break;
+			case ORP_DS3_START:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_START;
+				break;
+			case ORP_DS3_DPUP:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
 				break;
-			case SDL_BUTTON_WHEELDOWN:
+			case ORP_DS3_DPRIGHT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPRIGHT;
+				break;
+			case ORP_DS3_DPDOWN:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
+				break;
+			case ORP_DS3_DPLEFT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPLEFT;
+				break;
+			case ORP_DS3_L2:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_L2;
+				break;
+			case ORP_DS3_R2:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_R2;
+				break;
+			case ORP_DS3_L1:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_L1;
+				break;
+			case ORP_DS3_R1:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_R1;
+				break;
+			case ORP_DS3_TRI:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_TRI;
+				break;
+			case ORP_DS3_CIRCLE:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_CIRCLE;
+				break;
+			case ORP_DS3_X:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+				break;
+			case ORP_DS3_SQUARE:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_SQUARE;
+				break;
+			case ORP_DS3_HOME:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_HOME;
 				break;
 			}
 			break;
@@ -1459,6 +1560,25 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDL_BUTTON_WHEELDOWN:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
 				SDL_Delay(50);
+				break;
+			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			switch (event.button.button) {
+			case SDL_BUTTON_LEFT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+				break;
+			case SDL_BUTTON_MIDDLE:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_HOME;
+				break;
+			case SDL_BUTTON_RIGHT:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_TRI;
+				break;
+			case SDL_BUTTON_WHEELUP:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
+				break;
+			case SDL_BUTTON_WHEELDOWN:
+				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
 				break;
 			}
 			break;
