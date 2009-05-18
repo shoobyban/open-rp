@@ -21,7 +21,7 @@ If you connect your SIXAXIS or DualShock 3 controller to your PC *before* you
 start Open Remote Play, it should be detected and automatically configured.
 
 Not implemented, yet:
-The right/left analog sticks.
+The right analog stick.
 
 The player currently implements these keyboard mappings:
 

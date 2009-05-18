@@ -1263,7 +1263,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 	Uint32 id = 0, be_id;
 	Uint32 timestamp, be_timestamp;
 	Uint32 ticks = SDL_GetTicks();
-
+	Sint16 js_xaxis = 0x80, js_yaxis = 0x80;
 	SDL_Event event;
 
 	// Flush any queued events...
@@ -1545,6 +1545,32 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+		case SDL_JOYAXISMOTION:
+			switch (event.jaxis.axis) {
+			case 0:
+				key = ORP_PAD_PSP_LXAXIS;
+				if (event.jaxis.value == 0) {
+					js_xaxis = 0x80;
+					break;
+				}
+				js_xaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
+				break;
+			case 1:
+				key = ORP_PAD_PSP_LYAXIS;
+				if (event.jaxis.value == 0) {
+					js_yaxis = 0x80;
+					break;
+				}
+				js_yaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
+				break;
+			case 2:
+				break;
+			case 3:
+				break;
+			}
+//			cerr << "Joy axis: " << (Uint32)event.jaxis.axis;
+//			cerr << ", value: " << (Sint32)(event.jaxis.value % 0x80) << endl;
+			break;
 		case SDL_MOUSEBUTTONUP:
 			switch (event.button.button) {
 			case SDL_BUTTON_LEFT:
@@ -1597,9 +1623,15 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			if (key & ORP_PAD_KEYUP) {
 				statePad[((value & 0xff00) >> 8)] &=
 					~((Uint8)(value & 0x00ff));
-			} else {
+			} else if (key & ORP_PAD_KEYDOWN) {
 				statePad[((value & 0xff00) >> 8)] |=
 					((Uint8)(value & 0x00ff));
+			} else if (key == ORP_PAD_PSP_LXAXIS) {
+				js_xaxis = SDL_Swap16(js_xaxis);
+				memcpy(statePad + key, &js_xaxis, sizeof(Sint16));
+			} else if (key == ORP_PAD_PSP_LYAXIS) {
+				js_yaxis = SDL_Swap16(js_yaxis);
+				memcpy(statePad + key, &js_yaxis, sizeof(Sint16));
 			}
 
 			// TODO: This calculation is very approximate, needs to be fixed!

@@ -81,13 +81,8 @@ extern "C" {
 #define ORP_PAD_PSP_CIRCLE	0x0720
 #define ORP_PAD_PSP_X		0x0740
 #define ORP_PAD_PSP_SQUARE	0x0780
-#define ORP_PAD_PSP_YAXIS	0x0e
-#define ORP_PAD_PSP_XAXIS	0x10
-
-#define ORP_PAD_PS3_RYAXIS	0x09
-#define ORP_PAD_PS3_RXAXIS	0x0b
-#define ORP_PAD_PS3_LYAXIS	0x0d
-#define ORP_PAD_PS3_LXAXIS	0x0f
+#define ORP_PAD_PSP_LYAXIS	0x0e
+#define ORP_PAD_PSP_LXAXIS	0x0c
 
 #define ORP_DS3_SELECT		0x00
 #define ORP_DS3_L3			0x01
