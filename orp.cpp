@@ -29,6 +29,7 @@
 #include "orp.h"
 #include "base64.h"
 #include "images.h"
+#include "launch.h"
 
 static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_AUDIO_BITRATE, "PREMO-Audio-Bitrate" },
@@ -583,8 +584,6 @@ static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32
 		at3_config->unk5 = 0;
 		context->extradata = (Uint8 *)at3_config;
 		context->extradata_size = 14;
-		//context->block_align = 96 * 2;
-		//context->block_align = 152 * 2;
 		context->block_align = 192 * channels;
 		context->bit_rate = bit_rate;
 	}
@@ -632,7 +631,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 	requestedSpec.userdata = (void *)&feed;
 
 	if(SDL_OpenAudio(&requestedSpec, &audioSpec) == -1) {
-		cerr << SDL_GetError();
+		cerr << SDL_GetError() << endl;
 		return -1;
 	}
 
@@ -711,6 +710,61 @@ static Sint32 orpThreadAudioDecode(void *config)
 	if (_config->codec->id == CODEC_ID_ATRAC3) av_free(context->extradata);
 	avcodec_close(context);
 	SDL_UnlockMutex(orpAVMutex);
+	return 0;
+}
+
+static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
+{
+	Sint32 channels = 2, sample_rate = 48000;
+
+	struct orpConfigAudioFeed_t feed;
+	feed.feedLock = SDL_CreateMutex();
+
+	SDL_AudioSpec audioSpec, requestedSpec;
+	requestedSpec.freq = sample_rate;
+	requestedSpec.format = AUDIO_S16SYS;
+	requestedSpec.channels = channels;
+	requestedSpec.silence = 0;
+	requestedSpec.samples = 1024;
+	requestedSpec.callback = orpAudioFeed;
+	requestedSpec.userdata = (void *)&feed;
+
+	if(SDL_OpenAudio(&requestedSpec, &audioSpec) == -1) {
+		cerr << SDL_GetError() << endl;
+		SDL_DestroyMutex(feed.feedLock);
+		return -1;
+	}
+
+	SDL_PauseAudio(0);
+
+	Uint32 i, frame_size = 4096;
+	for (i = 0; len != 0; i += frame_size) {
+		struct orpAudioFrame_t *audioFrame =
+			new struct orpAudioFrame_t;
+
+		audioFrame->len = frame_size;
+		audioFrame->data = new Uint8[frame_size];
+		memset(audioFrame->data, 0, frame_size);
+		memcpy(audioFrame->data, data + i,
+			(len > frame_size) ? frame_size : len);
+		len -= (len > frame_size ? frame_size : len);
+
+		SDL_LockMutex(feed.feedLock);
+		feed.frameList.push(audioFrame);
+		SDL_UnlockMutex(feed.feedLock);
+	}
+
+	for ( ;; ) {
+		SDL_LockMutex(feed.feedLock);
+		if (feed.frameList.size() == 0) break;
+		SDL_UnlockMutex(feed.feedLock);
+		SDL_Delay(100);
+	}
+
+	SDL_PauseAudio(1);
+	SDL_CloseAudio();
+	SDL_DestroyMutex(feed.feedLock);
+
 	return 0;
 }
 
@@ -870,7 +924,7 @@ bool OpenRemotePlay::SessionCreate(void)
 {
 	// Initialize audio and video
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
-		cerr << SDL_GetError();
+		cerr << SDL_GetError() << endl;
 		return false;
 	}
 
@@ -1012,13 +1066,13 @@ bool OpenRemotePlay::CreateView(void)
 	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
 	if (!(view.view = SDL_SetVideoMode(
 		view.scale.w, view.scale.h, 0, flags))) {
-		cerr << SDL_GetError();
+		cerr << SDL_GetError() << endl;
 		return false;
 	}
 	if (!(view.overlay = SDL_CreateYUVOverlay(
 		view.scale.w, view.scale.h,
 		SDL_YV12_OVERLAY, view.view))) {
-		cerr << SDL_GetError();
+		cerr << SDL_GetError() << endl;
 		return false;
 	}
 	SDL_ShowCursor(!(view.size == VIEW_FULLSCREEN));
@@ -1273,7 +1327,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 	for ( ;; ) {
 		Uint32 key = 0;
 		if (SDL_WaitEvent(&event) == 0) {
-			cerr << SDL_GetError();
+			cerr << SDL_GetError() << endl;
 			return -1;
 		}
 		switch (event.type) {
@@ -1786,6 +1840,9 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		orpGetHeaderValue(HEADER_PS3_NICKNAME, headerList));
 	if (ps3_nickname)
 		SDL_WM_SetCaption((const char *)ps3_nickname, NULL);
+
+	// Play sound...
+	orpPlaySound(launch_wav, launch_wav_len);
 
 	struct orpConfigStream_t *videoConfig = new struct orpConfigStream_t;
 	os.str("");
