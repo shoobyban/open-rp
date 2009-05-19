@@ -278,10 +278,12 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 
 	// Copy header, set length
 	memcpy(&packet->header, bp, sizeof(struct orpStreamPacketHeader_t));
-	packet->len = chunk_len - sizeof(struct orpStreamPacketHeader_t);
+	//packet->len = chunk_len - sizeof(struct orpStreamPacketHeader_t);
+	memset(&packet->pkt, 0, sizeof(AVPacket));
+	packet->pkt.size = chunk_len - sizeof(struct orpStreamPacketHeader_t);
 
 	// Header size must match packet length
-	if (packet->len != SDL_Swap16(packet->header.len)) {
+	if (packet->pkt.size != SDL_Swap16(packet->header.len)) {
 //		FILE *fh = fopen("bad-header.dat", "w+");
 //		if (fh) {
 //			fwrite(&packet->header, 1, sizeof(orpStreamPacketHeader_t), fh);
@@ -295,20 +297,23 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		// TODO: For now we just accept the header length over the
 		// chunk size.  This only seems to happen with MPEG4 video, ex:
 		// PixelJunk Monsers/Eden
-		packet->len = SDL_Swap16(packet->header.len);
+		packet->pkt.size = SDL_Swap16(packet->header.len);
 	}
 
 	// Allocate payload
-	packet->data = new Uint8[packet->len];
-	if (!packet->data) {
+	packet->pkt.data = new Uint8[packet->pkt.size +
+		FF_INPUT_BUFFER_PADDING_SIZE];
+	if (!packet->pkt.data) {
 		delete [] packet;
 		delete [] buffer;
 		return 0;
 	}
+	memset(packet->pkt.data + packet->pkt.size, 0,
+		FF_INPUT_BUFFER_PADDING_SIZE);
 
 	// Copy payload
 	bp += sizeof(struct orpStreamPacketHeader_t);
-	memcpy(packet->data, bp, packet->len);
+	memcpy(packet->pkt.data, bp, packet->pkt.size);
 	delete [] buffer;
 
 	// Decrypt video key-frames and encrypted audio frames
@@ -317,8 +322,8 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		|| packet->header.unk6 == 0x0401 || packet->header.unk6 == 0x0001) {
 		memcpy(_config->key->iv1,
 			_config->key->xor_nonce, ORP_KEY_LEN);
-		AES_cbc_encrypt(packet->data, packet->data,
-			packet->len - (packet->len % ORP_KEY_LEN),
+		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
+			packet->pkt.size - (packet->pkt.size % ORP_KEY_LEN),
 			&_config->aes_key, _config->key->iv1, AES_DECRYPT);
 	}
 
@@ -358,10 +363,12 @@ static Sint32 orpThreadVideoDecode(void *config)
 
 	AVFrame *frame;
 	frame = avcodec_alloc_frame();
+	Uint64 pts;
 
 	struct SwsContext *sws_normal;
 	struct SwsContext *sws_medium;
 	struct SwsContext *sws_large;
+	struct SwsContext *sws_fullscreen;
 	sws_normal = sws_getContext(ORP_FRAME_WIDTH, ORP_FRAME_HEIGHT,
 		context->pix_fmt, ORP_FRAME_WIDTH, ORP_FRAME_HEIGHT,
 		PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
@@ -371,6 +378,9 @@ static Sint32 orpThreadVideoDecode(void *config)
 		PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
 	sws_large = sws_getContext(ORP_FRAME_WIDTH, ORP_FRAME_HEIGHT,
 		context->pix_fmt, ORP_FRAME_WIDTH * 2, ORP_FRAME_HEIGHT * 2,
+		PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+	sws_fullscreen = sws_getContext(ORP_FRAME_WIDTH, ORP_FRAME_HEIGHT,
+		context->pix_fmt, _config->view->fs.w, _config->view->fs.h,
 		PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
 
 	Sint32 bytes_decoded, frame_done = 0;
@@ -404,8 +414,8 @@ static Sint32 orpThreadVideoDecode(void *config)
 #ifdef ORP_DUMP_VIDEO_STREAM
 		fwrite(packet->data, 1, packet->len, h_stream);
 #endif
-		bytes_decoded = avcodec_decode_video(context,
-			frame, &frame_done, packet->data, packet->len);
+		bytes_decoded = avcodec_decode_video2(context,
+			frame, &frame_done, &packet->pkt);
 
 		if (bytes_decoded != -1 && frame_done) {
 			SDL_LockMutex(_config->view->viewLock);
@@ -420,8 +430,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 			p.linesize[1] = _config->view->overlay->pitches[2];
 			p.linesize[2] = _config->view->overlay->pitches[1];
 
-			if (_config->view->size == VIEW_FULLSCREEN ||
-				_config->view->size == VIEW_NORMAL) {
+			if (_config->view->size == VIEW_NORMAL) {
 				sws_scale(sws_normal,
 					frame->data, frame->linesize, 0, context->height,
 					p.data, p.linesize);
@@ -433,22 +442,32 @@ static Sint32 orpThreadVideoDecode(void *config)
 				sws_scale(sws_large,
 					frame->data, frame->linesize, 0, context->height,
 					p.data, p.linesize);
+			} else if (_config->view->size == VIEW_FULLSCREEN) {
+				sws_scale(sws_fullscreen,
+					frame->data, frame->linesize, 0, context->height,
+					p.data, p.linesize);
 			}
 
 			SDL_UnlockYUVOverlay(_config->view->overlay);
 
 			SDL_Rect rect;
 			rect.x = 0;
-			rect.y = 0;
-			rect.w = _config->view->scale.w;
-			rect.h = _config->view->scale.h;
+			if (_config->view->size == VIEW_FULLSCREEN) {
+				rect.y = _config->view->fs.y;
+				rect.w = _config->view->fs.w;
+				rect.h = _config->view->fs.h;
+			} else {
+				rect.y = 0;
+				rect.w = _config->view->scale.w;
+				rect.h = _config->view->scale.h;
+			}
 
 			SDL_DisplayYUVOverlay(_config->view->overlay, &rect);
 			SDL_UnlockMutex(_config->view->viewLock);
 		}
 //		else if (bytes_decoded == -1) cerr << "frame decode failed" << endl;
 
-		delete [] packet->data;
+		delete [] packet->pkt.data;
 		delete packet;
 	}
 #ifdef ORP_DUMP_VIDEO_HEADER
@@ -464,6 +483,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 	sws_freeContext(sws_normal);
 	sws_freeContext(sws_medium);
 	sws_freeContext(sws_large);
+	sws_freeContext(sws_fullscreen);
 	return 0;
 }
 
@@ -668,8 +688,8 @@ static Sint32 orpThreadAudioDecode(void *config)
 		fwrite(packet->data, 1, packet->len, h_stream);
 #endif
 		frame_size = sizeof(buffer);
-		bytes_decoded = avcodec_decode_audio2(context,
-			(Sint16 *)buffer, &frame_size, packet->data, packet->len);
+		bytes_decoded = avcodec_decode_audio3(context,
+			(Sint16 *)buffer, &frame_size, &packet->pkt);
 		if (bytes_decoded != -1 && frame_size) {
 			struct orpAudioFrame_t *audioFrame =
 				new struct orpAudioFrame_t;
@@ -693,7 +713,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 			decode_errors = 0;
 		} else decode_errors++;
 
-		delete [] packet->data;
+		delete [] packet->pkt.data;
 		delete packet;
 	}
 	
@@ -928,11 +948,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		return false;
 	}
 
-	// Create window
-	if (!view.view) { if (!CreateView()) return false; }
-
-	// Set window icon, caption, and splash logo
-	SDL_WM_SetCaption("Open Remote Play", NULL);
+	// Set window icon, must be done before setting video mode
 	SDL_RWops *rw;
 	if ((rw = SDL_RWFromConstMem(icon_bmp, icon_bmp_len))) {
 		SDL_Surface *icon = IMG_Load_RW(rw, 0);
@@ -942,6 +958,29 @@ bool OpenRemotePlay::SessionCreate(void)
 		}
 		SDL_FreeRW(rw);
 	}
+
+	// Determine desktop video resolution
+	const SDL_VideoInfo *info = SDL_GetVideoInfo();
+	if (info) {
+		view.fs.x = 0;
+		view.fs.w = info->current_w;
+		view.fs.h = (Sint16)(info->current_w * ORP_FRAME_HEIGHT /
+			ORP_FRAME_WIDTH);
+		if (view.fs.h < info->current_h)
+			view.fs.y = (info->current_h - view.fs.h) / 2;
+		else view.fs.y = 0;
+		view.desktop.w = info->current_w;
+		view.desktop.h = info->current_h;
+	} else {
+		view.desktop.w = ORP_FRAME_WIDTH;
+		view.desktop.h = ORP_FRAME_HEIGHT;
+	}
+
+	// Create window (set video mode)
+	if (!view.view) { if (!CreateView()) return false; }
+
+	// Set caption and display splash logo
+	SDL_WM_SetCaption("Open Remote Play", NULL);
 	if ((rw = SDL_RWFromConstMem(splash_png, splash_png_len))) {
 		SDL_Surface *splash = IMG_Load_RW(rw, 0);
 		if (splash) {
@@ -1045,11 +1084,17 @@ void OpenRemotePlay::SessionDestroy(void)
 
 bool OpenRemotePlay::CreateView(void)
 {
+	SDL_Rect *r = NULL, fs;
 	Uint32 flags = 0;
 	switch (view.size)
 	{
 	case VIEW_FULLSCREEN:
 		flags |= SDL_FULLSCREEN;
+		fs.x = fs.y = 0;
+		fs.w = view.desktop.w;
+		fs.h = view.desktop.h;
+		r = &fs;
+		break;
 	case VIEW_NORMAL:
 		view.scale.w = ORP_FRAME_WIDTH;
 		view.scale.h = ORP_FRAME_HEIGHT;
@@ -1063,15 +1108,15 @@ bool OpenRemotePlay::CreateView(void)
 		view.scale.h = ORP_FRAME_HEIGHT * 2;
 		break;
 	}
+	if (r == NULL) r = &view.scale;
 	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
-	if (!(view.view = SDL_SetVideoMode(
-		view.scale.w, view.scale.h, 0, flags))) {
+	if (!(view.view = SDL_SetVideoMode(r->w, r->h, 0, flags))) {
 		cerr << SDL_GetError() << endl;
 		return false;
 	}
+	if (view.size == VIEW_FULLSCREEN) r->h = view.fs.h;
 	if (!(view.overlay = SDL_CreateYUVOverlay(
-		view.scale.w, view.scale.h,
-		SDL_YV12_OVERLAY, view.view))) {
+		r->w, r->h, SDL_YV12_OVERLAY, view.view))) {
 		cerr << SDL_GetError() << endl;
 		return false;
 	}
@@ -1603,27 +1648,35 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			switch (event.jaxis.axis) {
 			case 0:
 				key = ORP_PAD_PSP_LXAXIS;
-				if (event.jaxis.value == 0) {
+				//if (event.jaxis.value == 0) {
+				if (abs(event.jaxis.value) <= 16384) {
 					js_xaxis = 0x80;
 					break;
 				}
-				js_xaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
+				//js_xaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
+				if (event.jaxis.value > 0)
+					js_xaxis = (Sint16)(0x80 + ((event.jaxis.value >> 2) % 0x80));
+				else
+					js_xaxis = (Sint16)(0x80 + ((event.jaxis.value << 2) % 0x80));
 				break;
 			case 1:
 				key = ORP_PAD_PSP_LYAXIS;
-				if (event.jaxis.value == 0) {
+				if (abs(event.jaxis.value) <= 16384) {
 					js_yaxis = 0x80;
 					break;
 				}
-				js_yaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
+				if (event.jaxis.value > 0)
+					js_yaxis = (Sint16)(0x80 + ((event.jaxis.value >> 2) % 0x80));
+				else
+					js_yaxis = (Sint16)(0x80 + ((event.jaxis.value << 2) % 0x80));
 				break;
 			case 2:
 				break;
 			case 3:
 				break;
 			}
-//			cerr << "Joy axis: " << (Uint32)event.jaxis.axis;
-//			cerr << ", value: " << (Sint32)(event.jaxis.value % 0x80) << endl;
+			//cerr << "Joy axis: " << (Uint32)event.jaxis.axis;
+			//cerr << ", value: " << event.jaxis.value << endl;
 			break;
 		case SDL_MOUSEBUTTONUP:
 			switch (event.button.button) {

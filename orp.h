@@ -210,7 +210,9 @@ struct orpView_t {
 	enum orpViewSize prev;
 	SDL_Surface *view;
 	SDL_Overlay *overlay;
+	SDL_Rect fs;
 	SDL_Rect scale;
+	SDL_Rect desktop;
 	SDL_mutex *viewLock;
 };
 
@@ -256,8 +258,7 @@ struct orpStreamPacketHeader_t {
 
 struct orpStreamPacket_t {
 	struct orpStreamPacketHeader_t header;
-	Uint32 len;
-	Uint8 *data;
+	AVPacket pkt;
 };
 
 struct orpStreamData_t {
