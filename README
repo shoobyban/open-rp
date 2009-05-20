@@ -45,9 +45,10 @@ The right/left analog sticks, L2, R2, L3, and R3.
 
 The player currently implements the following mouse support:
 
-While in full-screen mode, mouse motion deltas are sent as PSP D-Pad events.
-In window-mode, mouse motion does nothing.  The mouse buttons are mapped the
-same as when you plug a USB mouse in to the PS3:
+While in full-screen mode, mouse motion deltas are sent as PSP D-Pad events
+while the ALT key is held down.  In window-mode, mouse motion does nothing.
+The mouse buttons are mapped the same as when you plug a USB mouse in to the
+PS3:
 
 LEFT BUTTON	X
 RIGHT BUTTON	Triangle

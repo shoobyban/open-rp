@@ -1358,6 +1358,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 	struct orpCtrlMode_t mode;
 
+	Uint8 *keystate;
 	Uint32 count = 0;
 	Uint32 id = 0, be_id;
 	Uint32 timestamp, be_timestamp;
@@ -1380,6 +1381,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			mode.mode = CTRL_SESSION_TERM;
 			ControlPerform(curl, &mode);
 			return 0;
+
 		case SDL_USEREVENT:
 			switch (event.user.code) {
 			case EVENT_ERROR:
@@ -1396,6 +1398,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				return 0;
 			}
 			break;
+
 		case SDL_KEYUP:
 			switch (event.key.keysym.sym) {
 			case SDLK_UP:
@@ -1436,6 +1439,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+
 		case SDL_KEYDOWN:
 			switch (event.key.keysym.sym) {
 			case SDLK_q:
@@ -1461,7 +1465,11 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				}
 				break;
 			case SDLK_f:
-				if (event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
+			case SDLK_F11:
+				if ((event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) ||
+					!(event.key.keysym.mod &
+						(KMOD_CTRL | KMOD_SHIFT | KMOD_ALT) &&
+						event.key.keysym.sym == SDLK_F11)) {
 					SDL_LockMutex(view.viewLock);
 					if (view.size == VIEW_FULLSCREEN)
 						view.size = view.prev;
@@ -1515,8 +1523,11 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+
 		case SDL_MOUSEMOTION:
 			if (SDL_WM_GrabInput(SDL_GRAB_QUERY) != SDL_GRAB_ON) break;
+			keystate = SDL_GetKeyState(NULL);
+			if (!keystate[SDLK_RALT] && !keystate[SDLK_LALT]) break;
 			if (abs(event.motion.xrel) < 3 && abs(event.motion.yrel) < 3) {
 				key = ORP_PAD_KEYUP;
 				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
@@ -1537,6 +1548,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
 			}
 			break;
+
 		case SDL_JOYBUTTONUP:
 			switch (event.jbutton.button) {
 			case ORP_DS3_SELECT:
@@ -1589,6 +1601,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+
 		case SDL_JOYBUTTONDOWN:
 			switch (event.jbutton.button) {
 			case ORP_DS3_SELECT:
@@ -1644,6 +1657,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+
 		case SDL_JOYAXISMOTION:
 			switch (event.jaxis.axis) {
 			case 0:
@@ -1678,6 +1692,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			//cerr << "Joy axis: " << (Uint32)event.jaxis.axis;
 			//cerr << ", value: " << event.jaxis.value << endl;
 			break;
+
 		case SDL_MOUSEBUTTONUP:
 			switch (event.button.button) {
 			case SDL_BUTTON_LEFT:
@@ -1696,6 +1711,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			}
 			break;
+
 		case SDL_MOUSEBUTTONDOWN:
 			switch (event.button.button) {
 			case SDL_BUTTON_LEFT:
