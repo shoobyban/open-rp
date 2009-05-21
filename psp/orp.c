@@ -37,47 +37,11 @@
 #include <malloc.h>
 #include <sys/unistd.h>
 
-// Config format version
-#define ORP_CONFIG_VER		1
-
-#define ORP_KEY_LEN			16
-#define ORP_MAC_LEN			6
-#define ORP_NICKNAME_LEN	128
-#define ORP_HOSTNAME_LEN	128
-
-// Config header and record flags
-#define ORP_CONFIG_EXPORT	0x20000000
-
 typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 
-struct orpConfigHeader_t
-{
-	Uint8 magic[3];
-	Uint8 version;
-	Uint32 flags;
-	Uint8 reserved[8];
-	Uint8 skey0[ORP_KEY_LEN];
-	Uint8 skey1[ORP_KEY_LEN];
-	Uint8 skey2[ORP_KEY_LEN];
-};
-
-// Default Remote Play TCP/UDP port
-#define ORP_PORT			9293
-
-struct orpConfigRecord_t
-{
-	Uint32 flags;
-	Uint16 ps3_port;
-	Uint8 ps3_hostname[ORP_HOSTNAME_LEN];
-	Uint8 ps3_nickname[ORP_NICKNAME_LEN];
-	Uint8 ps3_mac[ORP_MAC_LEN];
-	Uint8 psp_mac[ORP_MAC_LEN];
-	Uint8 psp_id[ORP_KEY_LEN];
-	Uint8 psp_owner[ORP_NICKNAME_LEN];
-	Uint8 pkey[ORP_KEY_LEN];
-};
+#include "../config.h"
 
 PSP_MODULE_INFO("ORP_Exporter", PSP_MODULE_USER, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);

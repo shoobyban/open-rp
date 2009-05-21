@@ -2,7 +2,7 @@ TARGET = orp
 OBJS = orp.o
 
 INCDIR =
-CFLAGS = -G0 -Wall -DPSPFW3X
+CFLAGS = -G0 -Wall -DORP_PSP -DPSPFW3X
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 BUILD_PRX=1

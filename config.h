@@ -24,7 +24,9 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+#ifndef ORP_PSP
 #include <SDL/SDL_stdinc.h>
+#endif
 
 #define ORP_KEY_LEN			16
 #define ORP_MAC_LEN			6
@@ -66,6 +68,7 @@ struct orpConfigRecord_t
 	Uint8 pkey[ORP_KEY_LEN];
 };
 
+#ifndef ORP_PSP
 struct orpConfigCtx_t
 {
 	FILE *h_file;
@@ -89,5 +92,6 @@ int orpConfigSave(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec);
 int orpConfigGetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *dst);
 int orpConfigSetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *src);
 
+#endif // ORP_PSP
 #endif // _CONFIG_H
 // vi: ts=4
