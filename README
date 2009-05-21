@@ -19,9 +19,13 @@ Controls
 
 If you connect your SIXAXIS or DualShock 3 controller to your PC *before* you
 start Open Remote Play, it should be detected and automatically configured.
+Remember to press the PlayStation button to activate the controller.
 
-Not implemented, yet:
-The right analog stick.
+For Windows users, you require to download and install the DualShock driver:
+  http://www.motiongame.net/
+
+Ensure that the controller is functioning properly by testing it using the
+Game Controllers program found in the Control Panel.
 
 The player currently implements these keyboard mappings:
 
@@ -42,6 +46,9 @@ CTRL-Q          Quit Remote Play
 
 Not implemented, yet:
 The right/left analog sticks, L2, R2, L3, and R3.
+
+NOTE: On Apple laptops, you may have to hold down the Fn key to access some of
+the above keys.
 
 The player currently implements the following mouse support:
 

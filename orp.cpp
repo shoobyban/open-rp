@@ -363,7 +363,6 @@ static Sint32 orpThreadVideoDecode(void *config)
 
 	AVFrame *frame;
 	frame = avcodec_alloc_frame();
-	Uint64 pts;
 
 	struct SwsContext *sws_normal;
 	struct SwsContext *sws_medium;
@@ -1003,7 +1002,8 @@ bool OpenRemotePlay::SessionCreate(void)
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0 &&
 		SDL_NumJoysticks() > 0) {
 		if ((!strncasecmp("sony", SDL_JoystickName(0), 4) ||
-			!strncasecmp("playstation", SDL_JoystickName(0), 11)) &&
+			!strncasecmp("playstation", SDL_JoystickName(0), 11) ||
+			!strncasecmp("www.", SDL_JoystickName(0), 4)) &&
 			(js = SDL_JoystickOpen(0))) {
 			cerr << "Joystick opened: " << SDL_JoystickName(0) << endl;
 		}
@@ -1359,12 +1359,13 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 	struct orpCtrlMode_t mode;
 
-	Uint8 *keystate;
 	Uint32 count = 0;
 	Uint32 id = 0, be_id;
 	Uint32 timestamp, be_timestamp;
 	Uint32 ticks = SDL_GetTicks();
-	Sint16 js_xaxis = 0x80, js_yaxis = 0x80;
+	Sint16 jsr_xaxis = 0x80, jsr_yaxis = 0x80;
+	Sint16 jsl_xaxis = 0x80, jsl_yaxis = 0x80;
+	Uint8 *keystate = SDL_GetKeyState(NULL);;
 	SDL_Event event;
 
 	// Flush any queued events...
@@ -1527,11 +1528,11 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 		case SDL_MOUSEMOTION:
 			if (SDL_WM_GrabInput(SDL_GRAB_QUERY) != SDL_GRAB_ON) break;
-			keystate = SDL_GetKeyState(NULL);
 			if (!keystate[SDLK_RALT] && !keystate[SDLK_LALT]) break;
 			if (abs(event.motion.xrel) < 3 && abs(event.motion.yrel) < 3) {
 				key = ORP_PAD_KEYUP;
-				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
+				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP |
+					ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
 			} else if (abs(event.motion.xrel) > abs(event.motion.yrel)) {
 				key = ORP_PAD_KEYDOWN;
 				if (event.motion.xrel > 0)
@@ -1546,7 +1547,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					key += ORP_PAD_PSP_DPUP;
 			} else {
 				key = ORP_PAD_KEYUP;
-				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP | ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
+				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP |
+					ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
 			}
 			break;
 
@@ -1663,35 +1665,45 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			switch (event.jaxis.axis) {
 			case 0:
 				key = ORP_PAD_PSP_LXAXIS;
-				//if (event.jaxis.value == 0) {
-				if (abs(event.jaxis.value) <= 16384) {
-					js_xaxis = 0x80;
-					break;
+				if (event.jaxis.value >= 0) {
+					jsl_xaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MAX / (short)SHRT_MAX) + 0x80;
+				} else {
+					jsl_xaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MIN / (short)SHRT_MIN) + 0x80;
 				}
-				//js_xaxis = (Sint16)(0x80 + (event.jaxis.value % 0x80));
-				if (event.jaxis.value > 0)
-					js_xaxis = (Sint16)(0x80 + ((event.jaxis.value >> 2) % 0x80));
-				else
-					js_xaxis = (Sint16)(0x80 + ((event.jaxis.value << 2) % 0x80));
 				break;
 			case 1:
 				key = ORP_PAD_PSP_LYAXIS;
-				if (abs(event.jaxis.value) <= 16384) {
-					js_yaxis = 0x80;
-					break;
+				if (event.jaxis.value >= 0) {
+					jsl_yaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MAX / (short)SHRT_MAX) + 0x80;
+				} else {
+					jsl_yaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MIN / (short)SHRT_MIN) + 0x80;
 				}
-				if (event.jaxis.value > 0)
-					js_yaxis = (Sint16)(0x80 + ((event.jaxis.value >> 2) % 0x80));
-				else
-					js_yaxis = (Sint16)(0x80 + ((event.jaxis.value << 2) % 0x80));
 				break;
 			case 2:
+				key = ORP_PAD_PSP_RXAXIS;
+				if (event.jaxis.value >= 0) {
+					jsr_xaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MAX / (short)SHRT_MAX) + 0x80;
+				} else {
+					jsr_xaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MIN / (short)SHRT_MIN) + 0x80;
+				}
 				break;
 			case 3:
+				key = ORP_PAD_PSP_RYAXIS;
+				if (event.jaxis.value >= 0) {
+					jsr_yaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MAX / (short)SHRT_MAX) + 0x80;
+				} else {
+					jsr_yaxis = (short)(event.jaxis.value *
+						(short)SCHAR_MIN / (short)SHRT_MIN) + 0x80;
+				}
 				break;
 			}
-			//cerr << "Joy axis: " << (Uint32)event.jaxis.axis;
-			//cerr << ", value: " << event.jaxis.value << endl;
 			break;
 
 		case SDL_MOUSEBUTTONUP:
@@ -1751,11 +1763,17 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				statePad[((value & 0xff00) >> 8)] |=
 					((Uint8)(value & 0x00ff));
 			} else if (key == ORP_PAD_PSP_LXAXIS) {
-				js_xaxis = SDL_Swap16(js_xaxis);
-				memcpy(statePad + key, &js_xaxis, sizeof(Sint16));
+				jsl_xaxis = SDL_Swap16(jsl_xaxis);
+				memcpy(statePad + key, &jsl_xaxis, sizeof(Sint16));
 			} else if (key == ORP_PAD_PSP_LYAXIS) {
-				js_yaxis = SDL_Swap16(js_yaxis);
-				memcpy(statePad + key, &js_yaxis, sizeof(Sint16));
+				jsl_yaxis = SDL_Swap16(jsl_yaxis);
+				memcpy(statePad + key, &jsl_yaxis, sizeof(Sint16));
+			} else if (key == ORP_PAD_PSP_RXAXIS) {
+				jsr_xaxis = SDL_Swap16(jsr_xaxis);
+				memcpy(statePad + key, &jsr_xaxis, sizeof(Sint16));
+			} else if (key == ORP_PAD_PSP_RYAXIS) {
+				jsr_yaxis = SDL_Swap16(jsr_yaxis);
+				memcpy(statePad + key, &jsr_yaxis, sizeof(Sint16));
 			}
 
 			// TODO: This calculation is very approximate, needs to be fixed!
@@ -1912,7 +1930,8 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		SDL_WM_SetCaption((const char *)ps3_nickname, NULL);
 
 	// Play sound...
-	orpPlaySound(launch_wav, launch_wav_len);
+	static bool played = false;
+	if (!played) { played = true; orpPlaySound(launch_wav, launch_wav_len); }
 
 	struct orpConfigStream_t *videoConfig = new struct orpConfigStream_t;
 	os.str("");
