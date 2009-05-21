@@ -1002,7 +1002,8 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Initialize joystick(s)
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0 &&
 		SDL_NumJoysticks() > 0) {
-		if (!strncasecmp("sony", SDL_JoystickName(0), 4) &&
+		if ((!strncasecmp("sony", SDL_JoystickName(0), 4) ||
+			!strncasecmp("playstation", SDL_JoystickName(0), 11)) &&
 			(js = SDL_JoystickOpen(0))) {
 			cerr << "Joystick opened: " << SDL_JoystickName(0) << endl;
 		}
