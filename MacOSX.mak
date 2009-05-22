@@ -8,7 +8,7 @@ LIBS_SHARED=-lcrypto -lpthread -lz
 LIBS_STATIC=$(LIBDIR)/libSDL.a $(LIBDIR)/libSDLmain.a $(LIBDIR)/libSDL_image.a $(LIBDIR)/libSDL_net.a $(LIBDIR)/libcurl.a $(LIBDIR)/libfaad.a $(LIBDIR)/libavcodec.a $(LIBDIR)/libavformat.a $(LIBDIR)/libavutil.a $(LIBDIR)/libpng.a $(LIBDIR)/libswscale.a
 LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 #LIBS=$(shell sdl-config --libs) $(shell curl-config --libs) -lSDL_image -lSDL_net -lcrypto -lavcodec -lavutil -lavformat -lswscale -lfaad
-DEFS=
+DEFS=-D_MACOSX_
 TARGET=orp
 
 release: $(TARGET)

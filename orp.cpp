@@ -909,9 +909,9 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	oc->codec = codec;
 	this->codec.push_back(oc);
 
-	codec = avcodec_find_decoder(CODEC_ID_AAC);
+	codec = avcodec_find_decoder_by_name("libfaad");
 	if (!codec) {
-		cerr << "Required codec not found: CODEC_ID_AAC\n";
+		cerr << "Required codec not found: CODEC_ID_AAC (libfaad)\n";
 		throw -1;
 	}
 	oc = new struct orpCodec_t;
@@ -949,7 +949,11 @@ bool OpenRemotePlay::SessionCreate(void)
 
 	// Set window icon, must be done before setting video mode
 	SDL_RWops *rw;
+#ifdef _MACOSX_
+	if ((rw = SDL_RWFromConstMem(icon_osx_bmp, icon_osx_bmp_len))) {
+#else
 	if ((rw = SDL_RWFromConstMem(icon_bmp, icon_bmp_len))) {
+#endif
 		SDL_Surface *icon = IMG_Load_RW(rw, 0);
 		if (icon) {
 			SDL_WM_SetIcon(icon, NULL);

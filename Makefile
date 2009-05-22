@@ -38,12 +38,8 @@ $(TARGET): $(OBJECTS)
 	@echo "[L] $@"
 	@$(CXX) $(LDFLAGS) $(CXXFLAGS) $(OBJECTS) $(LIBS) -o $@
 
-images:
-	@echo "#ifndef _IMAGES_H" > images.h
-	@echo "#define _IMAGES_H" >> images.h
-	xxd -i ./images/icon.bmp >> images.h
-	xxd -i ./images/splash.png >> images.h
-	@echo "#endif // _IMAGES_H" >> images.h
+images::
+	make -C images
 
 clean:
 	rm -f $(OBJECTS) $(TARGET) $(DEPS)
