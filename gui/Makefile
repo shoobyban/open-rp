@@ -2,8 +2,8 @@
 -include ../Version.mak
 
 # Uncomment one of these
-#-include Linux.mak
--include MacOSX.mak
+-include Linux.mak
+#-include MacOSX.mak
 #-include MinGW32.mak
 #-include Custom.mak
 
