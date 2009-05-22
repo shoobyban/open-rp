@@ -14,10 +14,11 @@ PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-W32"
 release: $(TARGET)
 	@rm -rf $(PKG_VERSION) $(PKG_VERSION).zip
 	@mkdir $(PKG_VERSION)
-	@cp -v README $(PKG_VERSION)
+	@cp -v README $(PKG_VERSION)/README.txt
 	@cp -rv psp/ORP_Export $(PKG_VERSION) | grep -v '.svn'
 	@cp -v orp $(PKG_VERSION)
 	@cp -v gui/orpui $(PKG_VERSION)
-	@cp keys/keys.orp $(PKG_VERSION)
+	@cp -v gui/icon.ico $(PKG_VERSION)
+	@cp -v keys/keys.orp $(PKG_VERSION)
+	@cp -v /mingw/bin/mingwm10.dll $(PKG_VERSION)
 	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
-	@zip -r $(PKG_VERSION).zip $(PKG_VERSION)
