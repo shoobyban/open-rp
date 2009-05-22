@@ -516,6 +516,8 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	wxSize size = panel->GetSize();
 #ifdef __WXMAC__
 	size.SetHeight(size.GetHeight() + 20);
+#elif defined(__WXMSW__)
+	size.SetHeight(size.GetHeight() + 40);
 #endif
 	SetMinSize(size);
 
