@@ -51,7 +51,7 @@ extern "C" {
 
 #define ORP_FRAME_WIDTH		480
 #define ORP_FRAME_HEIGHT	272
-#define ORP_SESSION_LEN		16
+#define ORP_SESSION_LEN		20
 #define ORP_PADSTATE_MAX	60
 #define ORP_PADSTATE_LEN	128
 
@@ -328,6 +328,7 @@ protected:
 
 	bool CreateView(void);
 	bool CreateKeys(const string &nonce);
+	void SetCaption(const char *caption);
 	AVCodec *GetCodec(const string &name);
 	Sint32 ControlPerform(CURL *curl, struct orpCtrlMode_t *mode);
 	Sint32 SessionControl(void);

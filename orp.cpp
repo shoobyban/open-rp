@@ -982,8 +982,12 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Create window (set video mode)
 	if (!view.view) { if (!CreateView()) return false; }
 
+	// Initialize event thread
+	SDL_InitSubSystem(SDL_INIT_EVENTTHREAD);
+
 	// Set caption and display splash logo
-	SDL_WM_SetCaption("Open Remote Play", NULL);
+	SetCaption("Open Remote Play");
+
 	if ((rw = SDL_RWFromConstMem(splash_png, splash_png_len))) {
 		SDL_Surface *splash = IMG_Load_RW(rw, 0);
 		if (splash) {
@@ -998,9 +1002,6 @@ bool OpenRemotePlay::SessionCreate(void)
 		}
 		SDL_FreeRW(rw);
 	}
-
-	// Initialize event thread
-	SDL_InitSubSystem(SDL_INIT_EVENTTHREAD);
 
 	// Initialize joystick(s)
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0 &&
@@ -1041,7 +1042,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		os.str("");
 		os << "Searching... ";
 		os << (i + 1) << "/" << ORP_SRCH_TIMEOUT;
-		SDL_WM_SetCaption(os.str().c_str(), NULL);
+		SetCaption(os.str().c_str());
 
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			cerr << "Error sending packet.\n";
@@ -1162,6 +1163,13 @@ bool OpenRemotePlay::CreateKeys(const string &nonce)
 		&aes_key_encrypt, config.key.iv1, AES_ENCRYPT);
 
 	return true;
+}
+
+void OpenRemotePlay::SetCaption(const char *caption)
+{
+	SDL_WM_SetCaption(caption, NULL);
+	SDL_Event event;
+	while (SDL_PollEvent(&event) > 0);
 }
 
 AVCodec *OpenRemotePlay::GetCodec(const string &name)
@@ -1819,7 +1827,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 Sint32 OpenRemotePlay::SessionPerform(void)
 {
-	SDL_WM_SetCaption("Connecting...", NULL);
+	SetCaption("Connecting...");
 
 	CURL *curl = curl_easy_init();
 
@@ -1939,9 +1947,9 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	ps3_nickname = (char *)base64.Decode((const Uint8 *)
 		orpGetHeaderValue(HEADER_PS3_NICKNAME, headerList));
 	if (ps3_nickname)
-		SDL_WM_SetCaption((const char *)ps3_nickname, NULL);
+		SetCaption((const char *)ps3_nickname);
 	else
-		SDL_WM_SetCaption("Unknown", NULL);
+		SetCaption("Unknown");
 
 	// Play sound...
 	static bool played = false;
