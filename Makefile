@@ -1,3 +1,7 @@
+# Include version
+-include Version.mak
+
+# Uncomment one of these
 -include Gentoo.mak
 #-include Linux.mak
 #-include MacOSX.mak
@@ -6,6 +10,7 @@
 SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))
 DEPS=$(patsubst %.o,%.d,$(OBJECTS))
+VERSION="$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)"
 
 all:
 	@echo "Compiler: $(CXX) $(CXXFLAGS)"
@@ -26,11 +31,11 @@ psp::
 
 deps: $(wildcard *.cpp)
 	@echo "[D] $^"
-	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) $^ > /dev/null
+	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) -D'ORP_VERSION="$(VERSION)"' $^ > /dev/null
 
 %.o : %.cpp
 	@echo "[C] $@"
-	@$(CXX) -c $(CXXFLAGS) $(DEFS) -o $@ $<
+	@$(CXX) -c $(CXXFLAGS) $(DEFS) -D'ORP_VERSION="$(VERSION)"' -o $@ $<
 
 -include $(DEPS)
 

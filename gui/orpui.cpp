@@ -113,7 +113,7 @@ orpUIFrame::orpUIFrame(const wxString& title,
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
 	frame_sizer->AddSpacer(98);
 	wxHyperlinkCtrl *link = new wxHyperlinkCtrl(panel, wxID_ANY,
-		_T("v1.1 BETA"), _T("http://ps3-hacks.com/"));
+		_T("v"ORP_VERSION), _T("http://ps3-hacks.com/"));
 	link->SetNormalColour(wxColour(0, 134, 174));
 	frame_sizer->Add(link, 0, wxALIGN_RIGHT | wxRIGHT, 5);
 	frame_sizer->Add(lb, 1, wxEXPAND | wxALL, 5);

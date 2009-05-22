@@ -10,13 +10,16 @@ LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 #LIBS=$(shell sdl-config --libs) $(shell curl-config --libs) -lSDL_image -lSDL_net -lcrypto -lavcodec -lavutil -lavformat -lswscale -lfaad
 DEFS=-D_MACOSX_
 TARGET=orp
+PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-OSX"
 
 release: $(TARGET)
-	@rm -rf ORP-1.1-BETA-OSX*
-	@mkdir ORP-1.1-BETA-OSX
-	@cp -v README ORP-1.1-BETA-OSX/README.txt
-	@cp -rv psp/ORP_Export ORP-1.1-BETA-OSX
-	@cp -rv "gui/Open Remote Play.app" ORP-1.1-BETA-OSX
-	@cp keys/keys.orp ORP-1.1-BETA-OSX
-	@find ORP-1.1-BETA-OSX -type d -name '.svn' -print0 | xargs -0 rm -rf
-	@zip -r ORP-1.1-BETA-OSX.zip ORP-1.1-BETA-OSX
+	@rm -rf $(PKG_VERSION) $(PKG_VERSION).zip
+	@mkdir $(PKG_VERSION)
+	@cp -v README $(PKG_VERSION)
+	@cp -rv psp/ORP_Export $(PKG_VERSION) | grep -v '.svn'
+	@cp -v orp $(PKG_VERSION)
+	@cp -v gui/orpui $(PKG_VERSION)
+	@cp keys/keys.orp $(PKG_VERSION)
+	@cp -rv "gui/Open Remote Play.app" $(PKG_VERSION)
+	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
+	@zip -r $(PKG_VERSION).zip $(PKG_VERSION)

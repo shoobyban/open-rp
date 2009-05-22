@@ -1,3 +1,4 @@
+# MinG (Windows) build configuration
 CXX=g++
 LD=
 INCLUDE=-I. -I/mingw/include $(sdl-config --cflags)
@@ -8,3 +9,15 @@ LDFLAGS=-L$(LIBDIR) -mthreads
 LIBS=-mwindows -Wl,-Bsymbolic $(LIBDIR)/libSDLmain.a $(LIBDIR)/libSDL.a $(LIBDIR)/libSDL_image.a $(LIBDIR)/libpng.a $(LIBDIR)/libz.a $(LIBDIR)/libSDL_net.a $(LIBDIR)/libcrypto.a $(LIBDIR)/libavformat.a $(LIBDIR)/libavcodec.a $(LIBDIR)/libswscale.a $(LIBDIR)/libavutil.a $(LIBDIR)/libfaad.a $(LIBDIR)/libcurl.a $(LIBDIR)/libdxguid.a $(LIBDIR)/libz.a -lwsock32 -lgdi32 -lwinmm -lmingw32
 DEFS=-DCURL_STATICLIB
 TARGET=orp.exe
+PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-W32"
+
+release: $(TARGET)
+	@rm -rf $(PKG_VERSION) $(PKG_VERSION).zip
+	@mkdir $(PKG_VERSION)
+	@cp -v README $(PKG_VERSION)
+	@cp -rv psp/ORP_Export $(PKG_VERSION) | grep -v '.svn'
+	@cp -v orp $(PKG_VERSION)
+	@cp -v gui/orpui $(PKG_VERSION)
+	@cp keys/keys.orp $(PKG_VERSION)
+	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
+	@zip -r $(PKG_VERSION).zip $(PKG_VERSION)
