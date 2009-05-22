@@ -1,4 +1,4 @@
-# Gentoo Gentoo build configuration
+# Custom build configuration
 CXX=g++
 INCLUDE=-I. -I./ffmpeg/include
 CFLAGS=-g -pipe $(INCLUDE) $(shell sdl-config --cflags) $(shell curl-config --cflags)
@@ -13,7 +13,7 @@ LIBS_STATIC=$(LIBDIR)/libpng.a $(LIBDIR)/libSDL.a $(LIBDIR)/libSDL_image.a $(LIB
 LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 DEFS=-DORP_DUMP_VIDEO_HEADER
 TARGET=orp
-PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-Gentoo"
+PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-Custom"
 
 release: $(TARGET)
 	@rm -rf $(PKG_VERSION) $(PKG_VERSION).zip

@@ -2,10 +2,10 @@
 -include ../Version.mak
 
 # Uncomment one of these
--include Gentoo.mak
-#-include Linux.mak
+-include Linux.mak
 #-include MacOSX.mak
 #-include MinGW32.mak
+#-include Custom.mak
 
 SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))

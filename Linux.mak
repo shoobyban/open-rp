@@ -12,14 +12,15 @@ LIBS_STATIC=
 LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
 DEFS=
 TARGET=orp
+PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-Linux"
 
 release: all
-	@rm -rf ORP-1.1-BETA-Linux*
-	@mkdir ORP-1.1-BETA-Linux
-	@cp -v README ORP-1.1-BETA-Linux
-	@cp -rv psp/ORP_Export ORP-1.1-BETA-Linux
-	@cp -v orp ORP-1.1-BETA-Linux
-	@cp -v gui/orpui ORP-1.1-BETA-Linux
-	@cp keys/keys.orp ORP-1.1-BETA-Linux
-	@find ORP-1.1-BETA-Linux -type d -name '.svn' -print0 | xargs -0 rm -rf
-	@zip -r ORP-1.1-BETA-Linux.zip ORP-1.1-BETA-Linux
+	@rm -rf $(PKG_VERSION) $(PKG_VERSION).zip
+	@mkdir $(PKG_VERSION)
+	@cp -v README $(PKG_VERSION)
+	@cp -rv psp/ORP_Export $(PKG_VERSION)
+	@cp -v orp $(PKG_VERSION)
+	@cp -v gui/orpui $(PKG_VERSION)
+	@cp keys/keys.orp $(PKG_VERSION)
+	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
+	@zip -r $(PKG_VERSION).zip $(PKG_VERSION)
