@@ -1035,8 +1035,14 @@ bool OpenRemotePlay::SessionCreate(void)
 	UDPpacket *pkt_resp = SDLNet_AllocPacket(sizeof(struct PktAnnounceResp_t));
 
 	// Search forand/or wait on the PS3...
+	ostringstream os;
 	Sint32 i, reply = 0, first = 1;
 	for (i = 0; i < ORP_SRCH_TIMEOUT; i++) {
+		os.str("");
+		os << "Searching... ";
+		os << (i + 1) << "/" << ORP_SRCH_TIMEOUT;
+		SDL_WM_SetCaption(os.str().c_str(), NULL);
+
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			cerr << "Error sending packet.\n";
 			break;
@@ -1813,6 +1819,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 Sint32 OpenRemotePlay::SessionPerform(void)
 {
+	SDL_WM_SetCaption("Connecting...", NULL);
+
 	CURL *curl = curl_easy_init();
 
 	ostringstream os;
@@ -1932,6 +1940,8 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		orpGetHeaderValue(HEADER_PS3_NICKNAME, headerList));
 	if (ps3_nickname)
 		SDL_WM_SetCaption((const char *)ps3_nickname, NULL);
+	else
+		SDL_WM_SetCaption("Unknown", NULL);
 
 	// Play sound...
 	static bool played = false;
