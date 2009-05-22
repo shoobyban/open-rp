@@ -51,7 +51,7 @@ extern "C" {
 
 #define ORP_FRAME_WIDTH		480
 #define ORP_FRAME_HEIGHT	272
-#define ORP_SESSION_LEN		20
+#define ORP_SESSION_LEN		16
 #define ORP_PADSTATE_MAX	60
 #define ORP_PADSTATE_LEN	128
 
@@ -111,7 +111,7 @@ extern "C" {
 #define ORP_PAD_KEYDOWN		0x20000000
 
 #define ORP_SRCH_REPLIES	5
-#define ORP_SRCH_TIMEOUT	16
+#define ORP_SRCH_TIMEOUT	20
 
 // UDP broadcast from PSP to *:9293
 #define ORP_ANNOUNCE_SRCH	"SRCH"
