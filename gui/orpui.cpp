@@ -69,7 +69,7 @@ bool orpUIApp::OnInit()
 {
 	::wxInitAllImageHandlers();
 
-	orpUIFrame *frame = new orpUIFrame( _T("Open Remote Play v1.1"),
+	orpUIFrame *frame = new orpUIFrame( _T("Open Remote Play v"ORP_VERSION),
 		wxPoint(50, 50), wxSize(340, 480));
 	frame->Show(TRUE);
 	SetTopWindow(frame);
