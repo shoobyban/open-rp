@@ -271,15 +271,22 @@ struct orpStreamData_t {
 	Uint32 len;
 	Uint32 pos;
 	Uint8 *data;
-	Uint32 frames;
 	SDL_mutex *packetLock;
 	SDL_cond *packetCond;
 	queue<struct orpStreamPacket_t *> packetList;
 };
 
+struct orpClock_t {
+	Uint32 audio;
+	Uint32 video;
+	SDL_mutex *lock;
+	Uint32 decode;
+};
+
 struct orpThreadDecode_t {
 	bool terminate;
 	AVCodec *codec;
+	struct orpClock_t *clock;
 	struct orpView_t *view;
 	struct orpStreamData_t *stream;
 };
@@ -329,6 +336,10 @@ protected:
 	SDL_Thread *thread_audio_connection;
 	SDL_Thread *thread_audio_decode;
 	SDL_Joystick *js;
+	struct orpClock_t clock;
+#ifdef ORP_CLOCK_DEBUG
+	SDL_TimerID timer;
+#endif
 
 	bool CreateView(void);
 	bool CreateKeys(const string &nonce);
