@@ -40,6 +40,9 @@ PAGE-DOWN       R1
 ARROW KEYS      D-Pad
 HOME            PS Button
 
+CTRL-1		Select bit-rate: 1024k
+CTRL-2		Select bit-rate: 768k
+CTRL-3		Select bit-rate: 384k
 CTRL-D		Toggle through window sizes (normal, medium, and large)
 CTRL-F		Enter/exit full-screen mode
 CTRL-Q          Quit Remote Play

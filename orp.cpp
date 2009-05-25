@@ -111,8 +111,12 @@ static Uint32 orpClockTimer(Uint32 interval, void *param)
 	SDL_LockMutex(clock->lock);
 	Sint32 delta = clock->video - clock->audio;
 	Uint32 decode = clock->decode;
+	Sint32 s = (Sint32)((double)delta / (double)90000 * (double)1000);
+	double a = (double)clock->audio / (double)90000;
+	double v = (double)clock->video / (double)90000;
 	SDL_UnlockMutex(clock->lock);
-	cerr << "clock delta: " << delta << ", decode: " <<  decode << endl;
+	cerr << "clock delta: " << delta << ", decode: " <<  decode;
+	cerr << "ms, drift: " << s << "ms" << ", a/v: " << a << "s " << v << "s\n";
 	return interval;
 }
 #endif
@@ -341,10 +345,33 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	}
 
 	// Push stream packet
-	SDL_LockMutex(streamData->packetLock);
-	streamData->packetList.push(packet);
-	SDL_CondSignal(streamData->packetCond);
-	SDL_UnlockMutex(streamData->packetLock);
+	bool buffer_fill = false;
+	SDL_LockMutex(streamData->lock);
+#if 0
+	if (!strcmp(_config->name.c_str(), "video")) {
+		SDL_LockMutex(streamData->buffer->lock);
+		if (!streamData->pkt.size()) {
+			streamData->buffer->fill = true;
+			// TODO: Post event...
+			cerr << "Filling buffer...\n";
+		} else if (streamData->buffer->fill &&
+			streamData->pkt.size() < 120) {
+			cerr << "Buffering...\n";
+		} else {
+			streamData->buffer->fill = false;
+			//cerr << "Buffer full.\n";
+		}
+		buffer_fill = streamData->buffer->fill;
+		SDL_UnlockMutex(streamData->buffer->lock);
+	} else {
+		SDL_LockMutex(streamData->buffer->lock);
+		buffer_fill = streamData->buffer->fill;
+		SDL_UnlockMutex(streamData->buffer->lock);
+	}
+#endif
+	streamData->pkt.push(packet);
+	if (!buffer_fill) SDL_CondSignal(streamData->cond);
+	SDL_UnlockMutex(streamData->lock);
 
 	return (size * nmemb);
 }
@@ -407,20 +434,20 @@ static Sint32 orpThreadVideoDecode(void *config)
 #endif
 	while (!_config->terminate) {
 		Uint32 ticks = SDL_GetTicks();
-		SDL_LockMutex(_config->stream->packetLock);
-		Uint32 packets = _config->stream->packetList.size();
+		SDL_LockMutex(_config->stream->lock);
+		Uint32 packets = _config->stream->pkt.size();
 		if (packets == 0)
-			SDL_CondWait(_config->stream->packetCond, _config->stream->packetLock);
+			SDL_CondWait(_config->stream->cond, _config->stream->lock);
 		if (_config->terminate) {
-			SDL_UnlockMutex(_config->stream->packetLock);
+			SDL_UnlockMutex(_config->stream->lock);
 			break;
 		}
 
 		if (packets) {
-			packet = _config->stream->packetList.front();
-			_config->stream->packetList.pop();
+			packet = _config->stream->pkt.front();
+			_config->stream->pkt.pop();
 		} else packet = NULL;
-		SDL_UnlockMutex(_config->stream->packetLock);
+		SDL_UnlockMutex(_config->stream->lock);
 
 		if (!packet) continue;
 #ifdef ORP_DUMP_VIDEO_HEADER
@@ -438,7 +465,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 			frame, &frame_done, &packet->pkt);
 
 		if (bytes_decoded != -1 && frame_done) {
-			SDL_LockMutex(_config->view->viewLock);
+			SDL_LockMutex(_config->view->lock);
 			SDL_LockYUVOverlay(_config->view->overlay);
 
 			AVPicture p;
@@ -483,14 +510,22 @@ static Sint32 orpThreadVideoDecode(void *config)
 			}
 
 			SDL_DisplayYUVOverlay(_config->view->overlay, &rect);
-			SDL_UnlockMutex(_config->view->viewLock);
+			SDL_UnlockMutex(_config->view->lock);
 
 			SDL_LockMutex(_config->clock->lock);
-			Sint32 delta = _config->clock->video - _config->clock->audio;
-			Uint32 delay = _config->clock->decode = SDL_GetTicks() - ticks;
+			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
+			Uint32 decode = _config->clock->decode = SDL_GetTicks() - ticks;
 			SDL_UnlockMutex(_config->clock->lock);
 
-			if (delta > 0 && delay < fps) SDL_Delay(fps - delay);
+			Sint32 drift = 0;
+			if (delta > 0)
+				drift = (Sint32)((double)delta / (double)90000 * (double)1000);
+//			else drift = fps;
+			SDL_Delay(decode < drift ? drift - decode : drift);
+
+//			if (drift > 500) SDL_Delay(fps);
+//			else if (drift > 0) SDL_Delay(drift);
+			//if (delta > 0 && delay < fps) SDL_Delay(fps - delay);
 		}
 //		else if (bytes_decoded == -1) cerr << "frame decode failed" << endl;
 
@@ -593,11 +628,11 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 	struct orpConfigAudioFeed_t *_config =
 		(struct orpConfigAudioFeed_t *)config;
 
-	SDL_LockMutex(_config->feedLock);
-	if (_config->frameList.size()) {
+	SDL_LockMutex(_config->lock);
+	if (_config->frame.size()) {
 		struct orpAudioFrame_t *frame;
-		frame = _config->frameList.front();
-		_config->frameList.pop();
+		frame = _config->frame.front();
+		_config->frame.pop();
 		memcpy(stream, frame->data, len);
 		if (_config->clock) {
 			SDL_LockMutex(_config->clock->lock);
@@ -607,7 +642,7 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 		delete [] frame->data;
 		delete frame;
 	} else memset(stream, 0, len);
-	SDL_UnlockMutex(_config->feedLock);
+	SDL_UnlockMutex(_config->lock);
 }
 
 static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32 sample_rate, Sint32 bit_rate)
@@ -671,7 +706,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 	Uint8 buffer[(AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2];
 
 	struct orpConfigAudioFeed_t feed;
-	feed.feedLock = SDL_CreateMutex();
+	feed.lock = SDL_CreateMutex();
 	feed.clock = _config->clock;
 
 	SDL_AudioSpec audioSpec, requestedSpec;
@@ -697,20 +732,20 @@ static Sint32 orpThreadAudioDecode(void *config)
 	FILE *h_stream = fopen("audio-stream.dat", "w+");
 #endif
 	while (!_config->terminate) {
-		SDL_LockMutex(_config->stream->packetLock);
-		Uint32 packets = _config->stream->packetList.size();
+		SDL_LockMutex(_config->stream->lock);
+		Uint32 packets = _config->stream->pkt.size();
 		if (packets == 0)
-			SDL_CondWait(_config->stream->packetCond, _config->stream->packetLock);
+			SDL_CondWait(_config->stream->cond, _config->stream->lock);
 		if (_config->terminate) {
-			SDL_UnlockMutex(_config->stream->packetLock);
+			SDL_UnlockMutex(_config->stream->lock);
 			break;
 		}
 
-		if (_config->stream->packetList.size()) {
-			packet = _config->stream->packetList.front();
-			_config->stream->packetList.pop();
+		if (_config->stream->pkt.size()) {
+			packet = _config->stream->pkt.front();
+			_config->stream->pkt.pop();
 		} else packet = NULL;
-		SDL_UnlockMutex(_config->stream->packetLock);
+		SDL_UnlockMutex(_config->stream->lock);
 
 		if (!packet) continue;
 #ifdef ORP_DUMP_AUDIO_HEADER
@@ -732,9 +767,12 @@ static Sint32 orpThreadAudioDecode(void *config)
 			audioFrame->clock = SDL_Swap32(packet->header.clock);
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
-			SDL_LockMutex(feed.feedLock);
-			feed.frameList.push(audioFrame);
-			SDL_UnlockMutex(feed.feedLock);
+			SDL_LockMutex(feed.lock);
+			feed.frame.push(audioFrame);
+			if (feed.frame.size() > 10) {
+				cerr << "feed queue: " << feed.frame.size() << endl;
+			}
+			SDL_UnlockMutex(feed.lock);
 			decode_errors = 0;
 		} else if (decode_errors > 5) {
 			SDL_LockMutex(orpAVMutex);
@@ -753,7 +791,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 	
 	SDL_PauseAudio(1);
 	SDL_CloseAudio();
-	SDL_DestroyMutex(feed.feedLock);
+	SDL_DestroyMutex(feed.lock);
 #ifdef ORP_DUMP_AUDIO_HEADER
 	fclose(h_header);
 #endif
@@ -773,7 +811,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 
 	struct orpConfigAudioFeed_t feed;
 	feed.clock = NULL;
-	feed.feedLock = SDL_CreateMutex();
+	feed.lock = SDL_CreateMutex();
 
 	SDL_AudioSpec audioSpec, requestedSpec;
 	requestedSpec.freq = sample_rate;
@@ -786,7 +824,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 
 	if(SDL_OpenAudio(&requestedSpec, &audioSpec) == -1) {
 		cerr << SDL_GetError() << endl;
-		SDL_DestroyMutex(feed.feedLock);
+		SDL_DestroyMutex(feed.lock);
 		return -1;
 	}
 
@@ -804,21 +842,21 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 			(len > frame_size) ? frame_size : len);
 		len -= (len > frame_size ? frame_size : len);
 
-		SDL_LockMutex(feed.feedLock);
-		feed.frameList.push(audioFrame);
-		SDL_UnlockMutex(feed.feedLock);
+		SDL_LockMutex(feed.lock);
+		feed.frame.push(audioFrame);
+		SDL_UnlockMutex(feed.lock);
 	}
 
 	for ( ;; ) {
-		SDL_LockMutex(feed.feedLock);
-		if (feed.frameList.size() == 0) break;
-		SDL_UnlockMutex(feed.feedLock);
+		SDL_LockMutex(feed.lock);
+		if (feed.frame.size() == 0) break;
+		SDL_UnlockMutex(feed.lock);
 		SDL_Delay(100);
 	}
 
 	SDL_PauseAudio(1);
 	SDL_CloseAudio();
-	SDL_DestroyMutex(feed.feedLock);
+	SDL_DestroyMutex(feed.lock);
 
 	return 0;
 }
@@ -911,7 +949,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	view.scale.x = view.scale.y = 0;
 	view.scale.w = ORP_FRAME_WIDTH;
 	view.scale.h = ORP_FRAME_HEIGHT;
-	view.viewLock = SDL_CreateMutex();
+	view.lock = SDL_CreateMutex();
 	orpAVMutex = SDL_CreateMutex();
 
 	// Copy config
@@ -970,6 +1008,10 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 
 	clock.lock = SDL_CreateMutex();
 	clock.audio = clock.video = clock.decode = 0;
+
+	video_buffer.fill = true;
+	video_buffer.count = 0;
+	video_buffer.lock = SDL_CreateMutex();
 }
 
 OpenRemotePlay::~OpenRemotePlay()
@@ -978,7 +1020,7 @@ OpenRemotePlay::~OpenRemotePlay()
 	Sint32 i;
 	for (i = 0; i < codec.size(); i++) delete codec[i];
 	if (orpAVMutex) SDL_DestroyMutex(orpAVMutex);
-	if (view.viewLock) SDL_DestroyMutex(view.viewLock);
+	if (view.lock) SDL_DestroyMutex(view.lock);
 }
 
 bool OpenRemotePlay::SessionCreate(void)
@@ -1081,14 +1123,17 @@ bool OpenRemotePlay::SessionCreate(void)
 		}
 	}
 
+	// Direct TCP connection?
+	if (!config.ps3_search) return SessionPerform();
+
+	// UDP search for and/or wait on the PS3...
 	IPaddress addr;
 	if (SDLNet_ResolveHost(&addr,
 		config.ps3_addr, config.ps3_port) != 0) {
 		cerr << "Error resolving address.\n";
 		return false;
 	}
-	//UDPsocket skt = SDLNet_UDP_Open(0);
-	UDPsocket skt = SDLNet_UDP_Open(ORP_PORT);
+	UDPsocket skt = SDLNet_UDP_Open(0);
 	Sint32 channel;
 	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
 		cerr << "Error binding socket.\n";
@@ -1102,7 +1147,6 @@ bool OpenRemotePlay::SessionCreate(void)
 	memcpy(pkt_srch->data, &srch, sizeof(struct PktAnnounceSrch_t));
 	UDPpacket *pkt_resp = SDLNet_AllocPacket(sizeof(struct PktAnnounceResp_t));
 
-	// Search forand/or wait on the PS3...
 	ostringstream os;
 	Sint32 i, reply = 0, first = 1;
 	for (i = 0; i < ORP_SRCH_TIMEOUT; i++) {
@@ -1447,6 +1491,13 @@ Sint32 OpenRemotePlay::SessionControl(void)
 	};
 
 	struct orpCtrlMode_t mode;
+	mode.mode = CTRL_CHANGE_BITRATE;
+	mode.param1 = "1024000";
+	mode.param2 = "1024000";
+	ControlPerform(curl, &mode);
+
+	mode.param1 = "384000";
+	mode.param2 = "384000";
 
 	Uint32 count = 0;
 	Uint32 id = 0, be_id;
@@ -1540,10 +1591,36 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					return 0;
 				}
 				break;
+			case SDLK_1:
+				if (event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) {
+					mode.mode = CTRL_CHANGE_BITRATE;
+					mode.param1 = "1024000";
+					mode.param2 = "1024000";
+					ControlPerform(curl, &mode);
+				}
+				break;
+			case SDLK_2:
+				if (event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) {
+					mode.mode = CTRL_CHANGE_BITRATE;
+					mode.param1 = "768000";
+					mode.param2 = "1024000";
+					//mode.param2 = "768000";
+					ControlPerform(curl, &mode);
+				}
+				break;
+			case SDLK_3:
+				if (event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) {
+					mode.mode = CTRL_CHANGE_BITRATE;
+					mode.param1 = "384000";
+					mode.param2 = "1024000";
+					//mode.param2 = "384000";
+					ControlPerform(curl, &mode);
+				}
+				break;
 			case SDLK_d:
 				if ((event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) &&
 					view.size != VIEW_FULLSCREEN) {
-					SDL_LockMutex(view.viewLock);
+					SDL_LockMutex(view.lock);
 					if (view.size == VIEW_NORMAL)
 						view.size = VIEW_MEDIUM;
 					else if (view.size == VIEW_MEDIUM)
@@ -1551,7 +1628,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					else if (view.size == VIEW_LARGE)
 						view.size = VIEW_NORMAL;
 					CreateView();
-					SDL_UnlockMutex(view.viewLock);
+					SDL_UnlockMutex(view.lock);
 					while (SDL_PollEvent(&event) > 0);
 				}
 				break;
@@ -1561,7 +1638,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					!(event.key.keysym.mod &
 						(KMOD_CTRL | KMOD_SHIFT | KMOD_ALT) &&
 						event.key.keysym.sym == SDLK_F11)) {
-					SDL_LockMutex(view.viewLock);
+					SDL_LockMutex(view.lock);
 					if (view.size == VIEW_FULLSCREEN)
 						view.size = view.prev;
 					else {
@@ -1569,7 +1646,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 						view.size = VIEW_FULLSCREEN;
 					}
 					CreateView();
-					SDL_UnlockMutex(view.viewLock);
+					SDL_UnlockMutex(view.lock);
 					while (SDL_PollEvent(&event) > 0);
 				}
 				break;
@@ -2026,7 +2103,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	static bool played = false;
 	if (!played) { played = true; orpPlaySound(launch_wav, launch_wav_len); }
 #ifdef ORP_CLOCK_DEBUG
-	timer = SDL_AddTimer(500, orpClockTimer, (void *)&clock);
+	timer = SDL_AddTimer(1000, orpClockTimer, (void *)&clock);
 #endif
 
 	struct orpConfigStream_t *videoConfig = new struct orpConfigStream_t;
@@ -2045,8 +2122,9 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	videoConfig->stream = new struct orpStreamData_t;
 	videoConfig->stream->data = NULL;
 	videoConfig->stream->len = videoConfig->stream->pos = 0;
-	videoConfig->stream->packetLock = SDL_CreateMutex();
-	videoConfig->stream->packetCond = SDL_CreateCond();
+	videoConfig->stream->lock = SDL_CreateMutex();
+	videoConfig->stream->cond = SDL_CreateCond();
+	videoConfig->stream->buffer = &video_buffer;
 
 	struct orpConfigStream_t *audioConfig = new struct orpConfigStream_t;
 	os.str("");
@@ -2064,8 +2142,9 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	audioConfig->stream = new struct orpStreamData_t;
 	audioConfig->stream->data = NULL;
 	audioConfig->stream->len = audioConfig->stream->pos = 0;
-	audioConfig->stream->packetLock = SDL_CreateMutex();
-	audioConfig->stream->packetCond = SDL_CreateCond();
+	audioConfig->stream->lock = SDL_CreateMutex();
+	audioConfig->stream->cond = SDL_CreateCond();
+	audioConfig->stream->buffer = &video_buffer;
 
 	if (!(thread_video_connection = SDL_CreateThread(orpThreadVideoConnection,
 		videoConfig))) return -1;
@@ -2099,8 +2178,8 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	videoDecode->terminate = audioDecode->terminate = true;
 
 	Sint32 thread_result;
-	SDL_CondBroadcast(videoDecode->stream->packetCond);
-	SDL_CondBroadcast(audioDecode->stream->packetCond);
+	SDL_CondBroadcast(videoDecode->stream->cond);
+	SDL_CondBroadcast(audioDecode->stream->cond);
 
 	SDL_WaitThread(thread_video_connection, &thread_result);
 	SDL_WaitThread(thread_audio_connection, &thread_result);

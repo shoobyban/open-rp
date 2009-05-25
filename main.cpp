@@ -77,6 +77,10 @@ int main(int argc, char *argv[])
 	memcpy(config.psp_mac, record.psp_mac, ORP_MAC_LEN);
 	memcpy(config.key.psp_id, record.psp_id, ORP_KEY_LEN);
 	memcpy(config.key.pkey, record.pkey, ORP_KEY_LEN);
+	if (record.flags & ORP_CONFIG_NOSRCH)
+		config.ps3_search = false;
+	else
+		config.ps3_search = true;
 
 	orpConfigClose(&config_ctx);
 

@@ -219,7 +219,7 @@ struct orpView_t {
 	SDL_Rect fs;
 	SDL_Rect scale;
 	SDL_Rect desktop;
-	SDL_mutex *viewLock;
+	SDL_mutex *lock;
 };
 
 struct orpKey_t {
@@ -241,7 +241,7 @@ struct orpConfig_t {
 	Uint8 psp_mac[ORP_MAC_LEN];
 	char ps3_addr[ORP_HOSTNAME_LEN];
 	Uint16 ps3_port;
-	bool ps3_discover;
+	bool ps3_search;
 	struct orpKey_t key;
 };
 
@@ -267,13 +267,20 @@ struct orpStreamPacket_t {
 	AVPacket pkt;
 };
 
+struct orpVideoBuffer_t {
+	bool fill;
+	Uint32 count;
+	SDL_mutex *lock;
+};
+
 struct orpStreamData_t {
 	Uint32 len;
 	Uint32 pos;
 	Uint8 *data;
-	SDL_mutex *packetLock;
-	SDL_cond *packetCond;
-	queue<struct orpStreamPacket_t *> packetList;
+	SDL_mutex *lock;
+	SDL_cond *cond;
+	struct orpVideoBuffer_t *buffer;
+	queue<struct orpStreamPacket_t *> pkt;
 };
 
 struct orpClock_t {
@@ -298,6 +305,7 @@ struct orpConfigStream_t {
 	string session_id;
 	AES_KEY aes_key;
 	struct orpKey_t *key;
+	struct orpBuffer_t *buffer;
 	struct orpStreamData_t *stream;
 };
 
@@ -308,9 +316,9 @@ struct orpAudioFrame_t {
 };
 
 struct orpConfigAudioFeed_t {
-	SDL_mutex *feedLock;
+	SDL_mutex *lock;
 	struct orpClock_t *clock;
-	queue<struct orpAudioFrame_t *> frameList;
+	queue<struct orpAudioFrame_t *> frame;
 };
 
 struct orpCodec_t {
@@ -339,6 +347,7 @@ protected:
 	SDL_Thread *thread_audio_decode;
 	SDL_Joystick *js;
 	struct orpClock_t clock;
+	struct orpVideoBuffer_t video_buffer;
 #ifdef ORP_CLOCK_DEBUG
 	SDL_TimerID timer;
 #endif

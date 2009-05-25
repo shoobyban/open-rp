@@ -426,6 +426,15 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(50, -1, 0);
+	ps3_nosrch = new wxCheckBox(panel, wxID_ANY,
+		_T("Disable UDP Search?"));
+	if (record->flags & ORP_CONFIG_NOSRCH)
+		ps3_nosrch->SetValue(true);
+	row_sizer->Add(ps3_nosrch, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
 	int i;
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(55, -1, 0);
@@ -551,6 +560,10 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	strcpy((char *)record->psp_owner, value.fn_str());
 	value = ps3_hostname->GetValue().Mid(0, ORP_HOSTNAME_LEN - 1);
 	strcpy((char *)record->ps3_hostname, value.fn_str());
+	if (ps3_nosrch->IsChecked())
+		record->flags |= ORP_CONFIG_NOSRCH;
+	else
+		record->flags &= ~ORP_CONFIG_NOSRCH;
 
 	// TODO: finish saving the rest of the config...
 

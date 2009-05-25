@@ -86,6 +86,7 @@ private:
 	wxTextCtrl *psp_owner;
 	wxTextCtrl *ps3_hostname;
 	wxSpinCtrl *ps3_port;
+	wxCheckBox *ps3_nosrch;
 	wxTextCtrl *ps3_mac[ORP_MAC_LEN];
 	wxTextCtrl *psp_mac[ORP_MAC_LEN];
 	wxTextCtrl *psp_id[ORP_KEY_LEN];
