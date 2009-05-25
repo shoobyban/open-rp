@@ -304,10 +304,12 @@ struct orpConfigStream_t {
 struct orpAudioFrame_t {
 	Uint32 len;
 	Uint8 *data;
+	Uint32 clock;
 };
 
 struct orpConfigAudioFeed_t {
 	SDL_mutex *feedLock;
+	struct orpClock_t *clock;
 	queue<struct orpAudioFrame_t *> frameList;
 };
 

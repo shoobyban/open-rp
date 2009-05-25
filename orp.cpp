@@ -599,6 +599,11 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 		frame = _config->frameList.front();
 		_config->frameList.pop();
 		memcpy(stream, frame->data, len);
+		if (_config->clock) {
+			SDL_LockMutex(_config->clock->lock);
+			_config->clock->audio = frame->clock;
+			SDL_UnlockMutex(_config->clock->lock);
+		}
 		delete [] frame->data;
 		delete frame;
 	} else memset(stream, 0, len);
@@ -667,6 +672,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 
 	struct orpConfigAudioFeed_t feed;
 	feed.feedLock = SDL_CreateMutex();
+	feed.clock = _config->clock;
 
 	SDL_AudioSpec audioSpec, requestedSpec;
 	requestedSpec.freq = sample_rate;
@@ -714,10 +720,6 @@ static Sint32 orpThreadAudioDecode(void *config)
 #ifdef ORP_DUMP_AUDIO_STREAM
 		fwrite(packet->data, 1, packet->len, h_stream);
 #endif
-		SDL_LockMutex(_config->clock->lock);
-		_config->clock->audio = SDL_Swap32(packet->header.clock);
-		SDL_UnlockMutex(_config->clock->lock);
-
 		frame_size = sizeof(buffer);
 		bytes_decoded = avcodec_decode_audio3(context,
 			(Sint16 *)buffer, &frame_size, &packet->pkt);
@@ -727,6 +729,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 		
 			audioFrame->len = (Uint32)frame_size;
 			audioFrame->data = new Uint8[audioFrame->len];
+			audioFrame->clock = SDL_Swap32(packet->header.clock);
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
 			SDL_LockMutex(feed.feedLock);
@@ -769,6 +772,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 	Sint32 channels = 2, sample_rate = 48000;
 
 	struct orpConfigAudioFeed_t feed;
+	feed.clock = NULL;
 	feed.feedLock = SDL_CreateMutex();
 
 	SDL_AudioSpec audioSpec, requestedSpec;
@@ -1054,11 +1058,13 @@ bool OpenRemotePlay::SessionCreate(void)
 				rmask, gmask, bmask, amask);
 
 			Sint32 i;
-			for (i = 255; i > 0; i -= 8) {
+			SDL_Event event;
+			for (i = 255; i > 0; i -= 16) {
 				SDL_BlitSurface(splash, NULL, view.view, &rect);
 				SDL_FillRect(surface, &rect, SDL_MapRGBA(surface->format, 0, 0, 0, (Uint8)i));
 				SDL_BlitSurface(surface, NULL, view.view, &rect);
 				SDL_UpdateRect(view.view, rect.x, rect.y, rect.w, rect.h);
+//				while (SDL_PollEvent(&event) > 0);
 			}
 			SDL_FreeSurface(splash);
 			SDL_FreeSurface(surface);
