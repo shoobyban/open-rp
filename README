@@ -114,9 +114,8 @@ The psp directory contains the RP key export utility.  This requires the PSPSDK
 to be installed and the $PSPDEV environment variable to be set accordingly.
 
 The keys directory contains a simple tool to save the 3 RP static keys (only 2
-are used).  I've seperated the these keys in to the configuration file in case
-we need to update them in the future.  You need to import keys.orp using the
-GUI before using ORP for the first time.
+are used).  I've seperated the keys in to the configuration file in case they
+need to updated.
 
 Known Issues
 -------------------------------------------------------------------------------
