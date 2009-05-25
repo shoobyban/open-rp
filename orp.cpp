@@ -1058,7 +1058,7 @@ bool OpenRemotePlay::SessionCreate(void)
 				rmask, gmask, bmask, amask);
 
 			Sint32 i;
-			for (i = 256; i >= 0; i -= 16) {
+			for (i = 256; i > 0; i -= 16) {
 				SDL_BlitSurface(splash, NULL, view.view, &rect);
 				SDL_FillRect(surface, &rect, SDL_MapRGBA(surface->format, 0, 0, 0, (Uint8)i - 1));
 				SDL_BlitSurface(surface, NULL, view.view, &rect);
