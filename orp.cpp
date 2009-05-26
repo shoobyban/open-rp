@@ -1133,11 +1133,14 @@ bool OpenRemotePlay::SessionCreate(void)
 
 	// Send WoL packet
 	Sint32 i;
-	Uint8 wol[264];
-	memset(wol, 0, sizeof(wol));
-	for (i = 0; i < 6; i++) wol[i] = 0xff;
-	for (i = 0; i < 16; i++) memcpy(wol + i + 6, config.ps3_mac, ORP_MAC_LEN);
-	UDPpacket *pkt_wol = SDLNet_AllocPacket(sizeof(wol));
+	Uint8 wol[ORP_WOLPKT_LEN];
+	memset(wol, 0, ORP_WOLPKT_LEN);
+	for (i = 0; i < ORP_MAC_LEN; i++) wol[i] = 0xff;
+	for (i = 0; i < 16; i++) {
+		memcpy(wol + ORP_MAC_LEN + (i * ORP_MAC_LEN),
+			config.ps3_mac, ORP_MAC_LEN);
+	}
+	UDPpacket *pkt_wol = SDLNet_AllocPacket(ORP_WOLPKT_LEN);
 
 	if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
 		cerr << "Error sending WoL packet.\n";
