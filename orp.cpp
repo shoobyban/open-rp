@@ -520,14 +520,9 @@ static Sint32 orpThreadVideoDecode(void *config)
 			Sint32 drift = 0;
 			if (delta > 0)
 				drift = (Sint32)((double)delta / (double)90000 * (double)1000);
-//			else drift = fps;
-			SDL_Delay(decode < drift ? drift - decode : drift);
-
-//			if (drift > 500) SDL_Delay(fps);
-//			else if (drift > 0) SDL_Delay(drift);
-			//if (delta > 0 && delay < fps) SDL_Delay(fps - delay);
+			if (drift > 0)
+				SDL_Delay(decode < drift ? drift - decode : drift);
 		}
-//		else if (bytes_decoded == -1) cerr << "frame decode failed" << endl;
 
 		delete [] packet->pkt.data;
 		delete packet;
@@ -1123,10 +1118,6 @@ bool OpenRemotePlay::SessionCreate(void)
 		}
 	}
 
-	// Direct TCP connection?
-	if (!config.ps3_search) return SessionPerform();
-
-	// UDP search for and/or wait on the PS3...
 	IPaddress addr;
 	if (SDLNet_ResolveHost(&addr,
 		config.ps3_addr, config.ps3_port) != 0) {
@@ -1140,6 +1131,27 @@ bool OpenRemotePlay::SessionCreate(void)
 		return false;
 	}
 
+	// Send WoL packet
+	Sint32 i;
+	Uint8 wol[264];
+	memset(wol, 0, sizeof(wol));
+	for (i = 0; i < 6; i++) wol[i] = 0xff;
+	for (i = 0; i < 16; i++) memcpy(wol + i + 6, config.ps3_mac, ORP_MAC_LEN);
+	UDPpacket *pkt_wol = SDLNet_AllocPacket(sizeof(wol));
+
+	if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
+		cerr << "Error sending WoL packet.\n";
+	}
+
+	SDLNet_FreePacket(pkt_wol);
+
+	// Direct TCP connection?
+	if (!config.ps3_search) {
+		SDLNet_UDP_Close(skt);
+		return SessionPerform();
+	}
+
+	// UDP search for and/or wait on the PS3...
 	struct PktAnnounceSrch_t srch;
 	CreatePktAnnounceSrch(srch);
 	UDPpacket *pkt_srch = SDLNet_AllocPacket(sizeof(struct PktAnnounceSrch_t));
@@ -1148,7 +1160,7 @@ bool OpenRemotePlay::SessionCreate(void)
 	UDPpacket *pkt_resp = SDLNet_AllocPacket(sizeof(struct PktAnnounceResp_t));
 
 	ostringstream os;
-	Sint32 i, reply = 0, first = 1;
+	Sint32 reply = 0, first = 1;
 	for (i = 0; i < ORP_SRCH_TIMEOUT; i++) {
 		os.str("");
 		os << "Searching... ";
