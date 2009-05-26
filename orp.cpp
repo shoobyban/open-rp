@@ -31,6 +31,21 @@
 #include "images.h"
 #include "launch.h"
 
+void orpPrintf(const char *format, ...)
+{
+	static SDL_mutex *lock = NULL;
+	if (lock == NULL) lock = SDL_CreateMutex();
+	SDL_LockMutex(lock);
+	va_list ap;
+	va_start(ap, format);
+	static FILE *log;
+	if (!log) log = fopen("orp.log", "w");
+	if (log) vfprintf(log, format, ap);
+	vfprintf(stderr, format, ap);
+	va_end(ap);
+	SDL_UnlockMutex(lock);
+}
+
 static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_AUDIO_BITRATE, "PREMO-Audio-Bitrate" },
 	{ HEADER_AUDIO_CHANNELS, "PREMO-Audio-Channels" },
@@ -115,8 +130,8 @@ static Uint32 orpClockTimer(Uint32 interval, void *param)
 	double a = (double)clock->audio / (double)90000;
 	double v = (double)clock->video / (double)90000;
 	SDL_UnlockMutex(clock->lock);
-	cerr << "clock delta: " << delta << ", decode: " <<  decode;
-	cerr << "ms, drift: " << s << "ms" << ", a/v: " << a << "s " << v << "s\n";
+	orpPrintf("clock delta: %d, decode: %ums, drift: %dms, a/v: %.04fs %.04fs\n",
+		delta, decode, s, a, v);
 	return interval;
 }
 #endif
@@ -207,7 +222,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Zero out first byte after chunk length (for sscanf)
 	bp[6] = 0x00;
 	Uint32 chunk_len = 0;
-//	printf("%02x %02x %02x %02x %02x %02x\n",
+//	orpPrintf("%02x %02x %02x %02x %02x %02x\n",
 //		bp[0], bp[1], bp[2], bp[3], bp[4], bp[5], bp[6]);
 
 	// Extract chunk length
@@ -256,14 +271,14 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 
 	// We have a full audio/video packet (frame)
 	if (bp[0] != 0x80) {
-		cerr << "invalid " << _config->name << " packet header" << endl;
+		orpPrintf("invalid %s packet header\n", _config->name.c_str());
 		delete [] buffer;
 		return 0;
 	}
 
 	// Asked to restore audio/video stream?
 	if (bp[1] == 0xfd) {
-		cerr << _config->name << " restore (reset)" << endl;
+		orpPrintf("%s restore (reset)\n", _config->name.c_str());
 		orpPostEvent(EVENT_RESTORE);
 		delete [] buffer;
 		return (size * nmemb);
@@ -271,7 +286,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 
 	// Audio/video magic of 0x8081 seems to mean PS3 shutdown
 	if (bp[1] == 0x81) {
-		cerr << _config->name << " system shutdown" << endl;
+		orpPrintf("%s system power-off\n", _config->name.c_str());
 		orpPostEvent(EVENT_SHUTDOWN);
 		delete [] buffer;
 		return (size * nmemb);
@@ -279,7 +294,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 
 	// Audio or video header?
 	if (bp[1] != 0x80 && bp[1] != 0xff && bp[1] != 0xfb && bp[1] != 0xfc) {
-		printf("invalid %s magic: 0x%02x%02x\n", _config->name.c_str(),
+		orpPrintf("invalid %s magic: 0x%02x%02x\n", _config->name.c_str(),
 			bp[0], bp[1]);
 		delete [] buffer;
 		// Discard...
@@ -674,7 +689,7 @@ static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32
 		if (codec->id == CODEC_ID_ATRAC3) av_free(context->extradata);
 		av_free(context);
 		SDL_UnlockMutex(orpAVMutex);
-		cerr << "codec context initialization failed.\n";
+		orpPrintf("codec context initialization failed.\n");
 		return NULL;
 	}
 	SDL_UnlockMutex(orpAVMutex);
@@ -714,7 +729,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 	requestedSpec.userdata = (void *)&feed;
 
 	if(SDL_OpenAudio(&requestedSpec, &audioSpec) == -1) {
-		cerr << SDL_GetError() << endl;
+		orpPrintf("SDL_OpenAudio: %s\n", SDL_GetError());
 		return -1;
 	}
 
@@ -765,7 +780,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 			SDL_LockMutex(feed.lock);
 			feed.frame.push(audioFrame);
 			if (feed.frame.size() > 10) {
-				cerr << "feed queue: " << feed.frame.size() << endl;
+				orpPrintf("feed queue: %u\n", feed.frame.size());
 			}
 			SDL_UnlockMutex(feed.lock);
 			decode_errors = 0;
@@ -818,7 +833,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 	requestedSpec.userdata = (void *)&feed;
 
 	if(SDL_OpenAudio(&requestedSpec, &audioSpec) == -1) {
-		cerr << SDL_GetError() << endl;
+		orpPrintf("SDL_OpenAudio: %s\n", SDL_GetError());
 		SDL_DestroyMutex(feed.lock);
 		return -1;
 	}
@@ -963,7 +978,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 
 	codec = avcodec_find_decoder(CODEC_ID_H264);
 	if (!codec) {
-		cerr << "Required codec not found: CODEC_ID_H264\n";
+		orpPrintf("Required codec not found: %s\n", "CODEC_ID_H264");
 		throw -1;
 	}
 	oc = new struct orpCodec_t;
@@ -973,7 +988,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 
 	codec = avcodec_find_decoder(CODEC_ID_MPEG4);
 	if (!codec) {
-		cerr << "Required codec not found: CODEC_ID_MPEG4\n";
+		orpPrintf("Required codec not found: %s\n", "CODEC_ID_MPEG4");
 		throw -1;
 	}
 	oc = new struct orpCodec_t;
@@ -983,7 +998,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 
 	codec = avcodec_find_decoder_by_name("libfaad");
 	if (!codec) {
-		cerr << "Required codec not found: CODEC_ID_AAC (libfaad)\n";
+		orpPrintf("Required codec not found: %s\n", "CODEC_ID_AAC (libfaad)");
 		throw -1;
 	}
 	oc = new struct orpCodec_t;
@@ -993,7 +1008,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 
 	codec = avcodec_find_decoder(CODEC_ID_ATRAC3);
 	if (!codec) {
-		cerr << "Required codec not found: CODEC_ID_ATRAC3\n";
+		orpPrintf("Required codec not found: %s\n", "CODEC_ID_ATRAC3");
 		throw -1;
 	}
 	oc = new struct orpCodec_t;
@@ -1020,9 +1035,11 @@ OpenRemotePlay::~OpenRemotePlay()
 
 bool OpenRemotePlay::SessionCreate(void)
 {
+	Sint32 i;
+
 	// Initialize audio, video, and timer
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
-		cerr << SDL_GetError() << endl;
+		orpPrintf("SDL_Init: %s\n", SDL_GetError());
 		return false;
 	}
 
@@ -1114,36 +1131,37 @@ bool OpenRemotePlay::SessionCreate(void)
 			!strncasecmp("playstation", SDL_JoystickName(0), 11) ||
 			!strncasecmp("www.", SDL_JoystickName(0), 4)) &&
 			(js = SDL_JoystickOpen(0))) {
-			cerr << "Joystick opened: " << SDL_JoystickName(0) << endl;
+			orpPrintf("Joystick opened: %s\n", SDL_JoystickName(0));
 		}
 	}
 
+	// Create and bind UDP socket
 	IPaddress addr;
 	if (SDLNet_ResolveHost(&addr,
 		config.ps3_addr, config.ps3_port) != 0) {
-		cerr << "Error resolving address.\n";
+		orpPrintf("Error resolving address: %s:%d: %s\n",
+			config.ps3_addr, config.ps3_port, SDLNet_GetError());
 		return false;
 	}
 	UDPsocket skt = SDLNet_UDP_Open(0);
 	Sint32 channel;
 	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
-		cerr << "Error binding socket.\n";
+		orpPrintf("Error binding socket: %s\n", SDLNet_GetError());
 		return false;
 	}
 
 	// Send WoL packet
-	Sint32 i;
-	Uint8 wol[ORP_WOLPKT_LEN];
-	memset(wol, 0, ORP_WOLPKT_LEN);
-	for (i = 0; i < ORP_MAC_LEN; i++) wol[i] = 0xff;
+	UDPpacket *pkt_wol = SDLNet_AllocPacket(ORP_WOLPKT_LEN);
+	pkt_wol->len = ORP_WOLPKT_LEN;
+	memset(pkt_wol->data, 0, ORP_WOLPKT_LEN);
+	for (i = 0; i < ORP_MAC_LEN; i++) pkt_wol->data[i] = 0xff;
 	for (i = 0; i < 16; i++) {
-		memcpy(wol + ORP_MAC_LEN + (i * ORP_MAC_LEN),
+		memcpy(pkt_wol->data + ORP_MAC_LEN + (i * ORP_MAC_LEN),
 			config.ps3_mac, ORP_MAC_LEN);
 	}
-	UDPpacket *pkt_wol = SDLNet_AllocPacket(ORP_WOLPKT_LEN);
 
 	if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
-		cerr << "Error sending WoL packet.\n";
+		orpPrintf("Error sending WoL packet: %s\n", SDLNet_GetError());
 	}
 
 	SDLNet_FreePacket(pkt_wol);
@@ -1171,25 +1189,26 @@ bool OpenRemotePlay::SessionCreate(void)
 		SetCaption(os.str().c_str());
 
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
-			cerr << "Error sending packet.\n";
+			orpPrintf("Error sending packet: %s\n", SDLNet_GetError());
 			break;
 		}
 
 		Sint32 result;
 		if ((result = SDLNet_UDP_Recv(skt, pkt_resp)) == -1) {
-			cerr << "Error receiving packet.\n";
+			orpPrintf("Error receiving packet: %s\n", SDLNet_GetError());
 			break;
 		}
 
 		if (result == 0) {
-			cerr << "No reply, trying again..." << endl;
+			orpPrintf("No reply, retry %d of %d...\n",
+				i + 1, ORP_SRCH_TIMEOUT);
 			reply = 0;
 			SDL_Delay(1000);
 			continue;
 		}
 
 		reply++;
-		cerr << "Reply of " << pkt_resp->len << " bytes." << endl;
+		orpPrintf("Reply of %d bytes.\n", pkt_resp->len);
 
 		if (!first && reply < ORP_SRCH_REPLIES) {
 			SDL_Delay(1000);
@@ -1253,13 +1272,13 @@ bool OpenRemotePlay::CreateView(void)
 	if (r == NULL) r = &view.scale;
 	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
 	if (!(view.view = SDL_SetVideoMode(r->w, r->h, 0, flags))) {
-		cerr << SDL_GetError() << endl;
+		orpPrintf("SDL_SetVideoMode: %s\n", SDL_GetError());
 		return false;
 	}
 	if (view.size == VIEW_FULLSCREEN) r->h = view.fs.h;
 	if (!(view.overlay = SDL_CreateYUVOverlay(
 		r->w, r->h, SDL_YV12_OVERLAY, view.view))) {
-		cerr << SDL_GetError() << endl;
+		orpPrintf("SDL_CreateYUVOverlay: %s\n", SDL_GetError());
 		return false;
 	}
 	SDL_ShowCursor(!(view.size == VIEW_FULLSCREEN));
@@ -1381,14 +1400,14 @@ static void orpDumpPadState(Uint8 *state)
 	Uint32 x, y, i = 0;
 	for (y = 0; y < 4; y++) {
 		for (x = 0; x < 32; x++) {
-			printf("%02x", state[i]);
+			orpPrintf("%02x", state[i]);
 			if (toggle) {
-				printf(" ");
+				orpPrintf(" ");
 				toggle = false;
 			} else toggle = true;
 			i++;
 		}
-		printf("\n");
+		orpPrintf("\n");
 	}
 }
 
@@ -1411,13 +1430,14 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 	IPaddress ip;
 	if (SDLNet_ResolveHost(&ip, config.ps3_addr, config.ps3_port) != 0) {
-		cerr << "Error resolving address.\n";
+		orpPrintf("Error resolving address: %s:%d: %s\n",
+			config.ps3_addr, config.ps3_port, SDLNet_GetError());
 		return -1;
 	}
 
 	TCPsocket skt;
 	if ((skt = SDLNet_TCP_Open(&ip)) == NULL) {
-		cerr << "Input connection failure.\n";
+		orpPrintf("Input connection failure: %s\n", SDLNet_GetError());
 		return -1;
 	}
 
@@ -1524,13 +1544,13 @@ Sint32 OpenRemotePlay::SessionControl(void)
 	SDL_Event event;
 
 	// Flush any queued events...
-	while (SDL_PollEvent(&event) > 0) cerr << "Flushing event...\n";
+	while (SDL_PollEvent(&event) > 0) orpPrintf("Flushing event...\n");
 
 	// Main event loop
 	for ( ;; ) {
 		Uint32 key = 0;
 		if (SDL_WaitEvent(&event) == 0) {
-			cerr << SDL_GetError() << endl;
+			orpPrintf("SDL_WaitEvent: %s\n", SDL_GetError());
 			return -1;
 		}
 		switch (event.type) {
@@ -1542,10 +1562,10 @@ Sint32 OpenRemotePlay::SessionControl(void)
 		case SDL_USEREVENT:
 			switch (event.user.code) {
 			case EVENT_ERROR:
-				cerr << "Error event\n";
+				orpPrintf("Error event\n");
 				break;
 			case EVENT_RESTORE:
-				cerr << "Restore event\n";
+				orpPrintf("Restore event\n");
 				SDLNet_TCP_Close(skt);
 				curl_easy_cleanup(curl);
 				return EVENT_RESTORE;
@@ -1972,7 +1992,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				// TODO: Yes this is lazy, and not right...
 				Uint8 reply[80];
 				if (SDLNet_TCP_Recv(skt, reply, 80) != 80) {
-					cerr << "Error receiving reply.\n";
+					orpPrintf("Error receiving reply: %s\n", SDLNet_GetError());
 					return -1;
 				}
 				count = 0;
@@ -2093,15 +2113,15 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	AVCodec *videoCodec = GetCodec(
 		orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList));
 	if (!videoCodec) {
-		cerr << "Required video codec not found: ";
-		cerr << orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList) << endl;
+		orpPrintf("Required video codec not found: %s\n",
+			orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList));
 		return -1;
 	}
 	AVCodec *audioCodec = GetCodec(
 		orpGetHeaderValue(HEADER_AUDIO_CODEC, headerList));
 	if (!audioCodec) {
-		cerr << "Required audio codec not found: ";
-		cerr << orpGetHeaderValue(HEADER_AUDIO_CODEC, headerList) << endl;
+		orpPrintf("Required audio codec not found: %s\n",
+			orpGetHeaderValue(HEADER_AUDIO_CODEC, headerList));
 		return -1;
 	}
 
@@ -2204,9 +2224,9 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 
 	// TODO: Free, clean-up everything, being really lazy here...
 	if (result == EVENT_RESTORE)
-		cerr << "Session restore." << endl;
+		orpPrintf("Session restore.\n");
 	else
-		cerr << "Session terminated." << endl;
+		orpPrintf("Session terminated.\n");
 
 	thread_video_connection = thread_video_decode = NULL;
 	thread_audio_connection = thread_audio_decode = NULL;

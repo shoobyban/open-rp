@@ -324,6 +324,8 @@ struct orpCodec_t {
 	AVCodec *codec;
 };
 
+void orpPrintf(const char *format, ...);
+
 class OpenRemotePlay
 {
 public:
