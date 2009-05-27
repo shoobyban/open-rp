@@ -14,6 +14,10 @@ would not be possible.  I would also like to thank TyRaNiD for psplink and
 prxtool.  Using psplink makes this type of work almost painless!  Thanks to
 jas0nuk for the essential PRXdecrypter utility.
 
+Thanks to Greg of http://ps3-hacks.com for the MacBook loan and beer!
+
+Thanks to MohammadAG for the virtual keyboard idea!
+
 Controls
 -------------------------------------------------------------------------------
 
@@ -30,6 +34,7 @@ Game Controllers program found in the Control Panel.
 The player currently implements these keyboard mappings:
 
 ENTER           X
+SPACE		Triangle
 F1              Triangle
 F2              Square
 F3              Select
@@ -39,6 +44,7 @@ PAGE-UP         L1
 PAGE-DOWN       R1
 ARROW KEYS      D-Pad
 HOME            PS Button
+BACKSPACE	Square
 
 CTRL-1		Select bit-rate: 1024k
 CTRL-2		Select bit-rate: 768k
@@ -46,6 +52,17 @@ CTRL-3		Select bit-rate: 384k
 CTRL-D		Toggle through window sizes (normal, medium, and large)
 CTRL-F		Enter/exit full-screen mode
 CTRL-Q          Quit Remote Play
+
+Virtual keyboard:
+NOTE: This is a hack and is bound to be buggy!
+
+While you are in a PS3 text-input dialog, you can enter virtual keyboard mode
+using CTRL-ENTER.  The window caption will change with [keyboard] being added.
+While in this mode, keys pressed on your real keyboard are translated in to
+D-Pad presses followed by X to speed up text entry.  The right and left arrow
+keys send L1/R1 and the ENTER key sends START instead of X.
+
+To exit virtual keyboard mode, press CTRL-ENTER again.
 
 Not implemented, yet:
 The right/left analog sticks, L2, R2, L3, and R3.

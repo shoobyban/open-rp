@@ -196,6 +196,17 @@ struct orpCtrlMode_t {
 	string param2;
 };
 
+#define ORP_KBMAP_LEN	40
+#define ORP_KBMAP_SX	4
+#define ORP_KBMAP_SY	2
+
+struct orpKeyboardMap_t {
+	SDLKey sym;
+	Uint32 mod;
+	Sint8 x;
+	Sint8 y;
+};
+
 enum orpEvent {
 	EVENT_ERROR,
 	EVENT_RESTORE,

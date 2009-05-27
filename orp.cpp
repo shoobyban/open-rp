@@ -1411,6 +1411,83 @@ static void orpDumpPadState(Uint8 *state)
 	}
 }
 
+static Sint32 orpSendPadState(TCPsocket skt, Uint8 *pad, Uint32 id, Uint32 &count, Uint32 timestamp, vector<string> &headers)
+{
+	if (id != 0) {
+		Uint32 be_id = SDL_Swap32(id);
+		Uint32 be_timestamp = SDL_Swap32(timestamp);
+		memcpy(pad + ORP_PAD_EVENTID, &be_id, 4);
+		memcpy(pad + ORP_PAD_TIMESTAMP, &be_timestamp, 4);
+	}
+	//orpDumpPadState(statePad);
+
+	SDLNet_TCP_Send(skt, pad, ORP_PADSTATE_LEN);
+
+	if (count == ORP_PADSTATE_MAX) {
+		// TODO: Yes this is lazy, and not right...
+		Uint8 reply[80];
+		if (SDLNet_TCP_Recv(skt, reply, 80) != 80) {
+			orpPrintf("Error receiving reply: %s\n", SDLNet_GetError());
+			return -1;
+		}
+		count = 0;
+		Uint32 i;
+		for (i = 0; i < headers.size(); i++) {
+			SDLNet_TCP_Send(skt,
+				headers[i].c_str(), strlen(headers[i].c_str()));
+		}
+	}
+
+	return 0;
+}
+
+static struct orpKeyboardMap_t orpKeyboardMap[ORP_KBMAP_LEN] = {
+	// 1 2 3 4 5 6 7 8 9 0
+	{ SDLK_1, KMOD_NONE, 0, 0 },
+	{ SDLK_2, KMOD_NONE, 1, 0 },
+	{ SDLK_3, KMOD_NONE, 2, 0 },
+	{ SDLK_4, KMOD_NONE, 3, 0 },
+	{ SDLK_5, KMOD_NONE, 4, 0 },
+	{ SDLK_6, KMOD_NONE, 5, 0 },
+	{ SDLK_7, KMOD_NONE, 6, 0 },
+	{ SDLK_8, KMOD_NONE, 7, 0 },
+	{ SDLK_9, KMOD_NONE, 8, 0 },
+	{ SDLK_0, KMOD_NONE, 9, 0 },
+	// q w e r t y u i o p
+	{ SDLK_q, KMOD_NONE, 0, 1 },
+	{ SDLK_w, KMOD_NONE, 1, 1 },
+	{ SDLK_e, KMOD_NONE, 2, 1 },
+	{ SDLK_r, KMOD_NONE, 3, 1 },
+	{ SDLK_t, KMOD_NONE, 4, 1 },
+	{ SDLK_y, KMOD_NONE, 5, 1 },
+	{ SDLK_u, KMOD_NONE, 6, 1 },
+	{ SDLK_i, KMOD_NONE, 7, 1 },
+	{ SDLK_o, KMOD_NONE, 8, 1 },
+	{ SDLK_p, KMOD_NONE, 9, 1 },
+	// a s d f g h j k l '
+	{ SDLK_a, KMOD_NONE, 0, 2 },
+	{ SDLK_s, KMOD_NONE, 1, 2 },
+	{ SDLK_d, KMOD_NONE, 2, 2 },
+	{ SDLK_f, KMOD_NONE, 3, 2 },
+	{ SDLK_g, KMOD_NONE, 4, 2 },
+	{ SDLK_h, KMOD_NONE, 5, 2 },
+	{ SDLK_j, KMOD_NONE, 6, 2 },
+	{ SDLK_k, KMOD_NONE, 7, 2 },
+	{ SDLK_l, KMOD_NONE, 8, 2 },
+	{ SDLK_QUOTE, KMOD_NONE, 9, 2 },
+	// z x c v b n m , . ?
+	{ SDLK_z, KMOD_NONE, 0, 3 },
+	{ SDLK_x, KMOD_NONE, 1, 3 },
+	{ SDLK_c, KMOD_NONE, 2, 3 },
+	{ SDLK_v, KMOD_NONE, 3, 3 },
+	{ SDLK_b, KMOD_NONE, 4, 3 },
+	{ SDLK_n, KMOD_NONE, 5, 3 },
+	{ SDLK_m, KMOD_NONE, 6, 3 },
+	{ SDLK_COMMA, KMOD_NONE, 7, 3 },
+	{ SDLK_PERIOD, KMOD_NONE, 8, 3 },
+	{ SDLK_SLASH, KMOD_SHIFT , 9, 3 },
+};
+
 Sint32 OpenRemotePlay::SessionControl(void)
 {
 	CURL *curl = curl_easy_init();
@@ -1531,8 +1608,10 @@ Sint32 OpenRemotePlay::SessionControl(void)
 	mode.param2 = "1024000";
 	ControlPerform(curl, &mode);
 
-	mode.param1 = "384000";
-	mode.param2 = "384000";
+	bool kbmap_mode = false;
+	Sint8 kbmap_cx = ORP_KBMAP_SX;
+	Sint8 kbmap_cy = ORP_KBMAP_SY;
+	vector<Uint32> kbmap_queue;
 
 	Uint32 count = 0;
 	Uint32 id = 0, be_id;
@@ -1582,21 +1661,34 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPUP;
 				break;
 			case SDLK_RIGHT:
-				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPRIGHT;
+				if (kbmap_mode)
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_R1;
+				else
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPRIGHT;
 				break;
 			case SDLK_DOWN:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
 				break;
 			case SDLK_LEFT:
-				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPLEFT;
+				if (kbmap_mode)
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_L1;
+				else
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPLEFT;
 				break;
 			case SDLK_RETURN:
-				key = ORP_PAD_KEYUP | ORP_PAD_PSP_X;
+				if (!(event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
+					if (kbmap_mode)
+						key = ORP_PAD_KEYUP | ORP_PAD_PSP_START;
+					else
+						key = ORP_PAD_KEYUP | ORP_PAD_PSP_X;
+				}
 				break;
 			case SDLK_F1:
+			case SDLK_SPACE:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_TRI;
 				break;
 			case SDLK_F2:
+			case SDLK_BACKSPACE:
 				key = ORP_PAD_KEYUP | ORP_PAD_PSP_SQUARE;
 				break;
 			case SDLK_F3:
@@ -1618,6 +1710,41 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			break;
 
 		case SDL_KEYDOWN:
+			if (kbmap_mode) {
+				bool found = false;
+				Sint8 tx = 0, ty = 0;
+				for (i = 0; i < ORP_KBMAP_LEN; i++) {
+					if (orpKeyboardMap[i].sym != event.key.keysym.sym)
+						continue;
+					if (event.key.keysym.mod &&
+						!(orpKeyboardMap[i].mod & event.key.keysym.mod))
+						continue;
+					tx = orpKeyboardMap[i].x;
+					ty = orpKeyboardMap[i].y;
+					found = true;
+					break;
+				}
+				if (found) {
+					Sint8 dx = (tx + 1) - (kbmap_cx + 1);
+					Sint8 dy = (ty + 1) - (kbmap_cy + 1);
+					for (i = 0; i < abs(dx); i++) {
+						if (dx > 0)
+							kbmap_queue.push_back(ORP_PAD_PSP_DPRIGHT);
+						else if (dx < 0)
+							kbmap_queue.push_back(ORP_PAD_PSP_DPLEFT);
+					}
+					for (i = 0; i < abs(dy); i++) {
+						if (dy > 0)
+							kbmap_queue.push_back(ORP_PAD_PSP_DPDOWN);
+						else if (dy < 0)
+							kbmap_queue.push_back(ORP_PAD_PSP_DPUP);
+					}
+					kbmap_queue.push_back(ORP_PAD_PSP_X);
+					kbmap_cx = dx + kbmap_cx;
+					kbmap_cy = dy + kbmap_cy;
+					break;
+				}
+			}
 			switch (event.key.keysym.sym) {
 			case SDLK_q:
 				if (event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
@@ -1670,9 +1797,9 @@ Sint32 OpenRemotePlay::SessionControl(void)
 			case SDLK_f:
 			case SDLK_F11:
 				if ((event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) ||
-					!(event.key.keysym.mod &
-						(KMOD_CTRL | KMOD_SHIFT | KMOD_ALT) &&
-						event.key.keysym.sym == SDLK_F11)) {
+					(event.key.keysym.sym == SDLK_F11 &&
+						!(event.key.keysym.mod &
+						(KMOD_CTRL | KMOD_SHIFT | KMOD_ALT)))) {
 					SDL_LockMutex(view.lock);
 					if (view.size == VIEW_FULLSCREEN)
 						view.size = view.prev;
@@ -1689,24 +1816,49 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
 				break;
 			case SDLK_RIGHT:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPRIGHT;
+				if (kbmap_mode)
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_R1;
+				else
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPRIGHT;
 				break;
 			case SDLK_DOWN:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
 				break;
 			case SDLK_LEFT:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPLEFT;
+				if (kbmap_mode)
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_L1;
+				else
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPLEFT;
 				break;
 			case SDLK_RETURN:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+				if (!(event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
+					if (kbmap_mode)
+						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_START;
+					else
+						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
+				} else {
+					if (kbmap_mode == true) {
+						SetCaption(ps3_nickname);
+						kbmap_mode = false;
+					} else {
+						ostringstream os;
+						os << ps3_nickname << " [keyboard]";
+						SetCaption(os.str().c_str());
+						kbmap_mode = true;
+						kbmap_cx = ORP_KBMAP_SX;
+						kbmap_cy = ORP_KBMAP_SY;
+					}
+				}
 				break;
 			case SDLK_ESCAPE:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_CIRCLE;
 				break;
 			case SDLK_F1:
+			case SDLK_SPACE:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_TRI;
 				break;
 			case SDLK_F2:
+			case SDLK_BACKSPACE:
 				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_SQUARE;
 				break;
 			case SDLK_F3:
@@ -1948,12 +2100,14 @@ Sint32 OpenRemotePlay::SessionControl(void)
 		}
 
 		if (key) {
-			id++;
 			count++;
 			Uint16 value = (Uint16)(key & 0x0000ffff);
+
 			if (value == ORP_PAD_PSP_HOME) {
 				//orpDumpPadState(statePadHome);
-				SDLNet_TCP_Send(skt, statePadHome, ORP_PADSTATE_LEN);
+				//SDLNet_TCP_Send(skt, statePadHome, ORP_PADSTATE_LEN);
+				orpSendPadState(skt,
+					statePadHome, 0, count, 0, headers);
 				continue;
 			}
 
@@ -1977,30 +2131,46 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				memcpy(statePad + key, &jsr_yaxis, sizeof(Sint16));
 			}
 
+			id++;
 			// TODO: This calculation is very approximate, needs to be fixed!
 			timestamp = (SDL_GetTicks() - ticks) / 16;	
 
-			be_id = SDL_Swap32(id);
-			be_timestamp = SDL_Swap32(timestamp);
-			memcpy(statePad + ORP_PAD_EVENTID, &be_id, 4);
-			memcpy(statePad + ORP_PAD_TIMESTAMP, &be_timestamp, 4);
-			//orpDumpPadState(statePad);
+			orpSendPadState(skt,
+				statePad, id, count, timestamp, headers);
 
-			SDLNet_TCP_Send(skt, statePad, ORP_PADSTATE_LEN);
+		} else if (kbmap_queue.size()) {
+			for (i = 0; i < kbmap_queue.size(); i++) {
+				Uint16 value = (Uint16)kbmap_queue[i];
 
-			if (count == ORP_PADSTATE_MAX) {
-				// TODO: Yes this is lazy, and not right...
-				Uint8 reply[80];
-				if (SDLNet_TCP_Recv(skt, reply, 80) != 80) {
-					orpPrintf("Error receiving reply: %s\n", SDLNet_GetError());
-					return -1;
-				}
-				count = 0;
-				for (i = 0; i < headers.size(); i++) {
-					SDLNet_TCP_Send(skt,
-						headers[i].c_str(), strlen(headers[i].c_str()));
-				}
+				// Send key down...
+				id++;
+				count++;
+				timestamp = (SDL_GetTicks() - ticks) / 16;
+
+				statePad[((value & 0xff00) >> 8)] |=
+					((Uint8)(value & 0x00ff));
+
+				orpSendPadState(skt,
+					statePad, id, count, timestamp, headers);
+
+				// Sleep...
+				SDL_Delay(100);
+
+				// Send key up...
+				id++;
+				count++;
+				timestamp = (SDL_GetTicks() - ticks) / 16;	
+
+				statePad[((value & 0xff00) >> 8)] &=
+					~((Uint8)(value & 0x00ff));
+
+				orpSendPadState(skt,
+					statePad, id, count, timestamp, headers);
+
+				// Sleep...
+				SDL_Delay(50);
 			}
+			kbmap_queue.clear();
 		}
 	}
 
