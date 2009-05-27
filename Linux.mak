@@ -21,6 +21,7 @@ release: all
 	@cp -rv psp/ORP_Export $(PKG_VERSION)
 	@cp -v orp $(PKG_VERSION)
 	@cp -v gui/orpui $(PKG_VERSION)
+	@cp -v gui/icon.ico $(PKG_VERSION)
 	@cp keys/keys.orp $(PKG_VERSION)
 	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
 	@zip -r $(PKG_VERSION).zip $(PKG_VERSION)
