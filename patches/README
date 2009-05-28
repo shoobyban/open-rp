@@ -1,0 +1,17 @@
+Patches
+-------
+
+The patches here need to be applied to the appropriate package/version for the
+specified platform.
+
+Windows (MinG)
+--------------
+curl-7.19.4-EINTR.patch
+	Fixes SIGINT causing socket reads to bail.
+
+MacOSX
+------
+SDL_net-1.2.7-TCP_NODELAY.patch
+	Enable TCP_NODELAY.  By default, it was only enabled for Linux.  May be
+	required for Windows too.
+
