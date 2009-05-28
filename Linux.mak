@@ -1,9 +1,9 @@
 # Generic Linux build configuration
 CXX=g++
 INCLUDE=-I.
-CFLAGS=-O2 -pipe $(INCLUDE) $(shell sdl-config --cflags) $(shell curl-config --cflags)
+CFLAGS=-g -pipe $(INCLUDE) $(shell sdl-config --cflags) $(shell curl-config --cflags)
 CXXFLAGS=$(CFLAGS)
-LDFLAGS=
+LDFLAGS=-L/usr/local/lib
 LIBDIR=/usr/lib
 LIB_FFMPEG=/usr/lib
 LIBS_SHARED=-lcrypto -lpthread -lz $(shell sdl-config --libs) $(shell curl-config --libs) -lSDL_net -lSDL_image -lavcodec -lavutil -lavformat -lswscale

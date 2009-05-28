@@ -1160,8 +1160,11 @@ bool OpenRemotePlay::SessionCreate(void)
 			config.ps3_mac, ORP_MAC_LEN);
 	}
 
-	if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
-		orpPrintf("Error sending WoL packet: %s\n", SDLNet_GetError());
+	for (i = 0; i < 2; i++) {
+		if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
+			orpPrintf("Error sending WoL packet: %s\n", SDLNet_GetError());
+		}
+		SDL_Delay(200);
 	}
 
 	SDLNet_FreePacket(pkt_wol);
