@@ -774,6 +774,8 @@ static Sint32 orpThreadAudioDecode(void *config)
 	// TODO: These values must come from the session headers
 	// rather than be hard coded here...
 	Sint32 channels = 2, sample_rate = 48000, bit_rate = 128000;
+	if (_config->codec->id == CODEC_ID_ATRAC3)
+		bit_rate = 144000;
 
 	AVCodecContext *context;
 	if (!(context = orpInitAudioCodec(_config->codec,
