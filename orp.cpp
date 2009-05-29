@@ -31,19 +31,80 @@
 #include "images.h"
 #include "launch.h"
 
-void orpPrintf(const char *format, ...)
+static void orpOutput(const char *format, va_list ap)
+{
+	static SDL_mutex *lock = NULL;
+	if (lock == NULL) lock = SDL_CreateMutex();
+	SDL_LockMutex(lock);
+	static FILE *log;
+	if (!log) {
+		log = fopen("orp.log", "w");
+		if (log) fprintf(log, "Open Remote Play v%s\n", ORP_VERSION);
+	}
+	if (log) {
+		fprintf(log, "%10u: ", SDL_GetTicks());
+		vfprintf(log, format, ap);
+	}
+#ifndef _WIN32
+	vfprintf(stderr, format, ap);
+#endif
+	SDL_UnlockMutex(lock);
+}
+
+static void orpPrintf(const char *format, ...)
 {
 	static SDL_mutex *lock = NULL;
 	if (lock == NULL) lock = SDL_CreateMutex();
 	SDL_LockMutex(lock);
 	va_list ap;
 	va_start(ap, format);
-	static FILE *log;
-	if (!log) log = fopen("orp.log", "w");
-	if (log) vfprintf(log, format, ap);
-	vfprintf(stderr, format, ap);
+	orpOutput(format, ap);
 	va_end(ap);
 	SDL_UnlockMutex(lock);
+}
+
+static Sint32 orpCurlDebug(CURL *curl, curl_infotype type, char *text, size_t text_len, void *data)
+{
+	static SDL_mutex *lock = NULL;
+	if (lock == NULL) lock = SDL_CreateMutex();
+	SDL_LockMutex(lock);
+	ostringstream os;
+	char *url = NULL;
+	curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &url);
+	if (url != NULL) os << url << ": ";
+	else os << "<Unknown>: ";
+	switch (type) {
+	case CURLINFO_TEXT:
+		break;
+	case CURLINFO_HEADER_IN:
+		os << ">> ";
+		break;
+	case CURLINFO_HEADER_OUT:
+		os << "<< Sending headers:" << endl;
+		break;
+	case CURLINFO_DATA_IN:
+		SDL_UnlockMutex(lock);
+		return 0;
+	case CURLINFO_DATA_OUT:
+		SDL_UnlockMutex(lock);
+		return 0;
+	}
+	char *buffer = new char[text_len + 1];
+	memset(buffer, 0, text_len + 1);
+	memcpy(buffer, text, text_len);
+	if (buffer[text_len -1] == '\n')
+		os << buffer;
+	else
+		os << buffer << endl;
+	delete [] buffer;
+	orpPrintf(os.str().c_str());
+	SDL_UnlockMutex(lock);
+	return 0;
+}
+
+static void orpAVDebug(void *ptr, Sint32 level, const char *format, va_list ap)
+{
+	orpOutput(format, ap);
 }
 
 static struct orpHeader_t orpHeaderList[] = {
@@ -535,8 +596,12 @@ static Sint32 orpThreadVideoDecode(void *config)
 			Sint32 drift = 0;
 			if (delta > 0)
 				drift = (Sint32)((double)delta / (double)90000 * (double)1000);
-			if (drift > 0)
-				SDL_Delay(decode < drift ? drift - decode : drift);
+			if (drift > 0) {
+				Uint32 delay = decode < drift ? drift - decode : drift;
+				if (delay > 1000)
+					orpPrintf("Delay too large: %u\n", delay);
+				else SDL_Delay(delay);
+			}
 		}
 
 		delete [] packet->pkt.data;
@@ -575,6 +640,7 @@ static Sint32 orpThreadVideoConnection(void *config)
 
 	curl_easy_setopt(curl, CURLOPT_URL, _config->url.c_str());
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, orpCurlDebug);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, ORP_USER_AGENT);
 
 	vector<struct orpHeaderValue_t *> headerList;
@@ -887,6 +953,7 @@ static Sint32 orpThreadAudioConnection(void *config)
 
 	curl_easy_setopt(curl, CURLOPT_URL, _config->url.c_str());
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, orpCurlDebug);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, ORP_USER_AGENT);
 
 	vector<struct orpHeaderValue_t *> headerList;
@@ -971,6 +1038,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	// Init libavcodec, load all codecs
 	avcodec_init();
 	avcodec_register_all();
+	av_log_set_callback(orpAVDebug);
 
 	// Initialize the audio/video decoders we need
 	struct orpCodec_t *oc;
@@ -1489,6 +1557,30 @@ static struct orpKeyboardMap_t orpKeyboardMap[ORP_KBMAP_LEN] = {
 	{ SDLK_COMMA, KMOD_NONE, 7, 3 },
 	{ SDLK_PERIOD, KMOD_NONE, 8, 3 },
 	{ SDLK_SLASH, KMOD_SHIFT , 9, 3 },
+	// symbols, shift, extra-char, etc...
+	{ SDLK_UNKNOWN, KMOD_NONE, 0, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 1, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 2, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 3, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 4, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 4, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 6, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 6, 4 },
+	{ SDLK_RETURN, KMOD_NONE, 9, 4 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 9, 4 },
+	// arrow buttons, input mode, enter, etc...
+/*	{ SDLK_UP, KMOD_NONE, 0, 5 },
+	{ SDLK_DOWN, KMOD_NONE, 1, 5 }, */
+	{ SDLK_UNKNOWN, KMOD_NONE, 0, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 1, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 2, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 3, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 4, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 5, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 6, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 6, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 8, 5 },
+	{ SDLK_UNKNOWN, KMOD_NONE, 8, 5 },
 };
 
 Sint32 OpenRemotePlay::SessionControl(void)
@@ -1502,6 +1594,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 	curl_easy_setopt(curl, CURLOPT_URL, os.str().c_str());
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, orpCurlDebug);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, ORP_USER_AGENT);
 
 	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
@@ -1661,7 +1754,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 		case SDL_KEYUP:
 			switch (event.key.keysym.sym) {
 			case SDLK_UP:
-				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPUP;
+				if (!kbmap_mode)
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPUP;
 				break;
 			case SDLK_RIGHT:
 				if (kbmap_mode)
@@ -1670,7 +1764,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPRIGHT;
 				break;
 			case SDLK_DOWN:
-				key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
+				if (!kbmap_mode)
+					key = ORP_PAD_KEYUP | ORP_PAD_PSP_DPDOWN;
 				break;
 			case SDLK_LEFT:
 				if (kbmap_mode)
@@ -1680,9 +1775,10 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			case SDLK_RETURN:
 				if (!(event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
-					if (kbmap_mode)
-						key = ORP_PAD_KEYUP | ORP_PAD_PSP_START;
-					else
+//					if (kbmap_mode)
+//						key = ORP_PAD_KEYUP | ORP_PAD_PSP_START;
+//					else
+					if (!kbmap_mode)
 						key = ORP_PAD_KEYUP | ORP_PAD_PSP_X;
 				}
 				break;
@@ -1730,21 +1826,43 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				if (found) {
 					Sint8 dx = (tx + 1) - (kbmap_cx + 1);
 					Sint8 dy = (ty + 1) - (kbmap_cy + 1);
-					for (i = 0; i < abs(dx); i++) {
-						if (dx > 0)
-							kbmap_queue.push_back(ORP_PAD_PSP_DPRIGHT);
-						else if (dx < 0)
-							kbmap_queue.push_back(ORP_PAD_PSP_DPLEFT);
-					}
-					for (i = 0; i < abs(dy); i++) {
-						if (dy > 0)
-							kbmap_queue.push_back(ORP_PAD_PSP_DPDOWN);
-						else if (dy < 0)
-							kbmap_queue.push_back(ORP_PAD_PSP_DPUP);
+					if (dy > 0) {
+						for (i = 0; i < abs(dx); i++) {
+							if (dx > 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPRIGHT);
+							else if (dx < 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPLEFT);
+						}
+						for (i = 0; i < abs(dy); i++) {
+							if (dy > 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPDOWN);
+							else if (dy < 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPUP);
+						}
+					} else {
+						for (i = 0; i < abs(dy); i++) {
+							if (dy > 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPDOWN);
+							else if (dy < 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPUP);
+						}
+						for (i = 0; i < abs(dx); i++) {
+							if (dx > 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPRIGHT);
+							else if (dx < 0)
+								kbmap_queue.push_back(ORP_PAD_PSP_DPLEFT);
+						}
 					}
 					kbmap_queue.push_back(ORP_PAD_PSP_X);
 					kbmap_cx = dx + kbmap_cx;
 					kbmap_cy = dy + kbmap_cy;
+					break;
+				}
+				if (event.key.keysym.sym == SDLK_SPACE) {
+					kbmap_queue.push_back(ORP_PAD_PSP_TRI);
+					break;
+				} else if (event.key.keysym.sym == SDLK_BACKSPACE) {
+					kbmap_queue.push_back(ORP_PAD_PSP_SQUARE);
 					break;
 				}
 			}
@@ -1816,7 +1934,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				}
 				break;
 			case SDLK_UP:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
+				if (!kbmap_mode)
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPUP;
 				break;
 			case SDLK_RIGHT:
 				if (kbmap_mode)
@@ -1825,7 +1944,8 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPRIGHT;
 				break;
 			case SDLK_DOWN:
-				key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
+				if (!kbmap_mode)
+					key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_DPDOWN;
 				break;
 			case SDLK_LEFT:
 				if (kbmap_mode)
@@ -1835,9 +1955,10 @@ Sint32 OpenRemotePlay::SessionControl(void)
 				break;
 			case SDLK_RETURN:
 				if (!(event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
-					if (kbmap_mode)
-						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_START;
-					else
+//					if (kbmap_mode)
+//						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_START;
+//					else
+					if (!kbmap_mode)
 						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
 				} else {
 					if (kbmap_mode == true) {
@@ -1845,7 +1966,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 						kbmap_mode = false;
 					} else {
 						ostringstream os;
-						os << ps3_nickname << " [keyboard]";
+						os << ps3_nickname << " - Virtual Keyboard Enabled";
 						SetCaption(os.str().c_str());
 						kbmap_mode = true;
 						kbmap_cx = ORP_KBMAP_SX;
@@ -2194,6 +2315,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 
 	curl_easy_setopt(curl, CURLOPT_URL, os.str().c_str());
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, orpCurlDebug);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, ORP_USER_AGENT);
 
 	vector<struct orpHeaderValue_t *> headerList;
