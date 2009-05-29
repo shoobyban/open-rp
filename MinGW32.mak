@@ -8,7 +8,6 @@ LIBDIR=/mingw/lib
 LDFLAGS=-L$(LIBDIR) -mthreads  -Wl,--subsystem,windows -mwindows
 LIBS=-mwindows -Wl,-Bsymbolic $(LIBDIR)/libSDLmain.a $(LIBDIR)/libSDL.a $(LIBDIR)/libSDL_image.a $(LIBDIR)/libpng.a $(LIBDIR)/libz.a $(LIBDIR)/libSDL_net.a $(LIBDIR)/libcrypto.a $(LIBDIR)/libavformat.a $(LIBDIR)/libavcodec.a $(LIBDIR)/libswscale.a $(LIBDIR)/libavutil.a $(LIBDIR)/libfaad.a $(LIBDIR)/libcurl.a $(LIBDIR)/libdxguid.a $(LIBDIR)/libz.a -lwsock32 -lgdi32 -lwinmm -lmingw32
 DEFS=-DCURL_STATICLIB -D_WIN32
-#DEFS=-DCURL_STATICLIB
 TARGET=orp.exe
 PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-W32"
 

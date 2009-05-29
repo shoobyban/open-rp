@@ -36,6 +36,7 @@ using namespace std;
 #include <SDL/SDL_net.h>
 
 extern "C" {
+#include <libavutil/avutil.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
 };
@@ -196,7 +197,7 @@ struct orpCtrlMode_t {
 	string param2;
 };
 
-#define ORP_KBMAP_LEN	40
+#define ORP_KBMAP_LEN	60
 #define ORP_KBMAP_SX	4
 #define ORP_KBMAP_SY	2
 
@@ -334,8 +335,6 @@ struct orpCodec_t {
 	string name;
 	AVCodec *codec;
 };
-
-void orpPrintf(const char *format, ...);
 
 class OpenRemotePlay
 {

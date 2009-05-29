@@ -31,11 +31,11 @@ psp::
 
 deps: $(wildcard *.cpp)
 	@echo "[D] $^"
-	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) -D'ORP_VERSION="$(VERSION)"' $^ > /dev/null
+	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) -D'ORP_VERSION=$(VERSION)' $^ > /dev/null
 
 %.o : %.cpp
 	@echo "[C] $@"
-	@$(CXX) -c $(CXXFLAGS) $(DEFS) -D'ORP_VERSION="$(VERSION)"' -o $@ $<
+	@$(CXX) -c $(CXXFLAGS) $(DEFS) -D'ORP_VERSION=$(VERSION)' -o $@ $<
 
 -include $(DEPS)
 
