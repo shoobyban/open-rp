@@ -31,7 +31,7 @@ For Windows users, you require to download and install the DualShock driver:
 Ensure that the controller is functioning properly by testing it using the
 Game Controllers program found in the Control Panel.
 
-The player currently implements these keyboard mappings:
+The player currently implements these keyboard bindings:
 
 ENTER           X
 SPACE		Triangle
@@ -57,15 +57,16 @@ Virtual keyboard:
 NOTE: This is a hack and is bound to be buggy!
 
 While you are in a PS3 text-input dialog, you can enter virtual keyboard mode
-using CTRL-ENTER.  The window caption will change with [keyboard] being added.
-While in this mode, keys pressed on your real keyboard are translated in to
-D-Pad presses followed by X to speed up text entry.  The right and left arrow
-keys send L1/R1 and the ENTER key sends START instead of X.  Always ensure that
-the letter 'g' is high-lighted *before* entering virtual keyboard mode.
+using CTRL-ENTER.  The window caption will be append with "Virtual Keyboard
+Enabled".  While in this mode, keys pressed on your real keyboard are translated
+in to D-Pad presses followed by X to speed up text entry.  The right and left
+arrow keys send L1/R1 and the ENTER key sends a line-break instead of X.  Always
+ensure that the letter 'g' is high-lighted *before* entering virtual keyboard
+mode, or after you've moved the cursor manually.
 
 To exit virtual keyboard mode, press CTRL-ENTER again.
 
-Not implemented, yet:
+There are no keyboard bindings for the following controller input:
 The right/left analog sticks, L2, R2, L3, and R3.
 
 NOTE: On Apple laptops, you may have to hold down the Fn key to access some of
@@ -104,14 +105,19 @@ settings from a registered PSP.  The steps are as follows:
 
 4 - Run the ORP GUI and click on Import, locate and import export.orp.  You
     will have to manually change the IP address of your PS3, by default it
-    will be set to 0.0.0.0.  I keep two profiles, one for local LAN and
-    another for when I'm connecting from the Internet.  You can create
-    multiple profiles by simply changing the Name field and clicking Save.
+    will be set to 0.0.0.0.
+
+    You can find your PS3's IP address from the XMB under:
+    Settings > Network Settings > Setting & Connection Status List
 
 5 - Click Import again, this time locate and import keys.orp.  You only have
     to do this once for a new installation, or if there is a key update.
 
 6 - Select a profile, cross your fingers, and click Launch!
+
+NOTE: You can duplicate a profile by changing the PS3 Name and clicking Save.
+This is useful if you wish to keep two profiles, one for the local LAN, and
+another for Internet connections.
 
 Compilation
 -------------------------------------------------------------------------------
