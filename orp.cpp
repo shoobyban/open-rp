@@ -846,9 +846,11 @@ static Sint32 orpThreadAudioDecode(void *config)
 
 			SDL_LockMutex(feed.lock);
 			feed.frame.push(audioFrame);
+#if 0
 			if (feed.frame.size() > 10) {
 				orpPrintf("feed queue: %u\n", feed.frame.size());
 			}
+#endif
 			SDL_UnlockMutex(feed.lock);
 			decode_errors = 0;
 		} else if (decode_errors > 5) {
