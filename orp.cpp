@@ -44,6 +44,7 @@ static void orpOutput(const char *format, va_list ap)
 	if (log) {
 		fprintf(log, "%10u: ", SDL_GetTicks());
 		vfprintf(log, format, ap);
+		fflush(log);
 	}
 #ifndef _WIN32
 	vfprintf(stderr, format, ap);
