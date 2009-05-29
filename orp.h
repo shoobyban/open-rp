@@ -296,6 +296,7 @@ struct orpStreamData_t {
 struct orpClock_t {
 	Uint32 audio;
 	Uint32 video;
+	bool drain;
 	SDL_mutex *lock;
 	Uint32 decode;
 };

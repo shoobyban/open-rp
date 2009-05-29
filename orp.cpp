@@ -599,9 +599,12 @@ static Sint32 orpThreadVideoDecode(void *config)
 				drift = (Sint32)((double)delta / (double)90000 * (double)1000);
 			if (drift > 0) {
 				Uint32 delay = decode < drift ? drift - decode : drift;
-				if (delay > 1000)
+				if (delay > 1000) {
 					orpPrintf("Delay too large: %u\n", delay);
-				else SDL_Delay(delay);
+					SDL_LockMutex(_config->clock->lock);
+					_config->clock->drain = true;
+					SDL_UnlockMutex(_config->clock->lock);
+				} else SDL_Delay(delay);
 			}
 		}
 
@@ -847,6 +850,19 @@ static Sint32 orpThreadAudioDecode(void *config)
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
 			SDL_LockMutex(feed.lock);
+			SDL_LockMutex(_config->clock->lock);
+			if (_config->clock->drain == true) {
+				Uint32 i;
+				struct orpAudioFrame_t *frame;
+				while (feed.frame.size()) {
+					frame = feed.frame.front();
+					feed.frame.pop();
+					delete [] frame->data;
+					delete [] frame;
+				}
+				_config->clock->drain = false;
+			}
+			SDL_UnlockMutex(_config->clock->lock);
 			feed.frame.push(audioFrame);
 #if 0
 			if (feed.frame.size() > 10) {
@@ -1090,6 +1106,7 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	this->codec.push_back(oc);
 
 	clock.lock = SDL_CreateMutex();
+	clock.drain = false;
 	clock.audio = clock.video = clock.decode = 0;
 
 	video_buffer.fill = true;
@@ -1157,7 +1174,7 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Set caption and display splash logo
 	SetCaption("Open Remote Play");
 
-	if ((rw = SDL_RWFromConstMem(splash_png, splash_png_len))) {
+	if ((rw = SDL_RWFromConstMem(splash_version_png, splash_version_png_len))) {
 		SDL_Surface *splash = IMG_Load_RW(rw, 0);
 		if (splash) {
 			SDL_Rect rect;
@@ -2283,7 +2300,7 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					statePad, id, count, timestamp, headers);
 
 				// Sleep...
-				SDL_Delay(100);
+				SDL_Delay(50);
 
 				// Send key up...
 				id++;
@@ -2361,6 +2378,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		os.str("");
 		os << orpGetHeader(HEADER_MODE);
 		os << ": " << "PREMO";
+		//os << ": " << "REMOCON";
 		headers = curl_slist_append(headers, os.str().c_str());
 
 		os.str("");
