@@ -26,15 +26,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
+#include <syslog.h>
 #include <pthread.h>
 
+#include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#define ORP_PSP
+typedef unsigned char Uint8;
+typedef unsigned short Uint16;
+typedef unsigned int Uint32;
 #include "config.h"
 
-#define ORP_MAX_THREADS		256
+#define ORP_MAX_THREADS		64
 
 extern int errno;
 
@@ -61,18 +68,20 @@ static void *wol_reflect(void *arg)
 	struct thread_info *tinfo = (struct thread_info *)arg;
 
 	while (!tinfo->terminate) {
-		fprintf(stderr, "[%08x]: locking...\n", tinfo->id);
 		pthread_mutex_lock(&tinfo->mutex);
-		fprintf(stderr, "[%08x]: waiting...\n", tinfo->id);
 		tinfo->state = STATE_WAIT;
 		pthread_cond_wait(&tinfo->cond, &tinfo->mutex);
-		fprintf(stderr, "[%08x]: busy: %s\n", tinfo->id,
-			inet_ntoa(tinfo->client.sin_addr));
+		if (tinfo->terminate) {
+			pthread_mutex_unlock(&tinfo->mutex);
+			break;
+		}
 		tinfo->state = STATE_BUSY;
+		syslog(LOG_DAEMON | LOG_DEBUG, "[%08x]: reflecting: %s", tinfo->id,
+			inet_ntoa(tinfo->client.sin_addr));
 
 		int sd;
 		if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-			fprintf(stderr, "[%08x]: socket: %s\n", tinfo->id, strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: socket: %s", tinfo->id, strerror(errno));
 		}
 
 		struct sockaddr_in sin;
@@ -81,22 +90,26 @@ static void *wol_reflect(void *arg)
 		sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		if (bind(sd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0) {
-			fprintf(stderr, "[%08x]: bind: %s\n", tinfo->id, strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: bind: %s", tinfo->id, strerror(errno));
 		}
 
 		tinfo->client.sin_port = htons(ORP_PORT);
 		if (sendto(sd, tinfo->pkt, ORP_WOLPKT_LEN, 0,
 			(struct sockaddr *)&tinfo->client, sizeof(struct sockaddr_in)) != ORP_WOLPKT_LEN) {
-			fprintf(stderr, "[%08x]: sendto: %s\n", tinfo->id, strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: sendto: %s", tinfo->id, strerror(errno));
 		}
 		close(sd);
 
-		fprintf(stderr, "[%08x]: unlocking...\n", tinfo->id);
 		pthread_mutex_unlock(&tinfo->mutex);
 	}
 
-	fprintf(stderr, "[%08x]: terminate...\n", tinfo->id);
 	return NULL;
+}
+
+static int last_signal = 0;
+static void sighandler(int sig)
+{
+	last_signal = sig;
 }
 
 int main(int argc, char *argv[])
@@ -105,9 +118,12 @@ int main(int argc, char *argv[])
 	pthread_attr_t attr;
 	struct thread_info *tinfo;
 
+	daemon(0, 0);
+	openlog("orpwol", LOG_PID, LOG_DAEMON);
+
 	int sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sd < 0) {
-		fprintf(stderr, "socket: %s\n", strerror(errno));
+		syslog(LOG_DAEMON | LOG_ERR, "socket: %s", strerror(errno));
 		return -1;
 	}
 
@@ -118,39 +134,39 @@ int main(int argc, char *argv[])
 	sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(sd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0) {
-		fprintf(stderr, "bind: %s\n", strerror(errno));
+		syslog(LOG_DAEMON | LOG_ERR, "bind: %s", strerror(errno));
 		return -1;
 	}
 
 	if (pthread_attr_init(&attr) != 0) {
-		fprintf(stderr, "pthread_attr_init: %s\n", strerror(errno));
+		syslog(LOG_DAEMON | LOG_ERR, "pthread_attr_init: %s", strerror(errno));
 		return -1;
 	}
 
 	tinfo = calloc(ORP_MAX_THREADS, sizeof(struct thread_info));
 	if (!tinfo) {
-		fprintf(stderr, "calloc: %s\n", strerror(errno));
+		syslog(LOG_DAEMON | LOG_ERR, "calloc: %s", strerror(errno));
 		return -1;
 	}
 
 	for (i = 0; i < ORP_MAX_THREADS; i++) {
 		if (pthread_cond_init(&tinfo[i].cond, NULL)) {
-			fprintf(stderr, "pthread_cond_init: %s\n", strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "pthread_cond_init: %s", strerror(errno));
 			return -1;
 		}
 		if (pthread_mutex_init(&tinfo[i].mutex, NULL)) {
-			fprintf(stderr, "pthread_mutex_init: %s\n", strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "pthread_mutex_init: %s", strerror(errno));
 			return -1;
 		}
 		if (pthread_create(&tinfo[i].id,
 			&attr, &wol_reflect, &tinfo[i]) != 0) {
-			fprintf(stderr, "pthread_create: %s\n", strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "pthread_create: %s", strerror(errno));
 			return -1;
 		}
 	}
 
 	if (pthread_attr_destroy(&attr) != 0) {
-		fprintf(stderr, "pthread_attr_destroy: %s\n", strerror(errno));
+		syslog(LOG_DAEMON | LOG_ERR, "pthread_attr_destroy: %s", strerror(errno));
 		return -1;
 	}
 
@@ -162,9 +178,21 @@ int main(int argc, char *argv[])
 		if (c == ORP_MAX_THREADS) break;
 	}
 
-	fprintf(stderr, "ready.\n");
+	signal(SIGINT, sighandler);
+	signal(SIGTERM, sighandler);
+	signal(SIGHUP, sighandler);
 
-	while (1) {
+	syslog(LOG_DAEMON | LOG_INFO, "ready.");
+
+	while (last_signal == 0) {
+		fd_set fds;
+		FD_ZERO(&fds);
+		FD_SET(sd, &fds);
+		struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 500;
+		if (select(sd + 1, &fds, NULL, NULL, &tv) != 1) continue;
+
 		ssize_t plen;
 		socklen_t slen = sizeof(struct sockaddr_in);
 		struct sockaddr_in client;
@@ -172,10 +200,12 @@ int main(int argc, char *argv[])
 		unsigned char pkt[ORP_WOLPKT_LEN];
 		if ((plen = recvfrom(sd, pkt, ORP_WOLPKT_LEN, 0,
 			(struct sockaddr *)&client, &slen)) < 0) {
-			fprintf(stderr, "recvfrom: %s\n", strerror(errno));
+			syslog(LOG_DAEMON | LOG_ERR, "recvfrom: %s", strerror(errno));
 			return -1;
 		}
+
 		if (plen != ORP_WOLPKT_LEN) continue;
+
 		for (i = 0; i < ORP_MAX_THREADS; i++) {
 			if (tinfo[i].state != STATE_WAIT) continue;
 			pthread_mutex_lock(&tinfo[i].mutex);
@@ -186,9 +216,8 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-#if 0
-	// TODO: Not implemented... being lazy.
-	fprintf(stderr, "shutdown...\n");
+
+	syslog(LOG_DAEMON | LOG_INFO, "shutdown...");
 
 	for (i = 0; i < ORP_MAX_THREADS; i++) {
 		pthread_mutex_lock(&tinfo[i].mutex);
@@ -196,8 +225,13 @@ int main(int argc, char *argv[])
 		pthread_cond_signal(&tinfo[i].cond);
 		pthread_mutex_unlock(&tinfo[i].mutex);
 		pthread_join(tinfo[i].id, NULL);
+		pthread_cond_destroy(&tinfo[i].cond);
+		pthread_mutex_destroy(&tinfo[i].mutex);
 	}
-#endif
+
+	free(tinfo);
+	closelog();
+
 	return 0;
 }
 
