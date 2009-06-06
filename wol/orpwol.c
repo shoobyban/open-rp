@@ -30,8 +30,9 @@
 #include <syslog.h>
 #include <pthread.h>
 
-#include <sys/select.h>
 #include <sys/types.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -42,8 +43,84 @@ typedef unsigned int Uint32;
 #include "config.h"
 
 #define ORP_MAX_THREADS		64
+#define ORP_MAX_REQUEST		15
 
 extern int errno;
+
+struct client_stats_t
+{
+	struct timeval tv;
+	struct in_addr in;
+	struct client_stats_t *next;
+	struct client_stats_t *prev;
+};
+
+static struct client_stats_t *client_stats = NULL;
+
+enum client_result {
+	CLIENT_OK,
+	CLIENT_IGNORE
+};
+
+static enum client_result client_update(struct in_addr *in)
+{
+	struct client_stats_t *stats = client_stats;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	while (stats) {
+		if (tv.tv_sec - stats->tv.tv_sec > ORP_MAX_REQUEST) {
+			if (stats->prev == NULL) {
+				client_stats = stats->next;
+				if (stats->next) stats->next->prev = NULL;
+			} else {
+				stats->prev->next = stats->next;
+				if (stats->next) stats->next->prev = stats->prev;
+			}
+
+			free(stats);
+			stats = client_stats;
+			continue;
+		}
+		if (!memcmp(&stats->in, in, sizeof(struct in_addr))) {
+			if (tv.tv_sec - stats->tv.tv_sec < ORP_MAX_REQUEST) {
+				memcpy(&stats->tv, &tv, sizeof(struct timeval));
+				syslog(LOG_DAEMON | LOG_WARNING,
+					"throttle: %s", inet_ntoa(*in));
+				return CLIENT_IGNORE;
+			} else {
+				memcpy(&stats->tv, &tv, sizeof(struct timeval));
+				return CLIENT_OK;
+			}
+		}
+
+		stats = stats->next;
+	}
+
+	stats = malloc(sizeof(struct client_stats_t));
+	if (!stats) return CLIENT_IGNORE;
+
+	memcpy(&stats->tv, &tv, sizeof(struct timeval));
+	memcpy(&stats->in, in, sizeof(struct in_addr));
+	stats->prev = NULL;
+	stats->next = client_stats;
+	client_stats = stats;
+
+	return CLIENT_OK;
+}
+
+static void client_dump(void)
+{
+	struct client_stats_t *stats = client_stats;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	while (stats) {
+		syslog(LOG_DAEMON | LOG_DEBUG, "%s: %d", inet_ntoa(stats->in),
+			tv.tv_sec - stats->tv.tv_sec);
+		stats = stats->next;
+	}
+}
 
 enum thread_state
 {
@@ -205,6 +282,8 @@ int main(int argc, char *argv[])
 		}
 
 		if (plen != ORP_WOLPKT_LEN) continue;
+//		client_dump();
+		if (client_update(&client.sin_addr) != CLIENT_OK) continue;
 
 		for (i = 0; i < ORP_MAX_THREADS; i++) {
 			if (tinfo[i].state != STATE_WAIT) continue;
@@ -229,6 +308,7 @@ int main(int argc, char *argv[])
 		pthread_mutex_destroy(&tinfo[i].mutex);
 	}
 
+	close(sd);
 	free(tinfo);
 	closelog();
 
