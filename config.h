@@ -36,6 +36,9 @@
 // Default Remote Play TCP/UDP port
 #define ORP_PORT			9293
 
+// WoL packet length
+#define ORP_WOLPKT_LEN		256
+
 // Config format version
 #define ORP_CONFIG_VER		1
 
