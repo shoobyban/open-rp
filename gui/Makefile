@@ -36,11 +36,27 @@ $(TARGET): $(OBJECTS)
 	@echo "[L] $@"
 	@$(CXX) $(LDFLAGS) $(CXXFLAGS) $(OBJECTS) $(LIBS) -o $@
 
-images:
+images::
 	@echo "#ifndef _IMAGES_H" > images.h
 	@echo "#define _IMAGES_H" >> images.h
-	@xxd -i ./images/edit.png >> images.h
 	@xxd -i ./images/logo.png >> images.h
+	@xxd -i ./images/circle.png >> images.h
+	@xxd -i ./images/dp-down.png >> images.h
+	@xxd -i ./images/dp-left.png >> images.h
+	@xxd -i ./images/dp-right.png >> images.h
+	@xxd -i ./images/dp-up.png >> images.h
+	@xxd -i ./images/l1.png >> images.h
+	@xxd -i ./images/l2.png >> images.h
+	@xxd -i ./images/l3.png >> images.h
+	@xxd -i ./images/ps.png >> images.h
+	@xxd -i ./images/r1.png >> images.h
+	@xxd -i ./images/r2.png >> images.h
+	@xxd -i ./images/r3.png >> images.h
+	@xxd -i ./images/select.png >> images.h
+	@xxd -i ./images/square.png >> images.h
+	@xxd -i ./images/start.png >> images.h
+	@xxd -i ./images/triangle.png >> images.h
+	@xxd -i ./images/x.png >> images.h
 	@echo "#endif // _IMAGES_H" >> images.h
 
 clean:
