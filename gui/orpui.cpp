@@ -55,12 +55,11 @@ EVT_BUTTON(wxID_CANCEL, orpUIEditFrame::OnCancel)
 EVT_BUTTON(wxID_DELETE, orpUIEditFrame::OnDelete)
 END_EVENT_TABLE()
 
-BEGIN_EVENT_TABLE(orpUIJoystickPanel, wxPanel)
-EVT_PAINT(orpUIJoystickPanel::OnPaint)
+BEGIN_EVENT_TABLE(orpUIKeyboardPanel, wxPanel)
+EVT_PAINT(orpUIKeyboardPanel::OnPaint)
 END_EVENT_TABLE()
 
-BEGIN_EVENT_TABLE(orpUIJoystickFrame, wxFrame)
-EVT_BUTTON(orpID_SCAN, orpUIJoystickFrame::OnScan)
+BEGIN_EVENT_TABLE(orpUIKeyboardFrame, wxFrame)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(orpUIApp)
@@ -69,8 +68,7 @@ bool orpUIApp::OnInit()
 {
 	::wxInitAllImageHandlers();
 
-	orpUIFrame *frame = new orpUIFrame( _T("Open Remote Play v"ORP_VERSION),
-		wxPoint(50, 50), wxSize(340, 480));
+	orpUIFrame *frame = new orpUIFrame( _T("Open Remote Play"));
 	frame->Show(TRUE);
 	SetTopWindow(frame);
 
@@ -81,7 +79,7 @@ orpUIPanel::orpUIPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
 		wxDefaultSize, wxTAB_TRAVERSAL)
 {
-	wxMemoryInputStream image(logo_png, logo_png_len);
+	wxMemoryInputStream image(__images_logo_png, __images_logo_png_len);
 	logo = new wxImage(image);
 }
 
@@ -92,9 +90,8 @@ void orpUIPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 	dc.DrawBitmap(bitmap, 5, 5, TRUE);
 }
 
-orpUIFrame::orpUIFrame(const wxString& title,
-	const wxPoint& pos, const wxSize& size)
-	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size)
+orpUIFrame::orpUIFrame(const wxString& title)
+	: wxFrame((wxFrame *)NULL, wxID_ANY, title)
 {
 #ifndef __WXMAC__
 	wxIcon icon;
@@ -138,8 +135,8 @@ orpUIFrame::orpUIFrame(const wxString& title,
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	button_sizer->Add(new wxButton(panel, wxID_EDIT),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-//	button_sizer->Add(new wxButton(panel, orpID_CONFIG, _T("&Config")),
-//		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	button_sizer->Add(new wxButton(panel, orpID_CONFIG, _T("&Config")),
+		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	button_sizer->Add(new wxButton(panel, wxID_DELETE),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	wxButton *launch = new wxButton(panel, orpID_LAUNCH, _T("&Launch!"));
@@ -154,6 +151,7 @@ orpUIFrame::orpUIFrame(const wxString& title,
 	SetStatusText(_T("http://ps3-hacks.com"));
 
 	frame_sizer->SetSizeHints(panel);
+	SetInitialSize();
 	SetMinSize(panel->GetSize());
 
 	int width, height;
@@ -243,8 +241,8 @@ void orpUIFrame::OnEdit(wxCommandEvent& WXUNUSED(event))
 
 void orpUIFrame::OnConfig(wxCommandEvent& WXUNUSED(event))
 {
-	orpUIJoystickFrame *joyframe = new orpUIJoystickFrame(this);
-	joyframe->Show();
+	orpUIKeyboardFrame *frame = new orpUIKeyboardFrame(this);
+	frame->Show();
 }
 
 void orpUIFrame::OnDelete(wxCommandEvent& WXUNUSED(event))
@@ -358,15 +356,24 @@ orpUIEditPanel::orpUIEditPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
 		wxDefaultSize, wxTAB_TRAVERSAL)
 {
-	wxMemoryInputStream image(edit_png, edit_png_len);
+#if 0
+	wxMemoryInputStream image(__images_edit_png, __images_edit_png_len);
 	logo = new wxImage(image);
+#endif
 }
 
 void orpUIEditPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
+#if 0
 	wxPaintDC dc(this);
 	wxBitmap bitmap(*logo);
-	dc.DrawBitmap(bitmap, logo_offset.x, logo_offset.y, TRUE);
+	wxSize size = GetSize();
+	wxPoint offset;
+	offset.y = 0;
+	if (bitmap.GetWidth() > size.GetWidth()) offset.x = 0;
+	else offset.x = size.GetWidth() - bitmap.GetWidth();
+	dc.DrawBitmap(bitmap, offset.x, offset.y, TRUE);
+#endif
 }
 
 orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
@@ -400,17 +407,6 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(50, -1, 0);
-	psp_owner = new wxTextCtrl(panel, wxID_ANY, 
-		wxString((const char *)record->psp_owner, wxConvUTF8),
-		wxDefaultPosition, wxSize(180, -1));
-	row_sizer->Add(psp_owner, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-
-	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("PSP Owner:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM | wxTOP, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(50, -1, 0);
 	ps3_hostname = new wxTextCtrl(panel, wxID_ANY, 
 		wxString((const char *)record->ps3_hostname, wxConvUTF8),
 		wxDefaultPosition, wxSize(180, -1));
@@ -435,78 +431,13 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	row_sizer->Add(ps3_nosrch, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
-	int i;
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (i = 0; i < ORP_MAC_LEN; i++) {
-		wxString octet;
-		octet.Printf(_T("%02X"), record->ps3_mac[i]);
-		ps3_mac[i] = new wxTextCtrl(panel, wxID_ANY, octet,
-			wxDefaultPosition, wxSize(32, -1));
-		ps3_mac[i]->SetEditable(false);
-		row_sizer->Add(ps3_mac[i], 0, wxRIGHT | wxBOTTOM, 5);
-	}
-
-	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("PS3 MAC Address:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (i = 0; i < ORP_MAC_LEN; i++) {
-		wxString octet;
-		octet.Printf(_T("%02X"), record->psp_mac[i]);
-		psp_mac[i] = new wxTextCtrl(panel, wxID_ANY, octet,
-			wxDefaultPosition, wxSize(32, -1));
-		psp_mac[i]->SetEditable(false);
-		row_sizer->Add(psp_mac[i], 0, wxRIGHT | wxBOTTOM, 5);
-	}
-
-	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("PSP MAC Address:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (i = 0; i < ORP_KEY_LEN; i++) {
-		wxString octet;
-		octet.Printf(_T("%02X"), record->psp_id[i]);
-		psp_id[i] = new wxTextCtrl(panel, wxID_ANY, octet,
-			wxDefaultPosition, wxSize(32, -1));
-		psp_id[i]->SetEditable(false);
-	}
-	for (i = 0; i < 8; i++) row_sizer->Add(psp_id[i], 0, wxRIGHT, 5);
-
-	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("PSP ID:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer, 0, wxBOTTOM, 2);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (; i < ORP_KEY_LEN; i++)
-		row_sizer->Add(psp_id[i], 0, wxRIGHT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (i = 0; i < ORP_KEY_LEN; i++) {
-		wxString octet;
-		octet.Printf(_T("%02X"), record->pkey[i]);
-		pkey[i] = new wxTextCtrl(panel, wxID_ANY, octet,
-			wxDefaultPosition, wxSize(32, -1));
-		pkey[i]->SetEditable(false);
-	}
-	for (i = 0; i < 8; i++) row_sizer->Add(pkey[i], 0, wxRIGHT, 5);
-
-	frame_sizer->Add(new wxStaticText(panel, wxID_ANY,
-		_T("Remote Play Private Key:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer, 0, wxBOTTOM, 2);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(55, -1, 0);
-	for (; i < ORP_KEY_LEN; i++)
-		row_sizer->Add(pkey[i], 0, wxRIGHT | wxBOTTOM, 5);
+	row_sizer->Add(50, -1, 0);
+	ps3_wolr = new wxCheckBox(panel, wxID_ANY,
+		_T("Enable WoL Reflector?"));
+	if (record->flags & ORP_CONFIG_WOLR)
+		ps3_wolr->SetValue(true);
+	row_sizer->Add(ps3_wolr, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -522,6 +453,7 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 
 	panel->SetSizer(frame_sizer);
 	frame_sizer->SetSizeHints(panel);
+	SetInitialSize();
 	wxSize size = panel->GetSize();
 #ifdef __WXMAC__
 	size.SetHeight(size.GetHeight() + 20);
@@ -529,12 +461,6 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	size.SetHeight(size.GetHeight() + 40);
 #endif
 	SetMinSize(size);
-
-	wxPoint pos1 = ps3_nickname->GetPosition();
-	wxPoint pos2 = psp_owner->GetPosition();
-	size = ps3_nickname->GetSize();
-	panel->SetLogoOffset(pos1, pos2, size);
-
 	CenterOnParent();
 }
 
@@ -556,16 +482,16 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	wxString value(ps3_nickname->GetValue().Mid(0, ORP_NICKNAME_LEN - 1));
 	strcpy((char *)record->ps3_nickname, value.fn_str());
 	record->ps3_port = (unsigned short)ps3_port->GetValue();
-	value = psp_owner->GetValue().Mid(0, ORP_NICKNAME_LEN - 1);
-	strcpy((char *)record->psp_owner, value.fn_str());
 	value = ps3_hostname->GetValue().Mid(0, ORP_HOSTNAME_LEN - 1);
 	strcpy((char *)record->ps3_hostname, value.fn_str());
 	if (ps3_nosrch->IsChecked())
 		record->flags |= ORP_CONFIG_NOSRCH;
 	else
 		record->flags &= ~ORP_CONFIG_NOSRCH;
-
-	// TODO: finish saving the rest of the config...
+	if (ps3_wolr->IsChecked())
+		record->flags |= ORP_CONFIG_WOLR;
+	else
+		record->flags &= ~ORP_CONFIG_WOLR;
 
 	orpConfigSave(config, record);
 
@@ -573,66 +499,145 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	::wxPostEvent(GetParent(), event);
 }
 
-orpUIJoystickPanel::orpUIJoystickPanel(wxFrame *parent)
+orpUIKeyboardPanel::orpUIKeyboardPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
 		wxSize(320, 240), wxTAB_TRAVERSAL)
 {
-//	wxMemoryInputStream image(logo_png, logo_png_len);
-//	logo = new wxImage(image);
 }
 
-void orpUIJoystickPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
+void orpUIKeyboardPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 //	wxBitmap bitmap(*logo);
 //	dc.DrawBitmap(bitmap, 5, 5, TRUE);
 }
 
-orpUIJoystickFrame::orpUIJoystickFrame(wxFrame *parent)
-	: wxFrame(parent, wxID_ANY, _T("Joystick Configuration"))
+orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
+	: wxFrame(parent, wxID_ANY, _T("Keyboard Configuration"))
 {
 #ifndef __WXMAC__
 	wxIcon icon;
 	icon.LoadFile(_T("icon.ico"), wxBITMAP_TYPE_ICO);
 	SetIcon(icon);
 #endif
-
-	orpUIJoystickPanel *panel = new orpUIJoystickPanel(this);
-
+	orpUIKeyboardPanel *panel = new orpUIKeyboardPanel(this);
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer *row_sizer;
+	
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_SQUARE), 0, wxALL, 5);
+	row_sizer->Add(CreateButton(panel, orpID_TRIANGLE), 0, wxALL, 5);
+	frame_sizer->Add(row_sizer);
 
-	wxBoxSizer *button_sizer = new wxBoxSizer(wxHORIZONTAL);
-	jslist = new wxComboBox(panel, wxID_ANY,
-		wxEmptyString, wxDefaultPosition,
-		wxDefaultSize, 0, NULL, wxCB_READONLY | wxCB_SORT | wxCB_DROPDOWN);
-//	jslist->SetPopupControl(new wxListViewComboPopup());
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_CIRCLE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_X), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
 
-	button_sizer->Add(jslist, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	button_sizer->Add(new wxButton(panel, orpID_SCAN, _T("&Scan")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_DP_LEFT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_DP_RIGHT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
 
-	frame_sizer->Add(button_sizer, 0, wxALIGN_CENTER);
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_DP_UP), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_DP_DOWN), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_SELECT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_START), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_L1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_R1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_L2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_R2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_L3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_R3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_HOME), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer, 0, wxALIGN_CENTER);
 
 	panel->SetSizer(frame_sizer);
 	frame_sizer->SetSizeHints(panel);
-//	SetMinSize(size);
+	SetInitialSize();
+	wxSize size = panel->GetSize();
+	SetMinSize(size);
 
 	CenterOnParent();
 }
 
-void orpUIJoystickFrame::OnScan(wxCommandEvent& WXUNUSED(event))
+wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 {
-#if 0
-	int jc = wxJoystick::GetNumberJoysticks();
-	std::cerr << "joysticks: " << jc << std::endl;
-		wxJoystick stick(0);
-	int i;
-	for (i = 0; i < jc; i++) {
-		wxJoystick stick(i);
-		if (stick.IsOk())
-		jslist->Insert(stick.GetProductName(), 0);
+	wxMemoryInputStream *stream = NULL;
+
+	switch (id) {
+	case orpID_CIRCLE:
+		stream = new wxMemoryInputStream(__images_circle_png, __images_circle_png_len);
+		break;
+	case orpID_SQUARE:
+		stream = new wxMemoryInputStream(__images_square_png, __images_square_png_len);
+		break;
+	case orpID_TRIANGLE:
+		stream = new wxMemoryInputStream(__images_triangle_png, __images_triangle_png_len);
+		break;
+	case orpID_X:
+		stream = new wxMemoryInputStream(__images_x_png, __images_x_png_len);
+		break;
+	case orpID_DP_LEFT:
+		stream = new wxMemoryInputStream(__images_dp_left_png, __images_dp_left_png_len);
+		break;
+	case orpID_DP_RIGHT:
+		stream = new wxMemoryInputStream(__images_dp_right_png, __images_dp_right_png_len);
+		break;
+	case orpID_DP_UP:
+		stream = new wxMemoryInputStream(__images_dp_up_png, __images_dp_up_png_len);
+		break;
+	case orpID_DP_DOWN:
+		stream = new wxMemoryInputStream(__images_dp_down_png, __images_dp_down_png_len);
+		break;
+	case orpID_SELECT:
+		stream = new wxMemoryInputStream(__images_select_png, __images_select_png_len);
+		break;
+	case orpID_START:
+		stream = new wxMemoryInputStream(__images_start_png, __images_start_png_len);
+		break;
+	case orpID_L1:
+		stream = new wxMemoryInputStream(__images_l1_png, __images_l1_png_len);
+		break;
+	case orpID_L2:
+		stream = new wxMemoryInputStream(__images_l2_png, __images_l2_png_len);
+		break;
+	case orpID_L3:
+		stream = new wxMemoryInputStream(__images_l3_png, __images_l3_png_len);
+		break;
+	case orpID_R1:
+		stream = new wxMemoryInputStream(__images_r1_png, __images_r1_png_len);
+		break;
+	case orpID_R2:
+		stream = new wxMemoryInputStream(__images_r2_png, __images_r2_png_len);
+		break;
+	case orpID_R3:
+		stream = new wxMemoryInputStream(__images_r3_png, __images_r3_png_len);
+		break;
+	case orpID_HOME:
+		stream = new wxMemoryInputStream(__images_ps_png, __images_ps_png_len);
+		break;
 	}
-#endif
+
+	wxBitmapButton *button = new wxBitmapButton(parent, id, wxBitmap(wxImage(*stream)));
+	delete stream;
+	return button;
 }
 
 // vi: ts=4

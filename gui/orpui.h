@@ -37,6 +37,23 @@
 #define orpID_REFRESH	(wxID_HIGHEST + 3)
 #define orpID_CONFIG	(wxID_HIGHEST + 4)
 #define orpID_SCAN		(wxID_HIGHEST + 5)
+#define orpID_CIRCLE	(wxID_HIGHEST + 6)
+#define orpID_SQUARE	(wxID_HIGHEST + 7)
+#define orpID_TRIANGLE	(wxID_HIGHEST + 8)
+#define orpID_X			(wxID_HIGHEST + 9)
+#define orpID_DP_LEFT	(wxID_HIGHEST + 10)
+#define orpID_DP_RIGHT	(wxID_HIGHEST + 11)
+#define orpID_DP_UP		(wxID_HIGHEST + 12)
+#define orpID_DP_DOWN	(wxID_HIGHEST + 13)
+#define orpID_SELECT	(wxID_HIGHEST + 14)
+#define orpID_START		(wxID_HIGHEST + 15)
+#define orpID_L1		(wxID_HIGHEST + 16)
+#define orpID_L2		(wxID_HIGHEST + 17)
+#define orpID_L3		(wxID_HIGHEST + 18)
+#define orpID_R1		(wxID_HIGHEST + 19)
+#define orpID_R2		(wxID_HIGHEST + 20)
+#define orpID_R3		(wxID_HIGHEST + 21)
+#define orpID_HOME		(wxID_HIGHEST + 22)
 
 class orpUIApp : public wxApp
 {
@@ -50,14 +67,6 @@ public:
 	orpUIEditPanel(wxFrame *parent);
 
 	void OnPaint(wxPaintEvent& event);
-	void SetLogoOffset(wxPoint& pos1, wxPoint& pos2, wxSize &size)
-	{
-		int image_height = logo->GetHeight();
-		logo_offset.x = pos1.x + size.GetWidth() + 10;
-		logo_offset.y = pos1.y;
-		logo_offset.y += size.GetHeight();
-		logo_offset.y = (pos2.y - ((pos2.y - logo_offset.y) / 2)) - image_height / 2;
-	};
 
 	DECLARE_EVENT_TABLE()
 
@@ -83,20 +92,16 @@ private:
 	struct orpConfigCtx_t *config;
 	struct orpConfigRecord_t *record;
 	wxTextCtrl *ps3_nickname;
-	wxTextCtrl *psp_owner;
 	wxTextCtrl *ps3_hostname;
 	wxSpinCtrl *ps3_port;
 	wxCheckBox *ps3_nosrch;
-	wxTextCtrl *ps3_mac[ORP_MAC_LEN];
-	wxTextCtrl *psp_mac[ORP_MAC_LEN];
-	wxTextCtrl *psp_id[ORP_KEY_LEN];
-	wxTextCtrl *pkey[ORP_KEY_LEN];
+	wxCheckBox *ps3_wolr;
 };
 
-class orpUIJoystickPanel : public wxPanel
+class orpUIKeyboardPanel : public wxPanel
 {
 public:
-	orpUIJoystickPanel(wxFrame *parent);
+	orpUIKeyboardPanel(wxFrame *parent);
 
 	void OnPaint(wxPaintEvent& event);
 
@@ -106,17 +111,17 @@ private:
 //	wxImage *logo;
 };
 
-class orpUIJoystickFrame : public wxFrame
+class orpUIKeyboardFrame : public wxFrame
 {
 public:
-	orpUIJoystickFrame(wxFrame *parent);
+	orpUIKeyboardFrame(wxFrame *parent);
 
 	void OnScan(wxCommandEvent& event);
 
 	DECLARE_EVENT_TABLE()
 
 private:
-	wxComboBox *jslist;
+	wxBitmapButton *CreateButton(wxWindow *parent, wxWindowID id);
 };
 
 class orpUIPanel : public wxPanel
@@ -135,7 +140,7 @@ private:
 class orpUIFrame : public wxFrame
 {
 public:
-	orpUIFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+	orpUIFrame(const wxString& title);
 
 	void OnImport(wxCommandEvent& event);
 	void OnEdit(wxCommandEvent& event);
