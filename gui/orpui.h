@@ -69,10 +69,6 @@ public:
 	void OnPaint(wxPaintEvent& event);
 
 	DECLARE_EVENT_TABLE()
-
-private:
-	wxImage *logo;
-	wxPoint logo_offset;
 };
 
 class orpUIEditFrame : public wxFrame
@@ -98,6 +94,24 @@ private:
 	wxCheckBox *ps3_wolr;
 };
 
+class orpKeyboardCtrl : public wxTextCtrl
+{
+public:
+	orpKeyboardCtrl(wxWindow *parent);
+
+	DECLARE_EVENT_TABLE()
+
+	void OnKeyDown(wxKeyEvent& event);
+	void UpdateValue(void);
+
+private:
+	int key;
+	bool ctrl;
+	bool shift;
+	bool alt;
+	bool meta;
+};
+
 class orpUIKeyboardPanel : public wxPanel
 {
 public:
@@ -116,12 +130,31 @@ class orpUIKeyboardFrame : public wxFrame
 public:
 	orpUIKeyboardFrame(wxFrame *parent);
 
-	void OnScan(wxCommandEvent& event);
+	void OnCancel(wxCommandEvent& event);
+	void OnButton(wxCommandEvent& event);
 
 	DECLARE_EVENT_TABLE()
 
 private:
 	wxBitmapButton *CreateButton(wxWindow *parent, wxWindowID id);
+
+	orpKeyboardCtrl *bt_square;
+	orpKeyboardCtrl *bt_triangle;
+	orpKeyboardCtrl *bt_circle;
+	orpKeyboardCtrl *bt_x;
+	orpKeyboardCtrl *bt_dp_left;
+	orpKeyboardCtrl *bt_dp_right;
+	orpKeyboardCtrl *bt_dp_up;
+	orpKeyboardCtrl *bt_dp_down;
+	orpKeyboardCtrl *bt_select;
+	orpKeyboardCtrl *bt_start;
+	orpKeyboardCtrl *bt_l1;
+	orpKeyboardCtrl *bt_l2;
+	orpKeyboardCtrl *bt_l3;
+	orpKeyboardCtrl *bt_r1;
+	orpKeyboardCtrl *bt_r2;
+	orpKeyboardCtrl *bt_r3;
+	orpKeyboardCtrl *bt_home;
 };
 
 class orpUIPanel : public wxPanel
@@ -135,6 +168,7 @@ public:
 
 private:
 	wxImage *logo;
+	wxImage *dash_hacks;
 };
 
 class orpUIFrame : public wxFrame

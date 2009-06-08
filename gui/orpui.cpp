@@ -29,6 +29,8 @@
 #include <wx/stdpaths.h>
 #include <wx/joystick.h>
 
+#include <sstream>
+
 #include "images.h"
 
 BEGIN_EVENT_TABLE(orpUIPanel, wxPanel)
@@ -60,6 +62,28 @@ EVT_PAINT(orpUIKeyboardPanel::OnPaint)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIKeyboardFrame, wxFrame)
+EVT_BUTTON(wxID_CANCEL, orpUIKeyboardFrame::OnCancel)
+EVT_BUTTON(orpID_CIRCLE, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_SQUARE, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_TRIANGLE, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_X, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_DP_LEFT, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_DP_RIGHT, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_DP_UP, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_DP_DOWN, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_SELECT, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_START, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_L1, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_L2, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_L3, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_R1, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_R2, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_R3, orpUIKeyboardFrame::OnButton)
+EVT_BUTTON(orpID_HOME, orpUIKeyboardFrame::OnButton)
+END_EVENT_TABLE()
+
+BEGIN_EVENT_TABLE(orpKeyboardCtrl, wxTextCtrl)
+EVT_KEY_DOWN(orpKeyboardCtrl::OnKeyDown)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(orpUIApp)
@@ -79,15 +103,26 @@ orpUIPanel::orpUIPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
 		wxDefaultSize, wxTAB_TRAVERSAL)
 {
-	wxMemoryInputStream image(__images_logo_png, __images_logo_png_len);
-	logo = new wxImage(image);
+	wxMemoryInputStream *image;
+	image = new wxMemoryInputStream(__images_logo_png, __images_logo_png_len);
+	logo = new wxImage(*image);
+	delete image;
+	image = new wxMemoryInputStream(__images_dash_hacks_png, __images_dash_hacks_png_len);
+	dash_hacks = new wxImage(*image);
+	delete image;
 }
 
 void orpUIPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
-	wxBitmap bitmap(*logo);
-	dc.DrawBitmap(bitmap, 5, 5, TRUE);
+	wxBitmap *bitmap;
+	bitmap = new wxBitmap(*dash_hacks);
+	dc.DrawBitmap(*bitmap, 0, 0, TRUE);
+	int width = bitmap->GetWidth();
+	delete bitmap;
+	bitmap = new wxBitmap(*logo);
+	dc.DrawBitmap(*bitmap, 5 + width, 5, TRUE);
+	delete bitmap;
 }
 
 orpUIFrame::orpUIFrame(const wxString& title)
@@ -135,7 +170,7 @@ orpUIFrame::orpUIFrame(const wxString& title)
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	button_sizer->Add(new wxButton(panel, wxID_EDIT),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	button_sizer->Add(new wxButton(panel, orpID_CONFIG, _T("&Config")),
+	button_sizer->Add(new wxButton(panel, orpID_CONFIG, _T("I&nput")),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	button_sizer->Add(new wxButton(panel, wxID_DELETE),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
@@ -499,9 +534,50 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	::wxPostEvent(GetParent(), event);
 }
 
+orpKeyboardCtrl::orpKeyboardCtrl(wxWindow *parent)
+	: ctrl(false), alt(false), shift(false), key(0),
+	wxTextCtrl(parent, wxID_ANY, wxEmptyString, wxDefaultPosition,
+		wxSize(180, -1), wxTE_PROCESS_ENTER | wxTE_PROCESS_TAB | wxTE_CENTER)
+{
+}
+
+void orpKeyboardCtrl::UpdateValue(void)
+{
+	std::ostringstream os;
+	if (ctrl) os << "CTRL+";
+	if (alt) os << "ALT+";
+	if (shift) os << "SHIFT+";
+	if (key) os << key;
+	SetValue(wxString((const char *)os.str().c_str(), wxConvUTF8));
+}
+
+void orpKeyboardCtrl::OnKeyDown(wxKeyEvent& event)
+{
+	switch (event.GetKeyCode()) {
+	case WXK_CONTROL:
+		if (ctrl) ctrl = false;
+		else ctrl = true;
+		break;
+	case WXK_ALT:
+		if (alt) alt = false;
+		else alt = true;
+		break;
+	case WXK_SHIFT:
+		if (shift) shift = false;
+		else shift = true;
+		break;
+	default:
+		key = event.GetKeyCode();
+		break;
+	}
+
+	UpdateValue();
+//	event.Skip();
+}
+
 orpUIKeyboardPanel::orpUIKeyboardPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
-		wxSize(320, 240), wxTAB_TRAVERSAL)
+		wxDefaultSize, wxTAB_TRAVERSAL)
 {
 }
 
@@ -513,7 +589,7 @@ void orpUIKeyboardPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 }
 
 orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
-	: wxFrame(parent, wxID_ANY, _T("Keyboard Configuration"))
+	: wxFrame(parent, wxID_ANY, _T("Input Key Bindings"))
 {
 #ifndef __WXMAC__
 	wxIcon icon;
@@ -523,50 +599,131 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	orpUIKeyboardPanel *panel = new orpUIKeyboardPanel(this);
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *row_sizer;
+	wxTextCtrl *txt;
 	
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_SQUARE), 0, wxALL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_TRIANGLE), 0, wxALL, 5);
+	row_sizer->Add(CreateButton(panel, orpID_HOME), 0, wxALL, 5);
+	bt_home = new orpKeyboardCtrl(panel);
+	bt_home->SetEditable(false);
+	bt_home->Enable(false);
+	row_sizer->Add(bt_home, 0, wxALIGN_CENTER_VERTICAL, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_SQUARE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_square = new orpKeyboardCtrl(panel);
+	bt_square->SetEditable(false);
+	bt_square->Enable(false);
+	row_sizer->Add(bt_square, 0, wxALIGN_CENTER_VERTICAL, 5);
+	row_sizer->Add(CreateButton(panel, orpID_TRIANGLE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_triangle = new orpKeyboardCtrl(panel);
+	bt_triangle->SetEditable(false);
+	bt_triangle->Enable(false);
+	row_sizer->Add(bt_triangle, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_CIRCLE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_circle = new orpKeyboardCtrl(panel);
+	bt_circle->SetEditable(false);
+	bt_circle->Enable(false);
+	row_sizer->Add(bt_circle, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_X), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_x = new orpKeyboardCtrl(panel);
+	bt_x->SetEditable(false);
+	bt_x->Enable(false);
+	row_sizer->Add(bt_x, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_DP_LEFT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_dp_left = new orpKeyboardCtrl(panel);
+	bt_dp_left->SetEditable(false);
+	bt_dp_left->Enable(false);
+	row_sizer->Add(bt_dp_left, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_DP_RIGHT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_dp_right = new orpKeyboardCtrl(panel);
+	bt_dp_right->SetEditable(false);
+	bt_dp_right->Enable(false);
+	row_sizer->Add(bt_dp_right, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_DP_UP), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_dp_up = new orpKeyboardCtrl(panel);
+	bt_dp_up->SetEditable(false);
+	bt_dp_up->Enable(false);
+	row_sizer->Add(bt_dp_up, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_DP_DOWN), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_dp_down = new orpKeyboardCtrl(panel);
+	bt_dp_down->SetEditable(false);
+	bt_dp_down->Enable(false);
+	row_sizer->Add(bt_dp_down, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_SELECT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_select = new orpKeyboardCtrl(panel);
+	bt_select->SetEditable(false);
+	bt_select->Enable(false);
+	row_sizer->Add(bt_select, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_START), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_start = new orpKeyboardCtrl(panel);
+	bt_start->SetEditable(false);
+	bt_start->Enable(false);
+	row_sizer->Add(bt_start, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_L1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_l1 = new orpKeyboardCtrl(panel);
+	bt_l1->SetEditable(false);
+	bt_l1->Enable(false);
+	row_sizer->Add(bt_l1, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_R1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_r1 = new orpKeyboardCtrl(panel);
+	bt_r1->SetEditable(false);
+	bt_r1->Enable(false);
+	row_sizer->Add(bt_r1, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_L2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_l2 = new orpKeyboardCtrl(panel);
+	bt_l2->SetEditable(false);
+	bt_l2->Enable(false);
+	row_sizer->Add(bt_l2, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_R2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_r2 = new orpKeyboardCtrl(panel);
+	bt_r2->SetEditable(false);
+	bt_r2->Enable(false);
+	row_sizer->Add(bt_r2, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(CreateButton(panel, orpID_L3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_l3 = new orpKeyboardCtrl(panel);
+	bt_l3->SetEditable(false);
+	bt_l3->Enable(false);
+	row_sizer->Add(bt_l3, 0, wxALIGN_CENTER_VERTICAL, 5);
 	row_sizer->Add(CreateButton(panel, orpID_R3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	bt_r3 = new orpKeyboardCtrl(panel);
+	bt_r3->SetEditable(false);
+	bt_r3->Enable(false);
+	row_sizer->Add(bt_r3, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_HOME), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	frame_sizer->Add(row_sizer, 0, wxALIGN_CENTER);
+	row_sizer->Add(new wxButton(panel, wxID_SAVE),
+		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(new wxButton(panel, wxID_ANY, _T("&Reset")),
+		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(new wxButton(panel, wxID_ANY, _T("&Defaults")),
+		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	wxButton *cancel = new wxButton(panel, wxID_CANCEL);
+	cancel->SetDefault();
+	row_sizer->Add(cancel, 0, wxLEFT | wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 8);
 
 	panel->SetSizer(frame_sizer);
 	frame_sizer->SetSizeHints(panel);
@@ -638,6 +795,98 @@ wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id
 	wxBitmapButton *button = new wxBitmapButton(parent, id, wxBitmap(wxImage(*stream)));
 	delete stream;
 	return button;
+}
+
+void orpUIKeyboardFrame::OnCancel(wxCommandEvent& WXUNUSED(event))
+{
+	Close();
+}
+
+void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
+{
+	orpKeyboardCtrl *ctrl = NULL;
+
+	switch (event.GetId()) {
+	case orpID_CIRCLE:
+		ctrl = bt_circle;
+		break;
+	case orpID_SQUARE:
+		ctrl = bt_square;
+		break;
+	case orpID_TRIANGLE:
+		ctrl = bt_triangle;
+		break;
+	case orpID_X:
+		ctrl = bt_x;
+		break;
+	case orpID_DP_LEFT:
+		ctrl = bt_dp_left;
+		break;
+	case orpID_DP_RIGHT:
+		ctrl = bt_dp_right;
+		break;
+	case orpID_DP_UP:
+		ctrl = bt_dp_up;
+		break;
+	case orpID_DP_DOWN:
+		ctrl = bt_dp_down;
+		break;
+	case orpID_SELECT:
+		ctrl = bt_select;
+		break;
+	case orpID_START:
+		ctrl = bt_start;
+		break;
+	case orpID_L1:
+		ctrl = bt_l1;
+		break;
+	case orpID_L2:
+		ctrl = bt_l2;
+		break;
+	case orpID_L3:
+		ctrl = bt_l3;
+		break;
+	case orpID_R1:
+		ctrl = bt_r1;
+		break;
+	case orpID_R2:
+		ctrl = bt_r2;
+		break;
+	case orpID_R3:
+		ctrl = bt_r3;
+		break;
+	case orpID_HOME:
+		ctrl = bt_home;
+		break;
+	}
+
+	long id_list[17] = {
+		orpID_CIRCLE, orpID_SQUARE, orpID_TRIANGLE,
+		orpID_X, orpID_DP_LEFT, orpID_DP_RIGHT,
+		orpID_DP_UP, orpID_DP_DOWN, orpID_SELECT,
+		orpID_START, orpID_L1, orpID_L2, orpID_L3,
+		orpID_R1, orpID_R2, orpID_R3, orpID_HOME
+	};
+
+	if (ctrl->IsEnabled()) {
+		ctrl->Enable(false);
+		for (int i = 0; i < sizeof(id_list); i++) {
+			wxWindow *button = wxWindow::FindWindowById(id_list[i], this);
+			if (button) button->Enable(true);
+		}
+		wxWindow *button = wxWindow::FindWindowById(wxID_SAVE, this);
+		if (button) button->Enable(true);
+	}
+	else {
+		for (int i = 0; i < sizeof(id_list); i++) {
+			wxWindow *button = wxWindow::FindWindowById(id_list[i], this);
+			if (button && id_list[i] != event.GetId()) button->Enable(false);
+		}
+		wxWindow *button = wxWindow::FindWindowById(wxID_SAVE, this);
+		if (button) button->Enable(false);
+		ctrl->Enable(true);
+		ctrl->SetFocus();
+	}
 }
 
 // vi: ts=4

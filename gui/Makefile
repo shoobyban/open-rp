@@ -40,6 +40,7 @@ images::
 	@echo "#ifndef _IMAGES_H" > images.h
 	@echo "#define _IMAGES_H" >> images.h
 	@xxd -i ./images/logo.png >> images.h
+	@xxd -i ./images/dash_hacks.png >> images.h
 	@xxd -i ./images/circle.png >> images.h
 	@xxd -i ./images/dp-down.png >> images.h
 	@xxd -i ./images/dp-left.png >> images.h
