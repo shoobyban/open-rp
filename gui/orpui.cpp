@@ -57,6 +57,12 @@ EVT_BUTTON(wxID_CANCEL, orpUIEditFrame::OnCancel)
 EVT_BUTTON(wxID_DELETE, orpUIEditFrame::OnDelete)
 END_EVENT_TABLE()
 
+BEGIN_EVENT_TABLE(orpPlayStationButton, wxControl)
+EVT_PAINT(orpPlayStationButton::OnPaint)
+EVT_LEFT_DOWN(orpPlayStationButton::OnLeftDown)
+EVT_LEFT_UP(orpPlayStationButton::OnLeftUp)
+END_EVENT_TABLE()
+
 BEGIN_EVENT_TABLE(orpUIKeyboardPanel, wxPanel)
 EVT_PAINT(orpUIKeyboardPanel::OnPaint)
 END_EVENT_TABLE()
@@ -534,6 +540,33 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	::wxPostEvent(GetParent(), event);
 }
 
+orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap)
+	: normal(bitmap), wxControl(parent, id, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
+{
+	SetInitialSize(wxSize(bitmap.GetWidth() + 10, bitmap.GetHeight() + 10));
+}
+
+void orpPlayStationButton::OnPaint(wxPaintEvent& WXUNUSED(event))
+{
+	wxPaintDC dc(this);
+	wxSize size = GetClientSize();
+	dc.DrawBitmap(normal,
+		(size.GetWidth() - normal.GetWidth()) / 2,
+		(size.GetHeight() - normal.GetHeight()) / 2, TRUE);
+}
+
+void orpPlayStationButton::OnLeftDown(wxMouseEvent& event)
+{
+	event.Skip();
+}
+
+void orpPlayStationButton::OnLeftUp(wxMouseEvent& event)
+{
+	wxCommandEvent cmd(wxEVT_COMMAND_BUTTON_CLICKED, GetId());
+	::wxPostEvent(GetParent(), cmd);
+	event.Skip();
+}
+
 orpKeyboardCtrl::orpKeyboardCtrl(wxWindow *parent)
 	: ctrl(false), alt(false), shift(false), key(0),
 	wxTextCtrl(parent, wxID_ANY, wxEmptyString, wxDefaultPosition,
@@ -734,7 +767,8 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	CenterOnParent();
 }
 
-wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
+//wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
+orpPlayStationButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 {
 	wxMemoryInputStream *stream = NULL;
 
@@ -792,7 +826,9 @@ wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id
 		break;
 	}
 
-	wxBitmapButton *button = new wxBitmapButton(parent, id, wxBitmap(wxImage(*stream)));
+	orpPlayStationButton *button = new orpPlayStationButton(parent, id, wxBitmap(*stream));
+
+	//wxBitmapButton *button = new wxBitmapButton(parent, id, wxBitmap(wxImage(*stream)));
 	delete stream;
 	return button;
 }

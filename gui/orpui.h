@@ -94,6 +94,21 @@ private:
 	wxCheckBox *ps3_wolr;
 };
 
+class orpPlayStationButton : public wxControl
+{
+public:
+	orpPlayStationButton(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap);
+
+	void OnPaint(wxPaintEvent &event);
+	void OnLeftDown(wxMouseEvent &event);
+	void OnLeftUp(wxMouseEvent &event);
+
+	DECLARE_EVENT_TABLE()
+
+private:
+	wxBitmap normal;
+};
+
 class orpKeyboardCtrl : public wxTextCtrl
 {
 public:
@@ -136,7 +151,8 @@ public:
 	DECLARE_EVENT_TABLE()
 
 private:
-	wxBitmapButton *CreateButton(wxWindow *parent, wxWindowID id);
+	//wxBitmapButton *CreateButton(wxWindow *parent, wxWindowID id);
+	orpPlayStationButton *CreateButton(wxWindow *parent, wxWindowID id);
 
 	orpKeyboardCtrl *bt_square;
 	orpKeyboardCtrl *bt_triangle;
