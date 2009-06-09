@@ -142,7 +142,7 @@ orpUIFrame::orpUIFrame(const wxString& title)
 	orpUIPanel *panel = new orpUIPanel(this);
 
 	lb = new wxListCtrl(panel,
-		orpID_LIST, wxDefaultPosition, wxSize(-1, 160),
+		orpID_LIST, wxDefaultPosition, wxSize(-1, 120),
 		wxBORDER_SUNKEN | wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES);
 
 	lb->InsertColumn(0, _T("Name"));
