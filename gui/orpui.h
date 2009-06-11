@@ -97,16 +97,20 @@ private:
 class orpPlayStationButton : public wxControl
 {
 public:
-	orpPlayStationButton(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap);
+	orpPlayStationButton(wxWindow *parent, wxWindowID id,
+		const wxBitmap &normal, const wxBitmap &disabled);
 
 	void OnPaint(wxPaintEvent &event);
 	void OnLeftDown(wxMouseEvent &event);
 	void OnLeftUp(wxMouseEvent &event);
+	void OnEnterWindow(wxMouseEvent &event);
+	void OnLeaveWindow(wxMouseEvent &event);
 
 	DECLARE_EVENT_TABLE()
 
 private:
 	wxBitmap normal;
+	wxBitmap disabled;
 };
 
 class orpKeyboardCtrl : public wxTextCtrl

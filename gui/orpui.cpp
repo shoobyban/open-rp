@@ -61,6 +61,8 @@ BEGIN_EVENT_TABLE(orpPlayStationButton, wxControl)
 EVT_PAINT(orpPlayStationButton::OnPaint)
 EVT_LEFT_DOWN(orpPlayStationButton::OnLeftDown)
 EVT_LEFT_UP(orpPlayStationButton::OnLeftUp)
+EVT_ENTER_WINDOW(orpPlayStationButton::OnEnterWindow)
+EVT_LEAVE_WINDOW(orpPlayStationButton::OnLeaveWindow)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIKeyboardPanel, wxPanel)
@@ -540,19 +542,26 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 	::wxPostEvent(GetParent(), event);
 }
 
-orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap)
-	: normal(bitmap), wxControl(parent, id, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
+orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id,
+	const wxBitmap &normal, const wxBitmap &disabled)
+	: normal(normal), disabled(disabled),
+	wxControl(parent, id, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
-	SetInitialSize(wxSize(bitmap.GetWidth() + 10, bitmap.GetHeight() + 10));
+	SetInitialSize(wxSize(normal.GetWidth() + 10, normal.GetHeight() + 10));
 }
 
 void orpPlayStationButton::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 	wxSize size = GetClientSize();
-	dc.DrawBitmap(normal,
-		(size.GetWidth() - normal.GetWidth()) / 2,
-		(size.GetHeight() - normal.GetHeight()) / 2, TRUE);
+	wxBitmap *bitmap;
+	if (IsEnabled())
+		bitmap = &normal;
+	else
+		bitmap = &disabled;
+	dc.DrawBitmap(*bitmap,
+		(size.GetWidth() - bitmap->GetWidth()) / 2,
+		(size.GetHeight() - bitmap->GetHeight()) / 2, TRUE);
 }
 
 void orpPlayStationButton::OnLeftDown(wxMouseEvent& event)
@@ -565,6 +574,14 @@ void orpPlayStationButton::OnLeftUp(wxMouseEvent& event)
 	wxCommandEvent cmd(wxEVT_COMMAND_BUTTON_CLICKED, GetId());
 	::wxPostEvent(GetParent(), cmd);
 	event.Skip();
+}
+
+void orpPlayStationButton::OnEnterWindow(wxMouseEvent& WXUNUSED(event))
+{
+}
+
+void orpPlayStationButton::OnLeaveWindow(wxMouseEvent& WXUNUSED(event))
+{
 }
 
 orpKeyboardCtrl::orpKeyboardCtrl(wxWindow *parent)
@@ -770,66 +787,119 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 //wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 orpPlayStationButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 {
-	wxMemoryInputStream *stream = NULL;
+	wxMemoryInputStream *stream0 = NULL;
+	wxMemoryInputStream *stream1 = NULL;
 
 	switch (id) {
 	case orpID_CIRCLE:
-		stream = new wxMemoryInputStream(__images_circle_png, __images_circle_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_circle0_png, __images_circle1_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_circle1_png, __images_circle1_png_len);
 		break;
 	case orpID_SQUARE:
-		stream = new wxMemoryInputStream(__images_square_png, __images_square_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_square0_png, __images_square0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_square1_png, __images_square1_png_len);
 		break;
 	case orpID_TRIANGLE:
-		stream = new wxMemoryInputStream(__images_triangle_png, __images_triangle_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_triangle0_png, __images_triangle0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_triangle1_png, __images_triangle1_png_len);
 		break;
 	case orpID_X:
-		stream = new wxMemoryInputStream(__images_x_png, __images_x_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_x0_png, __images_x0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_x1_png, __images_x1_png_len);
 		break;
 	case orpID_DP_LEFT:
-		stream = new wxMemoryInputStream(__images_dp_left_png, __images_dp_left_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_dp_left0_png, __images_dp_left0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_dp_left1_png, __images_dp_left1_png_len);
 		break;
 	case orpID_DP_RIGHT:
-		stream = new wxMemoryInputStream(__images_dp_right_png, __images_dp_right_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_dp_right0_png, __images_dp_right0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_dp_right1_png, __images_dp_right1_png_len);
 		break;
 	case orpID_DP_UP:
-		stream = new wxMemoryInputStream(__images_dp_up_png, __images_dp_up_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_dp_up0_png, __images_dp_up0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_dp_up1_png, __images_dp_up1_png_len);
 		break;
 	case orpID_DP_DOWN:
-		stream = new wxMemoryInputStream(__images_dp_down_png, __images_dp_down_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_dp_down0_png, __images_dp_down0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_dp_down1_png, __images_dp_down1_png_len);
 		break;
 	case orpID_SELECT:
-		stream = new wxMemoryInputStream(__images_select_png, __images_select_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_select0_png, __images_select0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_select1_png, __images_select1_png_len);
 		break;
 	case orpID_START:
-		stream = new wxMemoryInputStream(__images_start_png, __images_start_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_start0_png, __images_start0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_start1_png, __images_start1_png_len);
 		break;
 	case orpID_L1:
-		stream = new wxMemoryInputStream(__images_l1_png, __images_l1_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_l10_png, __images_l10_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_l11_png, __images_l11_png_len);
 		break;
 	case orpID_L2:
-		stream = new wxMemoryInputStream(__images_l2_png, __images_l2_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_l20_png, __images_l20_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_l21_png, __images_l21_png_len);
 		break;
 	case orpID_L3:
-		stream = new wxMemoryInputStream(__images_l3_png, __images_l3_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_l30_png, __images_l30_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_l31_png, __images_l31_png_len);
 		break;
 	case orpID_R1:
-		stream = new wxMemoryInputStream(__images_r1_png, __images_r1_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_r10_png, __images_r10_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_r11_png, __images_r11_png_len);
 		break;
 	case orpID_R2:
-		stream = new wxMemoryInputStream(__images_r2_png, __images_r2_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_r20_png, __images_r20_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_r21_png, __images_r21_png_len);
 		break;
 	case orpID_R3:
-		stream = new wxMemoryInputStream(__images_r3_png, __images_r3_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_r30_png, __images_r30_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_r31_png, __images_r31_png_len);
 		break;
 	case orpID_HOME:
-		stream = new wxMemoryInputStream(__images_ps_png, __images_ps_png_len);
+		stream0 = new wxMemoryInputStream(
+			__images_ps0_png, __images_ps0_png_len);
+		stream1 = new wxMemoryInputStream(
+			__images_ps1_png, __images_ps1_png_len);
 		break;
 	}
 
-	orpPlayStationButton *button = new orpPlayStationButton(parent, id, wxBitmap(*stream));
+	orpPlayStationButton *button = new orpPlayStationButton(parent, id,
+		wxBitmap(*stream1), wxBitmap(*stream0));
 
-	//wxBitmapButton *button = new wxBitmapButton(parent, id, wxBitmap(wxImage(*stream)));
-	delete stream;
+	delete stream0;
+	delete stream1;
 	return button;
 }
 
