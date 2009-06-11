@@ -154,7 +154,7 @@ static void *wol_reflect(void *arg)
 			continue;
 		}
 
-		syslog(LOG_DAEMON | LOG_DEBUG, "[%08x]: %s: %02x:%02x:%02x:%02x:%02x:%02x",
+		syslog(LOG_DAEMON | LOG_INFO, "[%08x]: %s: %02x:%02x:%02x:%02x:%02x:%02x",
 			tinfo->id, inet_ntoa(tinfo->client.sin_addr),
 			tinfo->pkt[ORP_MAC_LEN + 0], tinfo->pkt[ORP_MAC_LEN + 1],
 			tinfo->pkt[ORP_MAC_LEN + 2], tinfo->pkt[ORP_MAC_LEN + 3],
