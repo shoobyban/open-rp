@@ -42,9 +42,6 @@ typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 #include "config.h"
 
-#define ORP_MAX_THREADS		64
-#define ORP_MAX_REQUEST		15
-
 extern int errno;
 
 struct client_stats_t
@@ -57,12 +54,7 @@ struct client_stats_t
 
 static struct client_stats_t *client_stats = NULL;
 
-enum client_result {
-	CLIENT_OK,
-	CLIENT_IGNORE
-};
-
-static enum client_result client_update(struct in_addr *in)
+static int client_update(struct in_addr *in)
 {
 	struct client_stats_t *stats = client_stats;
 	struct timeval tv;
@@ -87,10 +79,10 @@ static enum client_result client_update(struct in_addr *in)
 				memcpy(&stats->tv, &tv, sizeof(struct timeval));
 				syslog(LOG_DAEMON | LOG_WARNING,
 					"throttle: %s", inet_ntoa(*in));
-				return CLIENT_IGNORE;
+				return -1;
 			} else {
 				memcpy(&stats->tv, &tv, sizeof(struct timeval));
-				return CLIENT_OK;
+				return 0;
 			}
 		}
 
@@ -98,15 +90,16 @@ static enum client_result client_update(struct in_addr *in)
 	}
 
 	stats = malloc(sizeof(struct client_stats_t));
-	if (!stats) return CLIENT_IGNORE;
+	if (!stats) return -1;
 
 	memcpy(&stats->tv, &tv, sizeof(struct timeval));
 	memcpy(&stats->in, in, sizeof(struct in_addr));
 	stats->prev = NULL;
 	stats->next = client_stats;
+	if (client_stats) client_stats->prev = stats;
 	client_stats = stats;
 
-	return CLIENT_OK;
+	return 0;
 }
 
 static void client_dump(void)
@@ -143,6 +136,8 @@ struct thread_info
 static void *wol_reflect(void *arg)
 {
 	struct thread_info *tinfo = (struct thread_info *)arg;
+	unsigned char magic[ORP_MAC_LEN];
+	memset(magic, 0xFF, ORP_MAC_LEN);
 
 	while (!tinfo->terminate) {
 		pthread_mutex_lock(&tinfo->mutex);
@@ -153,12 +148,23 @@ static void *wol_reflect(void *arg)
 			break;
 		}
 		tinfo->state = STATE_BUSY;
-		syslog(LOG_DAEMON | LOG_DEBUG, "[%08x]: reflecting: %s", tinfo->id,
-			inet_ntoa(tinfo->client.sin_addr));
+
+		if (memcmp(tinfo->pkt, magic, ORP_MAC_LEN)) {
+			pthread_mutex_unlock(&tinfo->mutex);
+			continue;
+		}
+
+		syslog(LOG_DAEMON | LOG_DEBUG, "[%08x]: %s: %02x:%02x:%02x:%02x:%02x:%02x",
+			tinfo->id, inet_ntoa(tinfo->client.sin_addr),
+			tinfo->pkt[ORP_MAC_LEN + 0], tinfo->pkt[ORP_MAC_LEN + 1],
+			tinfo->pkt[ORP_MAC_LEN + 2], tinfo->pkt[ORP_MAC_LEN + 3],
+			tinfo->pkt[ORP_MAC_LEN + 4], tinfo->pkt[ORP_MAC_LEN + 5]);
 
 		int sd;
 		if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
 			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: socket: %s", tinfo->id, strerror(errno));
+			pthread_mutex_unlock(&tinfo->mutex);
+			continue;
 		}
 
 		struct sockaddr_in sin;
@@ -168,6 +174,9 @@ static void *wol_reflect(void *arg)
 
 		if (bind(sd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in)) < 0) {
 			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: bind: %s", tinfo->id, strerror(errno));
+			close(sd);
+			pthread_mutex_unlock(&tinfo->mutex);
+			continue;
 		}
 
 		tinfo->client.sin_port = htons(ORP_PORT);
@@ -175,8 +184,8 @@ static void *wol_reflect(void *arg)
 			(struct sockaddr *)&tinfo->client, sizeof(struct sockaddr_in)) != ORP_WOLPKT_LEN) {
 			syslog(LOG_DAEMON | LOG_ERR, "[%08x]: sendto: %s", tinfo->id, strerror(errno));
 		}
-		close(sd);
 
+		close(sd);
 		pthread_mutex_unlock(&tinfo->mutex);
 	}
 
@@ -184,20 +193,16 @@ static void *wol_reflect(void *arg)
 }
 
 static int last_signal = 0;
-static void sighandler(int sig)
-{
-	last_signal = sig;
-}
+static void sighandler(int sig) { last_signal = sig; }
 
 int main(int argc, char *argv[])
 {
-	int i;
-	pthread_attr_t attr;
-	struct thread_info *tinfo;
-
+#ifndef ORP_DEBUG
 	daemon(0, 0);
 	openlog("orpwol", LOG_PID, LOG_DAEMON);
-
+#else
+	openlog("orpwol", LOG_PERROR, LOG_DAEMON);
+#endif
 	int sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sd < 0) {
 		syslog(LOG_DAEMON | LOG_ERR, "socket: %s", strerror(errno));
@@ -215,17 +220,25 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	pthread_attr_t attr;
 	if (pthread_attr_init(&attr) != 0) {
 		syslog(LOG_DAEMON | LOG_ERR, "pthread_attr_init: %s", strerror(errno));
 		return -1;
 	}
+	if (pthread_attr_setstacksize(&attr, ORP_STACK_SIZE) != 0) {
+		syslog(LOG_DAEMON | LOG_ERR, "pthread_attr_setstacksize(0x%08x): %s",
+			ORP_STACK_SIZE, strerror(errno));
+		return -1;
+	}
 
+	struct thread_info *tinfo;
 	tinfo = calloc(ORP_MAX_THREADS, sizeof(struct thread_info));
 	if (!tinfo) {
 		syslog(LOG_DAEMON | LOG_ERR, "calloc: %s", strerror(errno));
 		return -1;
 	}
 
+	int i;
 	for (i = 0; i < ORP_MAX_THREADS; i++) {
 		if (pthread_cond_init(&tinfo[i].cond, NULL)) {
 			syslog(LOG_DAEMON | LOG_ERR, "pthread_cond_init: %s", strerror(errno));
@@ -261,20 +274,18 @@ int main(int argc, char *argv[])
 
 	syslog(LOG_DAEMON | LOG_INFO, "ready.");
 
-	while (last_signal == 0) {
-		fd_set fds;
+	fd_set fds;
+	struct timeval tv;
+	ssize_t plen;
+	struct sockaddr_in client;
+	unsigned char pkt[ORP_WOLPKT_LEN];
+	while (!last_signal) {
 		FD_ZERO(&fds);
 		FD_SET(sd, &fds);
-		struct timeval tv;
-		tv.tv_sec = 0;
-		tv.tv_usec = 500;
+		tv.tv_sec = 0; tv.tv_usec = 1500;
 		if (select(sd + 1, &fds, NULL, NULL, &tv) != 1) continue;
 
-		ssize_t plen;
 		socklen_t slen = sizeof(struct sockaddr_in);
-		struct sockaddr_in client;
-		memset(&client, 0, sizeof(struct sockaddr_in));
-		unsigned char pkt[ORP_WOLPKT_LEN];
 		if ((plen = recvfrom(sd, pkt, ORP_WOLPKT_LEN, 0,
 			(struct sockaddr *)&client, &slen)) < 0) {
 			syslog(LOG_DAEMON | LOG_ERR, "recvfrom: %s", strerror(errno));
@@ -282,8 +293,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (plen != ORP_WOLPKT_LEN) continue;
-//		client_dump();
-		if (client_update(&client.sin_addr) != CLIENT_OK) continue;
+		if (client_update(&client.sin_addr) != 0) continue;
 
 		for (i = 0; i < ORP_MAX_THREADS; i++) {
 			if (tinfo[i].state != STATE_WAIT) continue;
