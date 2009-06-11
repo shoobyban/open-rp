@@ -1225,22 +1225,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		}
 	}
 
-	// Create and bind UDP socket
-	IPaddress addr;
-	if (SDLNet_ResolveHost(&addr,
-		config.ps3_addr, config.ps3_port) != 0) {
-		orpPrintf("Error resolving address: %s:%d: %s\n",
-			config.ps3_addr, config.ps3_port, SDLNet_GetError());
-		return false;
-	}
-	UDPsocket skt = SDLNet_UDP_Open(0);
-	Sint32 channel;
-	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
-		orpPrintf("Error binding socket: %s\n", SDLNet_GetError());
-		return false;
-	}
-
-	// Send WoL packet
+	// Allocate WoL packet
 	UDPpacket *pkt_wol = SDLNet_AllocPacket(ORP_WOLPKT_LEN);
 	pkt_wol->len = ORP_WOLPKT_LEN;
 	memset(pkt_wol->data, 0, ORP_WOLPKT_LEN);
@@ -1250,11 +1235,41 @@ bool OpenRemotePlay::SessionCreate(void)
 			config.ps3_mac, ORP_MAC_LEN);
 	}
 
-	for (i = 0; i < 2; i++) {
-		if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
-			orpPrintf("Error sending WoL packet: %s\n", SDLNet_GetError());
+	UDPsocket skt;
+	IPaddress addr;
+	Sint32 channel;
+
+	// Create and bind UDP socket for WoL reflector
+	if (config.ps3_wolr) {
+		skt = SDLNet_UDP_Open(0);
+		if (SDLNet_ResolveHost(&addr,
+			"wol.k0r3dump.net", config.ps3_port) == 0 &&
+			(channel = SDLNet_UDP_Bind(skt, -1, &addr)) != -1) {
+
+			// Send WoL packet to reflector
+			if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
+				orpPrintf("Error sending reflector WoL packet: %s\n",
+					SDLNet_GetError());
+			}
 		}
-		SDL_Delay(200);
+		SDLNet_UDP_Close(skt);
+	}
+
+	// Create and bind UDP socket
+	if (SDLNet_ResolveHost(&addr,
+		config.ps3_addr, config.ps3_port) != 0) {
+		orpPrintf("Error resolving address: %s:%d: %s\n",
+			config.ps3_addr, config.ps3_port, SDLNet_GetError());
+		return false;
+	}
+	skt = SDLNet_UDP_Open(0);
+	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
+		orpPrintf("Error binding socket: %s\n", SDLNet_GetError());
+		return false;
+	}
+
+	if (SDLNet_UDP_Send(skt, channel, pkt_wol) == 0) {
+		orpPrintf("Error sending WoL packet: %s\n", SDLNet_GetError());
 	}
 
 	SDLNet_FreePacket(pkt_wol);

@@ -250,6 +250,7 @@ struct orpConfig_t {
 	char ps3_addr[ORP_HOSTNAME_LEN];
 	Uint16 ps3_port;
 	bool ps3_search;
+	bool ps3_wolr;
 	struct orpKey_t key;
 };
 
