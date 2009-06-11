@@ -395,13 +395,7 @@ void orpUIFrame::OnRefresh(wxCommandEvent& WXUNUSED(event))
 
 orpUIEditPanel::orpUIEditPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
-		wxDefaultSize, wxTAB_TRAVERSAL)
-{
-#if 0
-	wxMemoryInputStream image(__images_edit_png, __images_edit_png_len);
-	logo = new wxImage(image);
-#endif
-}
+		wxDefaultSize, wxTAB_TRAVERSAL) { }
 
 orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	orpConfigCtx_t *config, orpConfigRecord_t *record)
@@ -604,7 +598,6 @@ void orpKeyboardCtrl::OnKeyDown(wxKeyEvent& event)
 	}
 
 	UpdateValue();
-//	event.Skip();
 }
 
 orpUIKeyboardPanel::orpUIKeyboardPanel(wxFrame *parent)
@@ -759,7 +752,6 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	CenterOnParent();
 }
 
-//wxBitmapButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 orpPlayStationButton *orpUIKeyboardFrame::CreateButton(wxWindow *parent, wxWindowID id)
 {
 	wxMemoryInputStream *stream0 = NULL;

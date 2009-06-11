@@ -135,9 +135,6 @@ public:
 	orpUIKeyboardPanel(wxFrame *parent);
 
 	DECLARE_EVENT_TABLE()
-
-private:
-//	wxImage *logo;
 };
 
 class orpUIKeyboardFrame : public wxFrame
@@ -151,7 +148,6 @@ public:
 	DECLARE_EVENT_TABLE()
 
 private:
-	//wxBitmapButton *CreateButton(wxWindow *parent, wxWindowID id);
 	orpPlayStationButton *CreateButton(wxWindow *parent, wxWindowID id);
 
 	orpKeyboardCtrl *bt_square;
