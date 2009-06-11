@@ -48,7 +48,6 @@ EVT_LIST_ITEM_ACTIVATED(orpID_LIST, orpUIFrame::OnActivate)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIEditPanel, wxPanel)
-EVT_PAINT(orpUIEditPanel::OnPaint)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIEditFrame, wxFrame)
@@ -66,7 +65,6 @@ EVT_LEAVE_WINDOW(orpPlayStationButton::OnLeaveWindow)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIKeyboardPanel, wxPanel)
-EVT_PAINT(orpUIKeyboardPanel::OnPaint)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIKeyboardFrame, wxFrame)
@@ -405,20 +403,6 @@ orpUIEditPanel::orpUIEditPanel(wxFrame *parent)
 #endif
 }
 
-void orpUIEditPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
-{
-#if 0
-	wxPaintDC dc(this);
-	wxBitmap bitmap(*logo);
-	wxSize size = GetSize();
-	wxPoint offset;
-	offset.y = 0;
-	if (bitmap.GetWidth() > size.GetWidth()) offset.x = 0;
-	else offset.x = size.GetWidth() - bitmap.GetWidth();
-	dc.DrawBitmap(bitmap, offset.x, offset.y, TRUE);
-#endif
-}
-
 orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	orpConfigCtx_t *config, orpConfigRecord_t *record)
 	: config(config), record(record),
@@ -500,8 +484,6 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	wxSize size = panel->GetSize();
 #ifdef __WXMAC__
 	size.SetHeight(size.GetHeight() + 20);
-#elif defined(__WXMSW__)
-	size.SetHeight(size.GetHeight() + 40);
 #endif
 	SetMinSize(size);
 	CenterOnParent();
@@ -629,13 +611,6 @@ orpUIKeyboardPanel::orpUIKeyboardPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
 		wxDefaultSize, wxTAB_TRAVERSAL)
 {
-}
-
-void orpUIKeyboardPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
-{
-	wxPaintDC dc(this);
-//	wxBitmap bitmap(*logo);
-//	dc.DrawBitmap(bitmap, 5, 5, TRUE);
 }
 
 orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
@@ -978,7 +953,7 @@ void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
 		ctrl->Enable(false);
 		for (int i = 0; i < sizeof(id_list); i++) {
 			wxWindow *button = wxWindow::FindWindowById(id_list[i], this);
-			if (button) button->Enable(true);
+			if (button) { button->Enable(true); button->Refresh(); }
 		}
 		wxWindow *button = wxWindow::FindWindowById(wxID_SAVE, this);
 		if (button) button->Enable(true);
@@ -986,7 +961,9 @@ void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
 	else {
 		for (int i = 0; i < sizeof(id_list); i++) {
 			wxWindow *button = wxWindow::FindWindowById(id_list[i], this);
-			if (button && id_list[i] != event.GetId()) button->Enable(false);
+			if (button && id_list[i] != event.GetId()) {
+				button->Enable(false); button->Refresh();
+			}
 		}
 		wxWindow *button = wxWindow::FindWindowById(wxID_SAVE, this);
 		if (button) button->Enable(false);

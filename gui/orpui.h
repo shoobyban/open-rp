@@ -66,8 +66,6 @@ class orpUIEditPanel : public wxPanel
 public:
 	orpUIEditPanel(wxFrame *parent);
 
-	void OnPaint(wxPaintEvent& event);
-
 	DECLARE_EVENT_TABLE()
 };
 
@@ -135,8 +133,6 @@ class orpUIKeyboardPanel : public wxPanel
 {
 public:
 	orpUIKeyboardPanel(wxFrame *parent);
-
-	void OnPaint(wxPaintEvent& event);
 
 	DECLARE_EVENT_TABLE()
 
