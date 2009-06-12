@@ -524,6 +524,7 @@ orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id,
 	wxControl(parent, id, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
 	SetInitialSize(wxSize(normal.GetWidth() + 10, normal.GetHeight() + 10));
+	SetCursor(wxCURSOR_BULLSEYE);
 }
 
 void orpPlayStationButton::OnPaint(wxPaintEvent& WXUNUSED(event))
