@@ -55,6 +55,7 @@ extern "C" {
 #define ORP_SESSION_LEN		16
 #define ORP_PADSTATE_MAX	60
 #define ORP_PADSTATE_LEN	128
+#define ORP_CLOCKFREQ		90000
 
 #define ORP_USER_AGENT		"premo/1.0.0 libhttp/1.0.0"
 
@@ -276,35 +277,41 @@ struct orpStreamPacket_t {
 	AVPacket pkt;
 };
 
-struct orpVideoBuffer_t {
-	bool fill;
-	Uint32 count;
-	SDL_mutex *lock;
-};
-
 struct orpStreamData_t {
 	Uint32 len;
 	Uint32 pos;
 	Uint8 *data;
 	SDL_mutex *lock;
 	SDL_cond *cond;
-	struct orpVideoBuffer_t *buffer;
 	queue<struct orpStreamPacket_t *> pkt;
 };
 
 struct orpClock_t {
 	Uint32 audio;
+	Uint32 audio_freq;
 	Uint32 video;
-	bool drain;
-	SDL_mutex *lock;
+	Uint32 video_freq;
+	Uint32 master;
 	Uint32 decode;
+	SDL_mutex *lock;
 };
 
-struct orpThreadDecode_t {
+struct orpThreadAudioDecode_t {
 	bool terminate;
 	AVCodec *codec;
+	Sint32 channels;
+	Sint32 sample_rate;
+	Sint32 bit_rate;
 	struct orpClock_t *clock;
+	struct orpStreamData_t *stream;
+};
+
+struct orpThreadVideoDecode_t {
+	bool terminate;
+	AVCodec *codec;
+	Sint32 frame_rate;
 	struct orpView_t *view;
+	struct orpClock_t *clock;
 	struct orpStreamData_t *stream;
 };
 
@@ -315,7 +322,6 @@ struct orpConfigStream_t {
 	string session_id;
 	AES_KEY aes_key;
 	struct orpKey_t *key;
-	struct orpBuffer_t *buffer;
 	struct orpStreamData_t *stream;
 };
 
@@ -357,7 +363,6 @@ protected:
 	SDL_Thread *thread_audio_decode;
 	SDL_Joystick *js;
 	struct orpClock_t clock;
-	struct orpVideoBuffer_t video_buffer;
 #ifdef ORP_CLOCK_DEBUG
 	SDL_TimerID timer;
 #endif
