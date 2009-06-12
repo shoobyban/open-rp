@@ -524,7 +524,7 @@ orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id,
 	wxControl(parent, id, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE)
 {
 	SetInitialSize(wxSize(normal.GetWidth() + 10, normal.GetHeight() + 10));
-	SetCursor(wxCURSOR_BULLSEYE);
+	SetCursor(wxCURSOR_HAND);
 }
 
 void orpPlayStationButton::OnPaint(wxPaintEvent& WXUNUSED(event))
@@ -621,72 +621,20 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	wxTextCtrl *txt;
 	
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_HOME), 0, wxALL, 5);
+	row_sizer->Add(CreateButton(panel, orpID_HOME));
 	bt_home = new orpKeyboardCtrl(panel);
 	bt_home->SetEditable(false);
 	bt_home->Enable(false);
-	row_sizer->Add(bt_home, 0, wxALIGN_CENTER_VERTICAL, 5);
+	row_sizer->Add(bt_home, 0, wxALIGN_CENTER_VERTICAL);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_SQUARE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_square = new orpKeyboardCtrl(panel);
-	bt_square->SetEditable(false);
-	bt_square->Enable(false);
-	row_sizer->Add(bt_square, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_TRIANGLE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_triangle = new orpKeyboardCtrl(panel);
-	bt_triangle->SetEditable(false);
-	bt_triangle->Enable(false);
-	row_sizer->Add(bt_triangle, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_CIRCLE), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_circle = new orpKeyboardCtrl(panel);
-	bt_circle->SetEditable(false);
-	bt_circle->Enable(false);
-	row_sizer->Add(bt_circle, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_X), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_x = new orpKeyboardCtrl(panel);
-	bt_x->SetEditable(false);
-	bt_x->Enable(false);
-	row_sizer->Add(bt_x, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_DP_LEFT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_dp_left = new orpKeyboardCtrl(panel);
-	bt_dp_left->SetEditable(false);
-	bt_dp_left->Enable(false);
-	row_sizer->Add(bt_dp_left, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_DP_RIGHT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_dp_right = new orpKeyboardCtrl(panel);
-	bt_dp_right->SetEditable(false);
-	bt_dp_right->Enable(false);
-	row_sizer->Add(bt_dp_right, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_DP_UP), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_dp_up = new orpKeyboardCtrl(panel);
-	bt_dp_up->SetEditable(false);
-	bt_dp_up->Enable(false);
-	row_sizer->Add(bt_dp_up, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_DP_DOWN), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
-	bt_dp_down = new orpKeyboardCtrl(panel);
-	bt_dp_down->SetEditable(false);
-	bt_dp_down->Enable(false);
-	row_sizer->Add(bt_dp_down, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-	frame_sizer->Add(row_sizer);
-
-	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_SELECT), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_SELECT));
 	bt_select = new orpKeyboardCtrl(panel);
 	bt_select->SetEditable(false);
 	bt_select->Enable(false);
-	row_sizer->Add(bt_select, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_START), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(bt_select, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_START));
 	bt_start = new orpKeyboardCtrl(panel);
 	bt_start->SetEditable(false);
 	bt_start->Enable(false);
@@ -694,12 +642,64 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_L1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_DP_LEFT));
+	bt_dp_left = new orpKeyboardCtrl(panel);
+	bt_dp_left->SetEditable(false);
+	bt_dp_left->Enable(false);
+	row_sizer->Add(bt_dp_left, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_DP_RIGHT));
+	bt_dp_right = new orpKeyboardCtrl(panel);
+	bt_dp_right->SetEditable(false);
+	bt_dp_right->Enable(false);
+	row_sizer->Add(bt_dp_right, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_DP_UP));
+	bt_dp_up = new orpKeyboardCtrl(panel);
+	bt_dp_up->SetEditable(false);
+	bt_dp_up->Enable(false);
+	row_sizer->Add(bt_dp_up, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_DP_DOWN));
+	bt_dp_down = new orpKeyboardCtrl(panel);
+	bt_dp_down->SetEditable(false);
+	bt_dp_down->Enable(false);
+	row_sizer->Add(bt_dp_down, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_SQUARE));
+	bt_square = new orpKeyboardCtrl(panel);
+	bt_square->SetEditable(false);
+	bt_square->Enable(false);
+	row_sizer->Add(bt_square, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_TRIANGLE));
+	bt_triangle = new orpKeyboardCtrl(panel);
+	bt_triangle->SetEditable(false);
+	bt_triangle->Enable(false);
+	row_sizer->Add(bt_triangle, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_CIRCLE));
+	bt_circle = new orpKeyboardCtrl(panel);
+	bt_circle->SetEditable(false);
+	bt_circle->Enable(false);
+	row_sizer->Add(bt_circle, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_X));
+	bt_x = new orpKeyboardCtrl(panel);
+	bt_x->SetEditable(false);
+	bt_x->Enable(false);
+	row_sizer->Add(bt_x, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(CreateButton(panel, orpID_L1));
 	bt_l1 = new orpKeyboardCtrl(panel);
 	bt_l1->SetEditable(false);
 	bt_l1->Enable(false);
-	row_sizer->Add(bt_l1, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_R1), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(bt_l1, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_R1));
 	bt_r1 = new orpKeyboardCtrl(panel);
 	bt_r1->SetEditable(false);
 	bt_r1->Enable(false);
@@ -707,12 +707,12 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_L2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_L2));
 	bt_l2 = new orpKeyboardCtrl(panel);
 	bt_l2->SetEditable(false);
 	bt_l2->Enable(false);
-	row_sizer->Add(bt_l2, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_R2), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(bt_l2, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_R2));
 	bt_r2 = new orpKeyboardCtrl(panel);
 	bt_r2->SetEditable(false);
 	bt_r2->Enable(false);
@@ -720,12 +720,12 @@ orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
-	row_sizer->Add(CreateButton(panel, orpID_L3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(CreateButton(panel, orpID_L3));
 	bt_l3 = new orpKeyboardCtrl(panel);
 	bt_l3->SetEditable(false);
 	bt_l3->Enable(false);
-	row_sizer->Add(bt_l3, 0, wxALIGN_CENTER_VERTICAL, 5);
-	row_sizer->Add(CreateButton(panel, orpID_R3), 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	row_sizer->Add(bt_l3, 0, wxALIGN_CENTER_VERTICAL);
+	row_sizer->Add(CreateButton(panel, orpID_R3));
 	bt_r3 = new orpKeyboardCtrl(panel);
 	bt_r3->SetEditable(false);
 	bt_r3->Enable(false);
