@@ -57,6 +57,11 @@ extern "C" {
 #define ORP_PADSTATE_LEN	128
 #define ORP_CLOCKFREQ		90000
 
+#define ORP_AUDIO_BUF_LEN 	1024
+#define ORP_AUDIO_DIFFAVGNB	20
+#define ORP_AUDIO_NOSYNC	10.0
+#define ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX 10
+
 #define ORP_USER_AGENT		"premo/1.0.0 libhttp/1.0.0"
 
 #define ORP_GET_SESSION		"/sce/premo/session"
@@ -334,6 +339,12 @@ struct orpAudioFrame_t {
 
 struct orpConfigAudioFeed_t {
 	SDL_mutex *lock;
+	Sint32 channels;
+	Sint32 sample_rate;
+	double audio_diff_cum;
+	double audio_diff_avg_coef;
+	double audio_diff_threshold;
+	Uint32 audio_diff_avg_count;
 	Uint32 clock_offset;
 	struct orpClock_t *clock;
 	queue<struct orpAudioFrame_t *> frame;

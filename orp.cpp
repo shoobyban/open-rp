@@ -702,13 +702,14 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 {
 	struct orpConfigAudioFeed_t *_config =
 		(struct orpConfigAudioFeed_t *)config;
+	int n = (sizeof(Sint16) * _config->channels);
 
 	SDL_LockMutex(_config->lock);
+orpAudioFeedTop:
 	if (_config->frame.size()) {
 		struct orpAudioFrame_t *frame;
 		frame = _config->frame.front();
 		_config->frame.pop();
-		memcpy(stream, frame->data, len);
 		if (_config->clock) {
 			if (!_config->clock_offset ||
 				frame->clock < _config->clock_offset) {
@@ -717,8 +718,48 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 			}
 			SDL_LockMutex(_config->clock->lock);
 			_config->clock->audio = frame->clock - _config->clock_offset;
+			double clock_diff = (double)_config->clock->audio - (double)_config->clock->master;
 			SDL_UnlockMutex(_config->clock->lock);
+
+			if (clock_diff < ORP_AUDIO_NOSYNC) {
+				_config->audio_diff_cum = clock_diff +
+					_config->audio_diff_avg_coef * _config->audio_diff_cum;
+				if (_config->audio_diff_avg_count < ORP_AUDIO_DIFFAVGNB)
+					_config->audio_diff_avg_count++;
+				else {
+					double avg_diff = _config->audio_diff_cum *
+						(1.0 - _config->audio_diff_avg_coef);
+					if (fabs(avg_diff) >= _config->audio_diff_threshold) {
+						int wanted_size = frame->len + ((int)(clock_diff * _config->sample_rate) * n);
+						int min_size = frame->len * ((100 - ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX) / 100);
+						int max_size = frame->len * ((100 + ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX) / 100);
+						if (wanted_size < min_size)
+							wanted_size = min_size;
+						else if (wanted_size > max_size)
+							wanted_size = max_size;
+						if (wanted_size < frame->len) {
+							if (wanted_size == 0 && _config->frame.size()) {
+								delete [] frame->data;
+								delete frame;
+								goto orpAudioFeedTop;
+							} else if (wanted_size != 0) {
+								orpPrintf("remove samples: %d -> %d\n",
+									frame->len, wanted_size);
+							}
+						} else if (wanted_size > frame->len) {
+							orpPrintf("add samples: %d -> %d\n",
+								frame->len, wanted_size);
+						}
+					}
+				}
+			} else {
+//				orpPrintf("sync threshold too big: %f > %f\n",
+//					clock_diff, ORP_AUDIO_NOSYNC);
+				_config->audio_diff_avg_count = 0;
+				_config->audio_diff_cum = 0;
+			}
 		}
+		memcpy(stream, frame->data, len);
 		delete [] frame->data;
 		delete frame;
 	} else memset(stream, 0, len);
@@ -783,16 +824,21 @@ static Sint32 orpThreadAudioDecode(void *config)
 	Uint8 buffer[(AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2];
 
 	struct orpConfigAudioFeed_t feed;
-	feed.lock = SDL_CreateMutex();
+	feed.channels = _config->channels;
+	feed.sample_rate = _config->sample_rate;
+	feed.audio_diff_avg_coef = exp(log(0.01 / ORP_AUDIO_DIFFAVGNB));
+	feed.audio_diff_avg_count = 0;
+	feed.audio_diff_threshold = 2.0 * ORP_AUDIO_BUF_LEN / _config->sample_rate;
 	feed.clock_offset = 0;
 	feed.clock = _config->clock;
+	feed.lock = SDL_CreateMutex();
 
 	SDL_AudioSpec audioSpec, requestedSpec;
 	requestedSpec.freq = _config->sample_rate;
 	requestedSpec.format = AUDIO_S16SYS;
 	requestedSpec.channels = _config->channels;
 	requestedSpec.silence = 0;
-	requestedSpec.samples = 1024;
+	requestedSpec.samples = ORP_AUDIO_BUF_LEN;
 	requestedSpec.callback = orpAudioFeed;
 	requestedSpec.userdata = (void *)&feed;
 
@@ -900,7 +946,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 	requestedSpec.format = AUDIO_S16SYS;
 	requestedSpec.channels = channels;
 	requestedSpec.silence = 0;
-	requestedSpec.samples = 1024;
+	requestedSpec.samples = ORP_AUDIO_BUF_LEN;
 	requestedSpec.callback = orpAudioFeed;
 	requestedSpec.userdata = (void *)&feed;
 
@@ -1906,7 +1952,6 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					mode.mode = CTRL_CHANGE_BITRATE;
 					mode.param1 = "768000";
 					mode.param2 = "1024000";
-					//mode.param2 = "768000";
 					ControlPerform(curl, &mode);
 				}
 				break;
@@ -1915,7 +1960,6 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					mode.mode = CTRL_CHANGE_BITRATE;
 					mode.param1 = "384000";
 					mode.param2 = "1024000";
-					//mode.param2 = "384000";
 					ControlPerform(curl, &mode);
 				}
 				break;
