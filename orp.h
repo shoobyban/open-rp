@@ -310,6 +310,7 @@ struct orpThreadVideoDecode_t {
 	bool terminate;
 	AVCodec *codec;
 	Sint32 frame_rate;
+	Uint32 clock_offset;
 	struct orpView_t *view;
 	struct orpClock_t *clock;
 	struct orpStreamData_t *stream;
@@ -333,6 +334,7 @@ struct orpAudioFrame_t {
 
 struct orpConfigAudioFeed_t {
 	SDL_mutex *lock;
+	Uint32 clock_offset;
 	struct orpClock_t *clock;
 	queue<struct orpAudioFrame_t *> frame;
 };
@@ -369,7 +371,7 @@ protected:
 
 	bool CreateView(void);
 	bool CreateKeys(const string &nonce);
-	void SetCaption(const char *caption);
+	bool SetCaption(const char *caption);
 	AVCodec *GetCodec(const string &name);
 	Sint32 ControlPerform(CURL *curl, struct orpCtrlMode_t *mode);
 	Sint32 SessionControl(void);

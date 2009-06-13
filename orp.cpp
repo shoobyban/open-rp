@@ -187,7 +187,7 @@ static void orpMasterClockUpdate(struct orpClock_t *clock)
 	if (!start) start = SDL_GetTicks();
 	Uint32 ticks = SDL_GetTicks() - start;
 	SDL_LockMutex(clock->lock);
-	clock->master = ticks * ORP_CLOCKFREQ / 1000;
+	clock->master = (Uint32)((double)ticks * (double)ORP_CLOCKFREQ / (double)1000);
 	SDL_UnlockMutex(clock->lock);
 }
 
@@ -195,8 +195,6 @@ static void orpMasterClockUpdate(struct orpClock_t *clock)
 static Uint32 orpClockTimer(Uint32 interval, void *param)
 {
 	struct orpClock_t *clock = (struct orpClock_t *)param;
-
-	orpMasterClockUpdate(clock);
 
 	SDL_LockMutex(clock->lock);
 	Uint32 decode = clock->decode;
@@ -527,8 +525,14 @@ static Sint32 orpThreadVideoDecode(void *config)
 #ifdef ORP_DUMP_VIDEO_STREAM
 		fwrite(packet->data, 1, packet->len, h_stream);
 #endif
+		Uint32 clock = SDL_Swap32(packet->header.clock);
+		if (!_config->clock_offset ||
+			clock < _config->clock_offset) {
+			_config->clock_offset = clock;
+			_config->clock->master = 0;
+		}
 		SDL_LockMutex(_config->clock->lock);
-		_config->clock->video = SDL_Swap32(packet->header.clock);
+		_config->clock->video = clock - _config->clock_offset;
 		SDL_UnlockMutex(_config->clock->lock);
 
 		bytes_decoded = avcodec_decode_video2(context,
@@ -582,6 +586,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 			SDL_DisplayYUVOverlay(_config->view->overlay, &rect);
 			SDL_UnlockMutex(_config->view->lock);
 
+			orpMasterClockUpdate(_config->clock);
 			SDL_LockMutex(_config->clock->lock);
 			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
 			Uint32 decode = _config->clock->decode = SDL_GetTicks() - ticks;
@@ -705,8 +710,13 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 		_config->frame.pop();
 		memcpy(stream, frame->data, len);
 		if (_config->clock) {
+			if (!_config->clock_offset ||
+				frame->clock < _config->clock_offset) {
+				_config->clock_offset = frame->clock;
+				_config->clock->master = 0;
+			}
 			SDL_LockMutex(_config->clock->lock);
-			_config->clock->audio = frame->clock;
+			_config->clock->audio = frame->clock - _config->clock_offset;
 			SDL_UnlockMutex(_config->clock->lock);
 		}
 		delete [] frame->data;
@@ -774,6 +784,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 
 	struct orpConfigAudioFeed_t feed;
 	feed.lock = SDL_CreateMutex();
+	feed.clock_offset = 0;
 	feed.clock = _config->clock;
 
 	SDL_AudioSpec audioSpec, requestedSpec;
@@ -834,6 +845,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 			audioFrame->clock = SDL_Swap32(packet->header.clock);
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
+			orpMasterClockUpdate(_config->clock);
 			SDL_LockMutex(feed.lock);
 			feed.frame.push(audioFrame);
 #if 0
@@ -1262,7 +1274,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		os.str("");
 		os << "Searching... ";
 		os << (i + 1) << "/" << ORP_SRCH_TIMEOUT;
-		SetCaption(os.str().c_str());
+		if (SetCaption(os.str().c_str())) break;
 
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			orpPrintf("Error sending packet: %s\n", SDLNet_GetError());
@@ -1390,11 +1402,19 @@ bool OpenRemotePlay::CreateKeys(const string &nonce)
 	return true;
 }
 
-void OpenRemotePlay::SetCaption(const char *caption)
+bool OpenRemotePlay::SetCaption(const char *caption)
 {
 	SDL_WM_SetCaption(caption, NULL);
 	SDL_Event event;
-	while (SDL_PollEvent(&event) > 0);
+	bool quit = false;
+	while (SDL_PollEvent(&event) > 0) {
+		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN &&
+			event.key.keysym.sym == SDLK_q &&
+			event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
+			quit = true;
+		}
+	}
+	return quit;
 }
 
 AVCodec *OpenRemotePlay::GetCodec(const string &name)
@@ -2483,7 +2503,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		audioConfig))) return -1;
 
 	struct orpThreadVideoDecode_t *videoDecode = new struct orpThreadVideoDecode_t;
-	videoDecode->terminate = false;
+	memset(videoDecode, 0, sizeof(struct orpThreadVideoDecode_t));
 	videoDecode->view = &view;
 	videoDecode->frame_rate =
 		atoi(orpGetHeaderValue(HEADER_VIDEO_FRAMERATE, headerList));
@@ -2495,7 +2515,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		videoDecode))) return -1;
 
 	struct orpThreadAudioDecode_t *audioDecode = new struct orpThreadAudioDecode_t;
-	audioDecode->terminate = false;
+	memset(audioDecode, 0, sizeof(struct orpThreadVideoDecode_t));
 	audioDecode->codec = audioCodec;
 	audioDecode->channels =
 		atoi(orpGetHeaderValue(HEADER_AUDIO_CHANNELS, headerList));
