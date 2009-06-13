@@ -31,6 +31,7 @@
 #include <wx/combo.h>
 
 #include "config.h"
+#include "keybind.h"
 
 #define orpID_LAUNCH	(wxID_HIGHEST + 1)
 #define orpID_LIST		(wxID_HIGHEST + 2)
@@ -122,11 +123,7 @@ public:
 	void UpdateValue(void);
 
 private:
-	int key;
-	bool ctrl;
-	bool shift;
-	bool alt;
-	bool meta;
+	struct orpUIKeyData_t data;
 };
 
 class orpUIKeyboardPanel : public wxPanel

@@ -2,8 +2,8 @@
 -include ../Version.mak
 
 # Uncomment one of these
-#-include Linux.mak
--include MacOSX.mak
+-include Linux.mak
+#-include MacOSX.mak
 #-include MinGW32.mak
 #-include Custom.mak
 
@@ -19,6 +19,8 @@ all:
 	@echo "Libraries: $(LIBS)"
 	@ln -sf ../config.h .
 	@ln -sf ../config.cpp .
+	@ln -sf ../keybind.h .
+	@ln -sf ../keybind.cpp .
 	$(MAKE) MAKEFLAGS= deps
 	$(MAKE) $(TARGET)
 

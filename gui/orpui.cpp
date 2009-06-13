@@ -562,19 +562,23 @@ void orpPlayStationButton::OnLeaveWindow(wxMouseEvent& WXUNUSED(event))
 }
 
 orpKeyboardCtrl::orpKeyboardCtrl(wxWindow *parent)
-	: ctrl(false), alt(false), shift(false), key(0),
+	:
 	wxTextCtrl(parent, wxID_ANY, wxEmptyString, wxDefaultPosition,
 		wxSize(180, -1), wxTE_PROCESS_ENTER | wxTE_PROCESS_TAB | wxTE_CENTER)
 {
+	data.ctrl = false;
+	data.alt = false;
+	data.shift = false;
+	data.key = 0;
 }
 
 void orpKeyboardCtrl::UpdateValue(void)
 {
 	std::ostringstream os;
-	if (ctrl) os << "CTRL+";
-	if (alt) os << "ALT+";
-	if (shift) os << "SHIFT+";
-	if (key) os << key;
+	if (data.ctrl) os << "CTRL+";
+	if (data.alt) os << "ALT+";
+	if (data.shift) os << "SHIFT+";
+	if (data.key) os << data.key;
 	SetValue(wxString((const char *)os.str().c_str(), wxConvUTF8));
 }
 
@@ -582,19 +586,19 @@ void orpKeyboardCtrl::OnKeyDown(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode()) {
 	case WXK_CONTROL:
-		if (ctrl) ctrl = false;
-		else ctrl = true;
+		if (data.ctrl) data.ctrl = false;
+		else data.ctrl = true;
 		break;
 	case WXK_ALT:
-		if (alt) alt = false;
-		else alt = true;
+		if (data.alt) data.alt = false;
+		else data.alt = true;
 		break;
 	case WXK_SHIFT:
-		if (shift) shift = false;
-		else shift = true;
+		if (data.shift) data.shift = false;
+		else data.shift = true;
 		break;
 	default:
-		key = event.GetKeyCode();
+		data.key = event.GetKeyCode();
 		break;
 	}
 
