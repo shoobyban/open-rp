@@ -81,6 +81,12 @@ int main(int argc, char *argv[])
 	else config.ps3_search = true;
 	if (record.flags & ORP_CONFIG_WOLR) config.ps3_wolr = true;
 	else config.ps3_wolr = false;
+	if (record.flags & ORP_CONFIG_BR384)
+		config.bitrate = CTRL_BR_1024;
+	else if (record.flags & ORP_CONFIG_BR768)
+		config.bitrate = CTRL_BR_768;
+	else if (record.flags & ORP_CONFIG_BR1024)
+		config.bitrate = CTRL_BR_1024;
 
 	orpConfigClose(&config_ctx);
 

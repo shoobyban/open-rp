@@ -59,7 +59,7 @@ extern "C" {
 
 #define ORP_AUDIO_BUF_LEN 	1024
 #define ORP_AUDIO_DIFFAVGNB	20
-#define ORP_AUDIO_NOSYNC	10.0
+#define ORP_AUDIO_NOSYNC	100.0
 #define ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX 10
 
 #define ORP_USER_AGENT		"premo/1.0.0 libhttp/1.0.0"
@@ -201,6 +201,12 @@ struct orpCtrlMode_t {
 	string param2;
 };
 
+enum orpCtrlBitrate {
+	CTRL_BR_384,
+	CTRL_BR_768,
+	CTRL_BR_1024
+};
+
 #define ORP_KBMAP_LEN	60
 #define ORP_KBMAP_SX	4
 #define ORP_KBMAP_SY	2
@@ -258,6 +264,7 @@ struct orpConfig_t {
 	bool ps3_search;
 	bool ps3_wolr;
 	struct orpKey_t key;
+	enum orpCtrlBitrate bitrate;
 };
 
 struct orpStreamPacketHeader_t {
@@ -298,6 +305,8 @@ struct orpClock_t {
 	Uint32 video_freq;
 	Uint32 master;
 	Uint32 decode;
+	Uint32 audio_queue;
+	Uint32 video_queue;
 	SDL_mutex *lock;
 };
 

@@ -462,6 +462,30 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	row_sizer->Add(ps3_wolr, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
+	wxString choices[3];
+	choices[0] = _T("384k");
+	choices[1] = _T("768k");
+	choices[2] = _T("1024k");
+	ps3_bitrate = new wxRadioBox(panel, wxID_ANY, 
+		wxEmptyString, wxDefaultPosition, wxDefaultSize,
+		3, choices, 1, wxBORDER_NONE | wxRA_SPECIFY_ROWS);
+	if (record->flags & ORP_CONFIG_BR384)
+		ps3_bitrate->SetSelection(0);
+	else if (record->flags & ORP_CONFIG_BR768)
+		ps3_bitrate->SetSelection(1);
+	else if (record->flags & ORP_CONFIG_BR1024)
+		ps3_bitrate->SetSelection(2);
+	else
+		ps3_bitrate->SetSelection(2);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(50, -1, 0);
+	row_sizer->Add(ps3_bitrate, 0, wxBOTTOM, 5);
+
+	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("Default Bitrate:")),
+		0, wxRIGHT | wxLEFT | wxTOP, 5);
+	frame_sizer->Add(row_sizer);
+
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(new wxButton(panel, wxID_SAVE),
 		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
@@ -512,7 +536,25 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 		record->flags |= ORP_CONFIG_WOLR;
 	else
 		record->flags &= ~ORP_CONFIG_WOLR;
-
+	switch (ps3_bitrate->GetSelection())
+	{
+	case 0:
+		record->flags |= ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR768;
+		record->flags &= ~ORP_CONFIG_BR1024;
+		break;
+	case 1:
+		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags |= ORP_CONFIG_BR768;
+		record->flags &= ~ORP_CONFIG_BR1024;
+		break;
+	case 2:
+	default:
+		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR768;
+		record->flags |= ORP_CONFIG_BR1024;
+		break;
+	}
 	orpConfigSave(config, record);
 
 	wxCommandEvent event(wxEVT_COMMAND_BUTTON_CLICKED, orpID_REFRESH);

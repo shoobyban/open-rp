@@ -93,6 +93,7 @@ private:
 	wxSpinCtrl *ps3_port;
 	wxCheckBox *ps3_nosrch;
 	wxCheckBox *ps3_wolr;
+	wxRadioBox *ps3_bitrate;
 };
 
 class orpPlayStationButton : public wxControl
