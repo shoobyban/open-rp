@@ -61,6 +61,12 @@ struct orpKeyBind_t {
 };
 
 #ifdef __WXWINDOWS__
+struct orpKeyTable_t {
+	SDLKey sdl;
+	int wx;
+	char *name;
+};
+
 struct orpUIKeyData_t {
 	int key;
 	bool ctrl;
@@ -68,6 +74,11 @@ struct orpUIKeyData_t {
 	bool alt;
 	bool meta;
 	wxString name;
+};
+
+enum orpBindResult {
+	BIND_OK,
+	BIND_DUPLICATE
 };
 #endif
 
@@ -80,16 +91,17 @@ public:
 	bool Load(void);
 	void LoadDefaults(void);
 #ifdef __WXWINDOWS__
-	bool Bind(enum orpButton button, struct orpUIKeyData_t *key);
-	void UpdateName(struct orpUIKeyData_t *key);
 	bool Save(void);
+	enum orpBindResult Bind(enum orpButton button, struct orpUIKeyData_t *key);
+	void UpdateName(struct orpUIKeyData_t *key);
+	void UpdateName(struct orpUIKeyData_t *key, enum orpButton button);
 #else
 	enum orpButton KeyLookup(SDL_keysym *keysym);
 #endif
 
 private:
 	vector<struct orpKeyBind_t *> map;
-	char *filename;
+	FILE *fh;
 };
 
 #endif // _KEYBIND_H

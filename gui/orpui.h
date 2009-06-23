@@ -55,6 +55,8 @@
 #define orpID_R2		(wxID_HIGHEST + 20)
 #define orpID_R3		(wxID_HIGHEST + 21)
 #define orpID_HOME		(wxID_HIGHEST + 22)
+#define orpID_RESET		(wxID_HIGHEST + 23)
+#define orpID_DEFAULT	(wxID_HIGHEST + 24)
 
 class orpUIApp : public wxApp
 {
@@ -96,14 +98,11 @@ private:
 class orpPlayStationButton : public wxControl
 {
 public:
-	orpPlayStationButton(wxWindow *parent, wxWindowID id,
-		const wxBitmap &normal, const wxBitmap &disabled);
+	orpPlayStationButton(wxWindow *parent, wxWindowID id);
 
 	void OnPaint(wxPaintEvent &event);
 	void OnLeftDown(wxMouseEvent &event);
 	void OnLeftUp(wxMouseEvent &event);
-	void OnEnterWindow(wxMouseEvent &event);
-	void OnLeaveWindow(wxMouseEvent &event);
 
 	DECLARE_EVENT_TABLE()
 
@@ -115,7 +114,7 @@ private:
 class orpKeyboardCtrl : public wxTextCtrl
 {
 public:
-	orpKeyboardCtrl(wxWindow *parent);
+	orpKeyboardCtrl(wxWindow *parent, orpKeyBinding *keybind, orpButton button);
 
 	DECLARE_EVENT_TABLE()
 
@@ -123,7 +122,9 @@ public:
 	void UpdateValue(void);
 
 private:
+	orpButton button;
 	struct orpUIKeyData_t data;
+	orpKeyBinding *keybind;
 };
 
 class orpUIKeyboardPanel : public wxPanel
@@ -138,14 +139,18 @@ class orpUIKeyboardFrame : public wxFrame
 {
 public:
 	orpUIKeyboardFrame(wxFrame *parent);
+	~orpUIKeyboardFrame();
 
+	void OnSave(wxCommandEvent &event);
+	void OnDefault(wxCommandEvent &event);
+	void OnReset(wxCommandEvent &event);
 	void OnCancel(wxCommandEvent& event);
 	void OnButton(wxCommandEvent& event);
 
 	DECLARE_EVENT_TABLE()
 
 private:
-	orpPlayStationButton *CreateButton(wxWindow *parent, wxWindowID id);
+	orpKeyBinding *keybind;
 
 	orpKeyboardCtrl *bt_square;
 	orpKeyboardCtrl *bt_triangle;
@@ -164,6 +169,14 @@ private:
 	orpKeyboardCtrl *bt_r2;
 	orpKeyboardCtrl *bt_r3;
 	orpKeyboardCtrl *bt_home;
+};
+
+class orpKeyBindErrorDialog : public wxDialog
+{
+public:
+	orpKeyBindErrorDialog(wxFrame *parent, enum orpBindResult result, wxWindowID button1, wxWindowID button2 = wxID_ANY);
+
+private:
 };
 
 class orpUIPanel : public wxPanel
