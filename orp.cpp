@@ -198,6 +198,8 @@ static Uint32 orpClockTimer(Uint32 interval, void *param)
 
 	SDL_LockMutex(clock->lock);
 	Uint32 decode = clock->decode;
+	Uint32 aq = clock->audio_queue;
+	Uint32 vq = clock->video_queue;
 	double delta =
 		((double)clock->video / (double)clock->video_freq - 
 		 (double)clock->audio / (double)clock->audio_freq) * (double)1000;
@@ -207,7 +209,8 @@ static Uint32 orpClockTimer(Uint32 interval, void *param)
 	SDL_UnlockMutex(clock->lock);
 
 	orpPrintf("a/v drift: %.04fms, fd: %ums, "
-		"m/a/v: %.04fs %.04fs %.04fs\n", delta, decode, m, a, v);
+		"m/a/v: %.04fs %.04fs %.04fs a/v queue: %u %u\n",
+		delta, decode, m, a, v, aq, vq);
 
 	return interval;
 }
@@ -504,6 +507,9 @@ static Sint32 orpThreadVideoDecode(void *config)
 		Uint32 ticks = SDL_GetTicks();
 		SDL_LockMutex(_config->stream->lock);
 		Uint32 packets = _config->stream->pkt.size();
+		SDL_LockMutex(_config->clock->lock);
+		_config->clock->video_queue = packets;
+		SDL_UnlockMutex(_config->clock->lock);
 		if (packets == 0)
 			SDL_CondWait(_config->stream->cond, _config->stream->lock);
 		if (_config->terminate) {
@@ -588,7 +594,8 @@ static Sint32 orpThreadVideoDecode(void *config)
 
 			orpMasterClockUpdate(_config->clock);
 			SDL_LockMutex(_config->clock->lock);
-			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
+			//Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
+			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->master);
 			Uint32 decode = _config->clock->decode = SDL_GetTicks() - ticks;
 			SDL_UnlockMutex(_config->clock->lock);
 
@@ -702,68 +709,50 @@ static void orpAudioFeed(void *config, Uint8 *stream, int len)
 {
 	struct orpConfigAudioFeed_t *_config =
 		(struct orpConfigAudioFeed_t *)config;
-	int n = (sizeof(Sint16) * _config->channels);
+
+	struct orpAudioFrame_t *frame;
+
+orpAudioFeed_GetFrame:
+	frame = NULL;
 
 	SDL_LockMutex(_config->lock);
-orpAudioFeedTop:
 	if (_config->frame.size()) {
-		struct orpAudioFrame_t *frame;
 		frame = _config->frame.front();
 		_config->frame.pop();
-		if (_config->clock) {
-			if (!_config->clock_offset ||
-				frame->clock < _config->clock_offset) {
-				_config->clock_offset = frame->clock;
-				_config->clock->master = 0;
-			}
-			SDL_LockMutex(_config->clock->lock);
-			_config->clock->audio = frame->clock - _config->clock_offset;
-			double clock_diff = (double)_config->clock->audio - (double)_config->clock->master;
-			SDL_UnlockMutex(_config->clock->lock);
-
-			if (clock_diff < ORP_AUDIO_NOSYNC) {
-				_config->audio_diff_cum = clock_diff +
-					_config->audio_diff_avg_coef * _config->audio_diff_cum;
-				if (_config->audio_diff_avg_count < ORP_AUDIO_DIFFAVGNB)
-					_config->audio_diff_avg_count++;
-				else {
-					double avg_diff = _config->audio_diff_cum *
-						(1.0 - _config->audio_diff_avg_coef);
-					if (fabs(avg_diff) >= _config->audio_diff_threshold) {
-						int wanted_size = frame->len + ((int)(clock_diff * _config->sample_rate) * n);
-						int min_size = frame->len * ((100 - ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX) / 100);
-						int max_size = frame->len * ((100 + ORP_AUDIO_SAMPLE_CORRECTION_PERCENT_MAX) / 100);
-						if (wanted_size < min_size)
-							wanted_size = min_size;
-						else if (wanted_size > max_size)
-							wanted_size = max_size;
-						if (wanted_size < frame->len) {
-							if (wanted_size == 0 && _config->frame.size()) {
-								delete [] frame->data;
-								delete frame;
-								goto orpAudioFeedTop;
-							} else if (wanted_size != 0) {
-								orpPrintf("remove samples: %d -> %d\n",
-									frame->len, wanted_size);
-							}
-						} else if (wanted_size > frame->len) {
-							orpPrintf("add samples: %d -> %d\n",
-								frame->len, wanted_size);
-						}
-					}
-				}
-			} else {
-//				orpPrintf("sync threshold too big: %f > %f\n",
-//					clock_diff, ORP_AUDIO_NOSYNC);
-				_config->audio_diff_avg_count = 0;
-				_config->audio_diff_cum = 0;
-			}
-		}
-		memcpy(stream, frame->data, len);
-		delete [] frame->data;
-		delete frame;
 	} else memset(stream, 0, len);
+	if (_config->clock)
+		_config->clock->audio_queue = _config->frame.size();
 	SDL_UnlockMutex(_config->lock);
+
+	if (!frame) return;
+
+	if (_config->clock) {
+		SDL_LockMutex(_config->clock->lock);
+		if (!_config->clock_offset ||
+			frame->clock < _config->clock_offset) {
+			_config->clock_offset = frame->clock;
+			_config->clock->master = 0;
+		}
+		_config->clock->audio = frame->clock - _config->clock_offset;
+		double clock_diff = (double)_config->clock->master - (double)_config->clock->audio;
+		SDL_UnlockMutex(_config->clock->lock);
+#if 0
+		if (clock_diff > ORP_AUDIO_NOSYNC) {
+			SDL_LockMutex(_config->lock);
+			if (_config->frame.size()) {
+				delete [] frame->data;
+				delete frame;
+				SDL_UnlockMutex(_config->lock);
+				goto orpAudioFeed_GetFrame;
+			}
+			SDL_UnlockMutex(_config->lock);
+		}
+#endif
+	}
+
+	memcpy(stream, frame->data, len);
+	delete [] frame->data;
+	delete frame;
 }
 
 static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32 sample_rate, Sint32 bit_rate)
@@ -892,14 +881,11 @@ static Sint32 orpThreadAudioDecode(void *config)
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
 			orpMasterClockUpdate(_config->clock);
+
 			SDL_LockMutex(feed.lock);
 			feed.frame.push(audioFrame);
-#if 0
-			if (feed.frame.size() > 10) {
-				orpPrintf("feed queue: %u\n", feed.frame.size());
-			}
-#endif
 			SDL_UnlockMutex(feed.lock);
+
 			decode_errors = 0;
 		} else if (decode_errors > 5) {
 			SDL_LockMutex(orpAVMutex);
@@ -1198,7 +1184,7 @@ bool OpenRemotePlay::SessionCreate(void)
 	SDL_InitSubSystem(SDL_INIT_EVENTTHREAD);
 
 	// Set caption and display splash logo
-	SetCaption("Open Remote Play");
+	SetCaption(NULL);
 
 	if ((rw = SDL_RWFromConstMem(splash_version_png, splash_version_png_len))) {
 		SDL_Surface *splash = IMG_Load_RW(rw, 0);
@@ -1450,7 +1436,27 @@ bool OpenRemotePlay::CreateKeys(const string &nonce)
 
 bool OpenRemotePlay::SetCaption(const char *caption)
 {
-	SDL_WM_SetCaption(caption, NULL);
+	ostringstream os;
+	if (ps3_nickname) {
+		os << ps3_nickname << " - ";
+		if (!caption) {
+			switch (config.bitrate) {
+			case CTRL_BR_384:
+				os << "384k";
+				break;
+			case CTRL_BR_768:
+				os << "768k";
+				break;
+			case CTRL_BR_1024:
+				os << "1024k";
+				break;
+			}
+		}
+	}
+	else if (!caption) os << "Open Remote Play";
+
+	if (caption) os << caption;
+	SDL_WM_SetCaption(os.str().c_str(), NULL);
 	SDL_Event event;
 	bool quit = false;
 	while (SDL_PollEvent(&event) > 0) {
@@ -1765,7 +1771,17 @@ Sint32 OpenRemotePlay::SessionControl(void)
 
 	struct orpCtrlMode_t mode;
 	mode.mode = CTRL_CHANGE_BITRATE;
-	mode.param1 = "1024000";
+	switch (config.bitrate) {
+	case CTRL_BR_384:
+		mode.param1 = "384000";
+		break;
+	case CTRL_BR_768:
+		mode.param1 = "768000";
+		break;
+	case CTRL_BR_1024:
+		mode.param1 = "1024000";
+		break;
+	}
 	mode.param2 = "1024000";
 	ControlPerform(curl, &mode);
 
@@ -1944,7 +1960,9 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					mode.mode = CTRL_CHANGE_BITRATE;
 					mode.param1 = "1024000";
 					mode.param2 = "1024000";
+					config.bitrate = CTRL_BR_1024;
 					ControlPerform(curl, &mode);
+					SetCaption(NULL);
 				}
 				break;
 			case SDLK_2:
@@ -1952,7 +1970,9 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					mode.mode = CTRL_CHANGE_BITRATE;
 					mode.param1 = "768000";
 					mode.param2 = "1024000";
+					config.bitrate = CTRL_BR_768;
 					ControlPerform(curl, &mode);
+					SetCaption(NULL);
 				}
 				break;
 			case SDLK_3:
@@ -1960,7 +1980,9 @@ Sint32 OpenRemotePlay::SessionControl(void)
 					mode.mode = CTRL_CHANGE_BITRATE;
 					mode.param1 = "384000";
 					mode.param2 = "1024000";
+					config.bitrate = CTRL_BR_384;
 					ControlPerform(curl, &mode);
+					SetCaption(NULL);
 				}
 				break;
 			case SDLK_d:
@@ -2025,12 +2047,10 @@ Sint32 OpenRemotePlay::SessionControl(void)
 						key = ORP_PAD_KEYDOWN | ORP_PAD_PSP_X;
 				} else {
 					if (kbmap_mode == true) {
-						SetCaption(ps3_nickname);
+						SetCaption(NULL);
 						kbmap_mode = false;
 					} else {
-						ostringstream os;
-						os << ps3_nickname << " - Virtual Keyboard Enabled";
-						SetCaption(os.str().c_str());
+						SetCaption("Virtual Keyboard Mode");
 						kbmap_mode = true;
 						kbmap_cx = ORP_KBMAP_SX;
 						kbmap_cy = ORP_KBMAP_SY;
@@ -2490,10 +2510,8 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 
 	ps3_nickname = (char *)base64.Decode((const Uint8 *)
 		orpGetHeaderValue(HEADER_PS3_NICKNAME, headerList));
-	if (ps3_nickname)
-		SetCaption((const char *)ps3_nickname);
-	else
-		SetCaption("Unknown");
+	if (!ps3_nickname) ps3_nickname = strdup("Unknown");
+	SetCaption(NULL);
 
 	// Play sound...
 	static bool played = false;
