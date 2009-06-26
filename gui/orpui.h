@@ -120,7 +120,6 @@ public:
 	DECLARE_EVENT_TABLE()
 
 	void OnKeyDown(wxKeyEvent& event);
-	void UpdateValue(void);
 
 private:
 	orpButton button;
@@ -175,7 +174,7 @@ private:
 class orpKeyBindErrorDialog : public wxDialog
 {
 public:
-	orpKeyBindErrorDialog(wxFrame *parent, enum orpBindResult result, wxWindowID button1, wxWindowID button2 = wxID_ANY);
+	orpKeyBindErrorDialog(wxFrame *parent, wxWindowID button1, wxWindowID button2 = wxID_ANY);
 
 private:
 };

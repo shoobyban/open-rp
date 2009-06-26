@@ -484,7 +484,7 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 
 	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("Default Bitrate:")),
 		0, wxRIGHT | wxLEFT | wxTOP, 5);
-	frame_sizer->Add(row_sizer);
+	frame_sizer->Add(row_sizer, 0, wxTOP, -10);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(new wxButton(panel, wxID_SAVE),
@@ -676,8 +676,8 @@ orpPlayStationButton::orpPlayStationButton(wxWindow *parent, wxWindowID id)
 	normal = (stream1) ? wxBitmap(*stream1) : wxNullBitmap;
 	disabled = (stream0) ? wxBitmap(*stream0) : wxNullBitmap;
 
-	delete stream0;
-	delete stream1;
+	if (stream0) delete stream0;
+	if (stream1) delete stream1;
 
 	SetInitialSize(wxSize(normal.GetWidth() + 10, normal.GetHeight() + 10));
 	SetCursor(wxCURSOR_HAND);
@@ -723,12 +723,6 @@ orpKeyboardCtrl::orpKeyboardCtrl(wxWindow *parent, orpKeyBinding *keybind, orpBu
 	SetValue(data.name);
 }
 
-void orpKeyboardCtrl::UpdateValue(void)
-{
-	keybind->UpdateName(&data);
-	SetValue(data.name);
-}
-
 void orpKeyboardCtrl::OnKeyDown(wxKeyEvent& event)
 {
 	switch (event.GetKeyCode()) {
@@ -749,14 +743,13 @@ void orpKeyboardCtrl::OnKeyDown(wxKeyEvent& event)
 		break;
 	}
 
-	UpdateValue();
+	keybind->UpdateName(&data);
+	SetValue(data.name);
 }
 
 orpUIKeyboardPanel::orpUIKeyboardPanel(wxFrame *parent)
 	: wxPanel(parent, wxID_ANY, wxDefaultPosition,
-		wxDefaultSize, wxTAB_TRAVERSAL)
-{
-}
+		wxDefaultSize, wxTAB_TRAVERSAL) { }
 
 orpUIKeyboardFrame::orpUIKeyboardFrame(wxFrame *parent)
 	: wxFrame(parent, wxID_ANY, _T("Input Key Bindings"))
@@ -989,6 +982,8 @@ void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
 	case orpID_HOME:
 		ctrl = bt_home;
 		break;
+	default:
+		return;
 	}
 
 	long id_list[17] = {
@@ -1032,7 +1027,7 @@ void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
 	}
 }
 
-orpKeyBindErrorDialog::orpKeyBindErrorDialog(wxFrame *parent, enum orpBindResult result, wxWindowID button1, wxWindowID button2)
+orpKeyBindErrorDialog::orpKeyBindErrorDialog(wxFrame *parent, wxWindowID button1, wxWindowID button2)
 	: wxDialog(parent, wxID_ANY, _T("Key Bind Error!"))
 {
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
@@ -1045,8 +1040,8 @@ orpKeyBindErrorDialog::orpKeyBindErrorDialog(wxFrame *parent, enum orpBindResult
 
 	wxBoxSizer *msg_sizer = NULL;
 	wxBoxSizer *dup_sizer = NULL;
-	switch (result) {
-	case BIND_DUPLICATE:
+//	switch (result) {
+//	case BIND_DUPLICATE:
 		msg_sizer = new wxBoxSizer(wxVERTICAL);
 		msg_sizer->Add(new wxStaticText(this, wxID_ANY, 
 			_("Duplicate key binding detected:")),
@@ -1061,11 +1056,11 @@ orpKeyBindErrorDialog::orpKeyBindErrorDialog(wxFrame *parent, enum orpBindResult
 
 		msg_sizer->Add(dup_sizer);
 		row_sizer->Add(msg_sizer, 0, wxTOP | wxRIGHT | wxBOTTOM, 10);
-		break;
-	default:
-		row_sizer->Add(new wxStaticText(this, wxID_ANY, 
-			_("Unknown error!")), 0, wxTOP | wxRIGHT | wxBOTTOM, 10);
-	}
+//		break;
+//	default:
+//		row_sizer->Add(new wxStaticText(this, wxID_ANY, 
+//			_("Unknown error!")), 0, wxTOP | wxRIGHT | wxBOTTOM, 10);
+//	}
 
 	frame_sizer->Add(row_sizer);
 
