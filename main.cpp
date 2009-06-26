@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 	if (record.flags & ORP_CONFIG_WOLR) config.ps3_wolr = true;
 	else config.ps3_wolr = false;
 	if (record.flags & ORP_CONFIG_BR384)
-		config.bitrate = CTRL_BR_1024;
+		config.bitrate = CTRL_BR_384;
 	else if (record.flags & ORP_CONFIG_BR768)
 		config.bitrate = CTRL_BR_768;
 	else if (record.flags & ORP_CONFIG_BR1024)
