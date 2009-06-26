@@ -15,3 +15,8 @@ SDL_net-1.2.7-TCP_NODELAY.patch
 	Enable TCP_NODELAY.  By default, it was only enabled for Linux.  May be
 	required for Windows too.
 
+All Platforms
+-------------
+curl-7.19.4-blank-header-fix.patch
+	A fix for cases where want to send Header: without data, and without
+	having to send "".
