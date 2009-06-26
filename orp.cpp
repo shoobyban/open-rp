@@ -442,12 +442,6 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	memcpy(packet->pkt.data, bp, packet->pkt.size);
 	delete [] buffer;
 
-	if (packet->header.magic[1] == 0xff && packet->header.unk6 != 0x0401) {
-		if (packet->pkt.data[0] != 0x00) {
-			orpPrintf("%s: corrupt header?\n", _config->name.c_str());
-		}
-	}
-
 	// Decrypt video key-frames
 	if (packet->header.magic[1] == 0xff && packet->header.unk6 == 0x0401) {
 		memcpy(_config->key.iv1,
