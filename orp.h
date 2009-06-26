@@ -332,11 +332,22 @@ struct orpThreadVideoDecode_t {
 
 struct orpConfigStream_t {
 	string name;
+#ifdef ORP_DUMP_STREAM_HEADER
+	FILE *h_header;
+#endif
+#ifdef ORP_DUMP_STREAM_DATA
+	FILE *h_data;
+#endif
+#ifdef ORP_DUMP_STREAM_RAW
+	FILE *h_raw;
+#endif
 	string url;
+	string host;
+	Uint16 port;
 	string codec;
 	string session_id;
 	AES_KEY aes_key;
-	struct orpKey_t *key;
+	struct orpKey_t key;
 	struct orpStreamData_t *stream;
 };
 
@@ -394,7 +405,7 @@ protected:
 	bool SetCaption(const char *caption);
 	AVCodec *GetCodec(const string &name);
 	Sint32 ControlPerform(CURL *curl, struct orpCtrlMode_t *mode);
-	Sint32 SessionControl(void);
+	Sint32 SessionControl(CURL *curl);
 	Sint32 SessionPerform(void);
 };
 
