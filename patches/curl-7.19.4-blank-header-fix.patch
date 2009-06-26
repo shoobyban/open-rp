@@ -1,0 +1,13 @@
+diff -ru curl-7.19.4/lib/http.c curl-7.19.4-blank-header-fix/lib/http.c
+--- curl-7.19.4/lib/http.c	2009-02-24 03:30:19.000000000 -0500
++++ curl-7.19.4-blank-header-fix/lib/http.c	2009-06-26 17:03:32.000000000 -0400
+@@ -2020,6 +2020,9 @@
+                 checkprefix("Content-Type:", headers->data))
+           ;
+         else {
++          if(*ptr == '\"' && *(ptr + 1) == '\"') {
++	    *ptr = ' '; *(ptr + 1) = 0;
++	  }
+           CURLcode result = add_bufferf(req_buffer, "%s\r\n", headers->data);
+           if(result)
+             return result;
