@@ -75,11 +75,6 @@ struct orpUIKeyData_t {
 	bool meta;
 	wxString name;
 };
-
-enum orpBindResult {
-	BIND_OK,
-	BIND_DUPLICATE
-};
 #endif
 
 class orpKeyBinding
@@ -92,7 +87,8 @@ public:
 	void LoadDefaults(void);
 #ifdef __WXWINDOWS__
 	bool Save(void);
-	enum orpBindResult Bind(enum orpButton button, struct orpUIKeyData_t *key);
+	void Bind(enum orpButton button, struct orpUIKeyData_t *key);
+	struct orpKeyBind_t *ButtonLookup(enum orpButton button);
 	void UpdateName(struct orpUIKeyData_t *key);
 	void UpdateName(struct orpUIKeyData_t *key, enum orpButton button);
 #else

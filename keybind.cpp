@@ -155,9 +155,12 @@ orpKeyBinding::orpKeyBinding(const char *filename)
 {
 	LoadDefaults();
 	FILE *fh = fopen(filename, "r+b");
-	if (!fh) fh = fopen(filename, "w+b");
-	else Load();
-	this->fh = fh;
+	if (!fh)
+		this->fh = fopen(filename, "w+b");
+	else {
+		this->fh = fh;
+		Load();
+	}
 }
 
 orpKeyBinding::~orpKeyBinding()
@@ -296,9 +299,31 @@ void orpKeyBinding::LoadDefaults(void)
 }
 
 #ifdef __WXWINDOWS__
-enum orpBindResult orpKeyBinding::Bind(enum orpButton button, struct orpUIKeyData_t *key)
+void orpKeyBinding::Bind(enum orpButton button, struct orpUIKeyData_t *key)
 {
-	return BIND_OK;
+	struct orpKeyBind_t *kb;
+	if (!(kb = ButtonLookup(button))) return;
+	memset(kb, 0, sizeof(struct orpKeyBind_t));
+	kb->button = button;
+	if (key->ctrl) kb->mod = (SDLMod)(kb->mod | KMOD_CTRL);
+	if (key->shift) kb->mod = (SDLMod)(kb->mod | KMOD_SHIFT);
+	if (key->alt) kb->mod = (SDLMod)(kb->mod | KMOD_ALT);
+	long i;
+	for (i = 0; orpKeyTable[i].sdl != SDLK_UNKNOWN; i++) {
+		if (orpKeyTable[i].wx != key->key) continue;
+		kb->sym = orpKeyTable[i].sdl;
+		break;
+	}
+}
+
+struct orpKeyBind_t *orpKeyBinding::ButtonLookup(enum orpButton button)
+{
+	long i;
+	for (i = 0; i < map.size(); i++) {
+		if (button != map[i]->button) continue;
+		return map[i];
+	}
+	return NULL;
 }
 
 void orpKeyBinding::UpdateName(struct orpUIKeyData_t *key)
