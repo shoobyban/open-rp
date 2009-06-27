@@ -415,7 +415,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 //			fwrite(&packet->header, 1, sizeof(orpStreamPacketHeader_t), fh);
 //			fclose(fh);
 //		}
-		orpPrintf("%s: packet length mis-match: %u, expected: %s\n",
+		orpPrintf("%s: packet length mis-match: %u, expected: %u\n",
 			_config->name.c_str(), packet->pkt.size,
 			SDL_Swap16(packet->header.len));
 
@@ -2605,7 +2605,6 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	videoConfig->session_id = session_id;
 
 	videoConfig->stream = new struct orpStreamData_t;
-	videoConfig->stream->hdrfix = NULL;
 	videoConfig->name = videoCodec->name;
 #ifdef ORP_DUMP_STREAM_HEADER
 	os.str("");
@@ -2643,7 +2642,6 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	audioConfig->session_id = session_id;
 
 	audioConfig->stream = new struct orpStreamData_t;
-	videoConfig->stream->hdrfix = NULL;
 	audioConfig->name = audioCodec->name;
 #ifdef ORP_DUMP_STREAM_HEADER
 	os.str("");
