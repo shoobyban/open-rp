@@ -1028,7 +1028,7 @@ void orpUIKeyboardFrame::OnButton(wxCommandEvent& event)
 }
 
 orpKeyBindErrorDialog::orpKeyBindErrorDialog(wxFrame *parent, wxWindowID button1, wxWindowID button2)
-	: wxDialog(parent, wxID_ANY, _T("Key Bind Error!"))
+	: wxDialog(parent, wxID_ANY, wxString(_T("Key Bind Error!")))
 {
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
 
