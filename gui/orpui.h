@@ -57,6 +57,18 @@
 #define orpID_HOME		(wxID_HIGHEST + 22)
 #define orpID_RESET		(wxID_HIGHEST + 23)
 #define orpID_DEFAULT	(wxID_HIGHEST + 24)
+#define orpID_NET_PUB	(wxID_HIGHEST + 25)
+#define orpID_NET_PRIV	(wxID_HIGHEST + 26)
+
+enum orpUIBitrate {
+	BR_256,
+	BR_384,
+	BR_512,
+	BR_768,
+	BR_1024,
+
+	BR_MAX
+};
 
 class orpUIApp : public wxApp
 {
@@ -78,7 +90,8 @@ public:
 	orpUIEditFrame(wxFrame *parent,
 		orpConfigCtx_t *config, orpConfigRecord_t *record);
 	~orpUIEditFrame() { if (record) delete record; };
-		
+
+	void OnNetworkType(wxCommandEvent& event);
 	void OnSave(wxCommandEvent& event);
 	void OnCancel(wxCommandEvent& event);
 	void OnDelete(wxCommandEvent& event);
@@ -89,11 +102,15 @@ private:
 	struct orpConfigCtx_t *config;
 	struct orpConfigRecord_t *record;
 	wxTextCtrl *ps3_nickname;
+	wxRadioButton *net_public;
+	wxRadioButton *net_private;
+	wxTextCtrl *psn_login;
 	wxTextCtrl *ps3_hostname;
 	wxSpinCtrl *ps3_port;
 	wxCheckBox *ps3_nosrch;
 	wxCheckBox *ps3_wolr;
-	wxRadioBox *ps3_bitrate;
+	wxComboBox *ps3_bitrate;
+	wxString bitrates[BR_MAX];
 };
 
 class orpPlayStationButton : public wxControl

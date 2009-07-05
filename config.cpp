@@ -67,7 +67,59 @@ int orpConfigOpen(struct orpConfigCtx_t *ctx, const char *filename)
 	ctx->filename = strdup(filename);
 	memcpy(&ctx->header, &header, sizeof(struct orpConfigHeader_t));
 
+	if (header.version < ORP_CONFIG_VER) {
+		if (orpConfigUpgrade(ctx) < 0) {
+			orpConfigClose(ctx);
+			return -1;
+		}
+	}
+
 	return 0;
+}
+
+int orpConfigUpgrade(struct orpConfigCtx_t *ctx)
+{
+	if (ctx->header.version == 1 && ORP_CONFIG_VER == 2) {
+		if (fseek(ctx->h_file, 0, SEEK_END) < 0) return -1;
+		long records = 0;
+		if ((ftell(ctx->h_file) - sizeof(struct orpConfigHeader_t)) > 0) {
+			records = (ftell(ctx->h_file) - sizeof(struct orpConfigHeader_t)) /
+				sizeof(struct orpConfigRecord_v1_t);
+		}
+		struct orpConfigRecord_v1_t *v1 = NULL;
+		if (records) v1 = (struct orpConfigRecord_v1_t *)calloc(records,
+			sizeof(struct orpConfigRecord_v1_t));
+		orpConfigRewind(ctx);
+		long i;
+		for (i = 0; i < records && v1 && !feof(ctx->h_file); i++) {
+			if (fread(&v1[i], 1, sizeof(struct orpConfigRecord_v1_t),
+				ctx->h_file) != sizeof(struct orpConfigRecord_v1_t)) {
+					free(v1);
+					return -1;
+			}
+		}
+		orpConfigRewind(ctx);
+		struct orpConfigRecord_v2_t v2;
+		for (i = 0; i < records && v1; i++) {
+			memset(&v2, 0, sizeof(struct orpConfigRecord_v2_t));
+			memcpy(&v2, &v1[i], sizeof(struct orpConfigRecord_v1_t));
+			if (fwrite(&v2, 1, sizeof(struct orpConfigRecord_v2_t),
+				ctx->h_file) != sizeof(struct orpConfigRecord_v2_t)) {
+					free(v1);
+					return -1;
+			}
+		}
+		if (v1) free(v1);
+		rewind(ctx->h_file);
+		ctx->header.version = ORP_CONFIG_VER;
+		if (fwrite(&ctx->header, 1, sizeof(struct orpConfigHeader_t),
+			ctx->h_file) != sizeof(struct orpConfigHeader_t)) return -1;
+		orpConfigRewind(ctx);
+		fflush(ctx->h_file);
+		return 0;
+	}
+
+	return -1;
 }
 
 int orpConfigClose(struct orpConfigCtx_t *ctx)

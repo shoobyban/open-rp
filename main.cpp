@@ -66,6 +66,8 @@ int main(int argc, char *argv[])
 	}
 
 	struct orpConfig_t config;
+	memset(&config, 0, sizeof(struct orpConfig_t));
+
 	orpConfigGetKey(&config_ctx, orpID_KEY_0, config.key.skey0);
 	orpConfigGetKey(&config_ctx, orpID_KEY_1, config.key.skey1);
 	orpConfigGetKey(&config_ctx, orpID_KEY_2, config.key.skey2);
@@ -81,12 +83,20 @@ int main(int argc, char *argv[])
 	else config.ps3_search = true;
 	if (record.flags & ORP_CONFIG_WOLR) config.ps3_wolr = true;
 	else config.ps3_wolr = false;
-	if (record.flags & ORP_CONFIG_BR384)
+	if (record.flags & ORP_CONFIG_BR256)
+		config.bitrate = CTRL_BR_256;
+	else if (record.flags & ORP_CONFIG_BR384)
 		config.bitrate = CTRL_BR_384;
+	else if (record.flags & ORP_CONFIG_BR512)
+		config.bitrate = CTRL_BR_512;
 	else if (record.flags & ORP_CONFIG_BR768)
 		config.bitrate = CTRL_BR_768;
 	else if (record.flags & ORP_CONFIG_BR1024)
 		config.bitrate = CTRL_BR_1024;
+	if (!(record.flags & ORP_CONFIG_PRIVATE)) {
+		config.net_public = true;
+		strcpy(config.psn_login, (const char *)record.psn_login);
+	} else config.net_public = false;
 
 	orpConfigClose(&config_ctx);
 

@@ -34,6 +34,7 @@ using namespace std;
 #include <SDL/SDL_thread.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_net.h>
+#include <SDL/SDL_ttf.h>
 
 extern "C" {
 #include <libavutil/avutil.h>
@@ -147,6 +148,7 @@ struct PktAnnounceResp_t {
 enum orpHeader {
 	HEADER_NULL,
 
+	HEADER_APP_REASON,
 	HEADER_AUDIO_BITRATE,
 	HEADER_AUDIO_CHANNELS,
 	HEADER_AUDIO_CLOCKFREQ,
@@ -161,12 +163,14 @@ enum orpHeader {
 	HEADER_NONCE,
 	HEADER_PAD_ASSIGN,
 	HEADER_PAD_COMPLETE,
+	HEADER_PAD_INDEX,
 	HEADER_PAD_INFO,
 	HEADER_PLATFORM_INFO,
 	HEADER_POWER_CONTROL,
 	HEADER_PS3_NICKNAME,
 	HEADER_PSPID,
 	HEADER_SESSIONID,
+	HEADER_SIGNINID,
 	HEADER_TRANS,
 	HEADER_TRANS_MODE,
 	HEADER_USERNAME,
@@ -202,7 +206,9 @@ struct orpCtrlMode_t {
 };
 
 enum orpCtrlBitrate {
+	CTRL_BR_256,
 	CTRL_BR_384,
+	CTRL_BR_512,
 	CTRL_BR_768,
 	CTRL_BR_1024
 };
@@ -242,6 +248,12 @@ struct orpView_t {
 	SDL_mutex *lock;
 };
 
+enum orpAuthType {
+	orpAUTH_NORMAL,
+	orpAUTH_CHANGE_BITRATE,
+	orpAUTH_SESSION_TERM
+};
+
 struct orpKey_t {
 	Uint8 skey0[ORP_KEY_LEN];
 	Uint8 skey1[ORP_KEY_LEN];
@@ -251,8 +263,11 @@ struct orpKey_t {
 	Uint8 xor_pkey[ORP_KEY_LEN];
 	Uint8 nonce[ORP_KEY_LEN];
 	Uint8 xor_nonce[ORP_KEY_LEN];
-	Uint8 akey[ORP_KEY_LEN];
 	Uint8 iv1[ORP_KEY_LEN];
+
+	Uint8 *auth_normal;
+	Uint8 *auth_change_bitrate;
+	Uint8 *auth_session_term;
 };
 
 struct orpConfig_t {
@@ -263,7 +278,9 @@ struct orpConfig_t {
 	Uint16 ps3_port;
 	bool ps3_search;
 	bool ps3_wolr;
+	bool net_public;
 	struct orpKey_t key;
+	char psn_login[ORP_NICKNAME_LEN];
 	enum orpCtrlBitrate bitrate;
 };
 
@@ -399,14 +416,21 @@ protected:
 #ifdef ORP_CLOCK_DEBUG
 	SDL_TimerID timer;
 #endif
+	TCPsocket skt_pad;
+	TTF_Font *font;
+	SDL_Surface *splash;
 
 	bool CreateView(void);
-	bool CreateKeys(const string &nonce);
+	bool CreateKeys(const string &nonce,	
+		enum orpAuthType type = orpAUTH_NORMAL);
 	bool SetCaption(const char *caption);
 	AVCodec *GetCodec(const string &name);
 	Sint32 ControlPerform(CURL *curl, struct orpCtrlMode_t *mode);
+	Sint32 SendPadState(Uint8 *pad, Uint32 id,
+		Uint32 &count, Uint32 timestamp, vector<string> &headers);
 	Sint32 SessionControl(CURL *curl);
 	Sint32 SessionPerform(void);
+	void DisplayError(const char *text);
 };
 
 #endif // _ORP_H

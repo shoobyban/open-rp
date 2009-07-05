@@ -30,6 +30,7 @@
 #include "base64.h"
 #include "images.h"
 #include "launch.h"
+#include "font.h"
 
 static void orpOutput(const char *format, va_list ap)
 {
@@ -109,6 +110,7 @@ static void orpAVDebug(void *ptr, Sint32 level, const char *format, va_list ap)
 }
 
 static struct orpHeader_t orpHeaderList[] = {
+	{ HEADER_APP_REASON, "PREMO-Application-Reason" },
 	{ HEADER_AUDIO_BITRATE, "PREMO-Audio-Bitrate" },
 	{ HEADER_AUDIO_CHANNELS, "PREMO-Audio-Channels" },
 	{ HEADER_AUDIO_CLOCKFREQ, "PREMO-Audio-ClockFrequency" },
@@ -123,6 +125,7 @@ static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_NONCE, "PREMO-Nonce" },
 	{ HEADER_PAD_ASSIGN, "PREMO-Pad-Assign" },
 	{ HEADER_PAD_COMPLETE, "PREMO-Pad-Complete" },
+	{ HEADER_PAD_INDEX, "PREMO-Pad-Index" },
 	{ HEADER_PAD_INFO, "PREMO-Pad-Info" },
 	{ HEADER_PLATFORM_INFO, "PREMO-Platform-Info" },
 	{ HEADER_POWER_CONTROL, "PREMO-Power-Control" },
@@ -131,6 +134,7 @@ static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_TRANS, "PREMO-Trans" },
 	{ HEADER_TRANS_MODE, "PREMO-Trans-Mode" },
 	{ HEADER_SESSIONID, "SessionID" },
+	{ HEADER_SIGNINID, "PREMO-SIGNIN-ID" },
 	{ HEADER_USERNAME, "PREMO-UserName" },
 	{ HEADER_VERSION, "PREMO-Version" },
 	{ HEADER_VIDEO_BITRATE, "PREMO-Video-Bitrate" },
@@ -176,6 +180,18 @@ static void orpPostEvent(enum orpEvent id)
 	event.type = SDL_USEREVENT;
 	event.user.code = id;
 	event.user.data1 = NULL;
+	event.user.data2 = NULL;
+
+	SDL_PushEvent(&event);
+}
+
+static void orpPostError(const char *text)
+{
+	SDL_Event event;
+
+	event.type = SDL_USEREVENT;
+	event.user.code = EVENT_ERROR;
+	event.user.data1 = strdup(text);
 	event.user.data2 = NULL;
 
 	SDL_PushEvent(&event);
@@ -264,7 +280,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Allocate frame buffer
 	Uint8 *buffer = new Uint8[streamData->len + len];
 	if (!buffer) {
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Memory allocation error.");
 		return 0;
 	}
 	Uint8 *bp = buffer;
@@ -292,7 +308,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostEvent(EVENT_SHUTDOWN);
+			orpPostError("Memory allocation error.");
 			return 0;
 		}
 		memcpy(streamData->data, bp, len);
@@ -303,7 +319,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Expected trailing 0xd 0xa not found!
 	if (bp[6] != 0x0d || bp[7] != 0x0a) {
 		delete [] buffer;
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Unexpected data.");
 		return 0;
 	}
 
@@ -314,7 +330,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Extract chunk length
 	if (sscanf((const char *)bp, "%06x", &chunk_len) != 1) {
 		delete [] buffer;
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Missing chunk size.");
 		return 0;
 	}
 
@@ -332,7 +348,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostEvent(EVENT_SHUTDOWN);
+			orpPostError("Memory allocation error.");
 			return 0;
 		}
 		memcpy(streamData->data, bp, len);
@@ -352,7 +368,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[streamData->len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostEvent(EVENT_SHUTDOWN);
+			orpPostError("Memory allocation error.");
 			return 0;
 		}
 		memcpy(streamData->data, bp + chunk_len, streamData->len);
@@ -362,7 +378,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	if (bp[0] != 0x80) {
 		orpPrintf("%s: invalid packet header\n", _config->name.c_str());
 		delete [] buffer;
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Invalid packet header.");
 		return 0;
 	}
 
@@ -399,7 +415,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	struct orpStreamPacket_t *packet = new struct orpStreamPacket_t;
 	if (!packet) {
 		delete [] buffer;
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Memory allocation error.");
 		return 0;
 	}
 
@@ -431,7 +447,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	if (!packet->pkt.data) {
 		delete packet;
 		delete [] buffer;
-		orpPostEvent(EVENT_SHUTDOWN);
+		orpPostError("Memory allocation error.");
 		return 0;
 	}
 	memset(packet->pkt.data + packet->pkt.size, 0,
@@ -458,7 +474,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 #endif
 			delete [] packet->pkt.data;
 			delete packet;
-			orpPostEvent(EVENT_SHUTDOWN);
+			orpPostError("Corrupt video stream.");
 			return 0;
 		}
 	}
@@ -584,6 +600,10 @@ static Sint32 orpThreadVideoDecode(void *config)
 
 		if (bytes_decoded != -1 && frame_done) {
 			SDL_LockMutex(_config->view->lock);
+			if (!_config->view->overlay) {
+				SDL_UnlockMutex(_config->view->lock);
+				return -1;
+			}
 			SDL_LockYUVOverlay(_config->view->overlay);
 
 			AVPicture p;
@@ -667,13 +687,6 @@ static Sint32 orpThreadVideoConnection(void *config)
 {
 	struct orpConfigStream_t *_config = (struct orpConfigStream_t *)config;
 
-	Base64 base64;
-	Uint8 *encoded = base64.Encode(_config->key.akey, ORP_KEY_LEN);
-	if (!encoded) return -1;
-
-	string authkey = (const char *)encoded;
-	delete [] encoded;
-
 	CURL *curl = curl_easy_init();
 
 	curl_easy_setopt(curl, CURLOPT_URL, _config->url.c_str());
@@ -726,7 +739,7 @@ static Sint32 orpThreadVideoConnection(void *config)
 
 	os.str("");
 	os << orpGetHeader(HEADER_AUTH);
-	os << ": " << authkey;
+	os << ": " << (const char *)_config->key.auth_normal;
 	headers = curl_slist_append(headers, os.str().c_str());
 
 	os.str("");
@@ -1010,13 +1023,6 @@ static Sint32 orpThreadAudioConnection(void *config)
 {
 	struct orpConfigStream_t *_config = (struct orpConfigStream_t *)config;
 
-	Base64 base64;
-	Uint8 *encoded = base64.Encode(_config->key.akey, ORP_KEY_LEN);
-	if (!encoded) return -1;
-
-	string authkey = (const char *)encoded;
-	delete [] encoded;
-
 	CURL *curl = curl_easy_init();
 
 	curl_easy_setopt(curl, CURLOPT_URL, _config->url.c_str());
@@ -1069,7 +1075,7 @@ static Sint32 orpThreadAudioConnection(void *config)
 
 	os.str("");
 	os << orpGetHeader(HEADER_AUTH);
-	os << ": " << authkey;
+	os << ": " << (const char *)_config->key.auth_normal;
 	headers = curl_slist_append(headers, os.str().c_str());
 
 	os.str("");
@@ -1093,7 +1099,7 @@ static Sint32 orpThreadAudioConnection(void *config)
 }
 
 OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
-	: ps3_nickname(NULL), js(NULL),
+	: ps3_nickname(NULL), js(NULL), splash(NULL), font(NULL),
 #ifdef ORP_CLOCK_DEBUG
 	timer(0),
 #endif
@@ -1175,6 +1181,8 @@ OpenRemotePlay::~OpenRemotePlay()
 	for (i = 0; i < codec.size(); i++) delete codec[i];
 	if (orpAVMutex) SDL_DestroyMutex(orpAVMutex);
 	if (view.lock) SDL_DestroyMutex(view.lock);
+	if (TTF_WasInit()) TTF_Quit();
+	if (splash) SDL_FreeSurface(splash);
 }
 
 bool OpenRemotePlay::SessionCreate(void)
@@ -1225,11 +1233,30 @@ bool OpenRemotePlay::SessionCreate(void)
 	// Initialize event thread
 	SDL_InitSubSystem(SDL_INIT_EVENTTHREAD);
 
+	// Initialize SDL TTF library
+	if (TTF_Init() == -1) {
+		orpPrintf("Error initializing SDL TTF: %s\n",
+			TTF_GetError());
+		return false;
+	}
+
+	if (!(rw = SDL_RWFromConstMem(font_ttf, font_ttf_len))) {
+		orpPrintf("Error loading font.\n");
+		return false;
+	} else {
+		font = TTF_OpenFontRW(rw, 1, 18);
+		if (!font) {
+			orpPrintf("Error opening font: %s\n",
+				TTF_GetError());
+			return false;
+		}
+	}
+
 	// Set caption and display splash logo
 	SetCaption(NULL);
 
 	if ((rw = SDL_RWFromConstMem(splash_version_png, splash_version_png_len))) {
-		SDL_Surface *splash = IMG_Load_RW(rw, 0);
+		splash = IMG_Load_RW(rw, 0);
 		if (splash) {
 			SDL_Rect rect;
 			rect.x = rect.y = 0;
@@ -1262,7 +1289,6 @@ bool OpenRemotePlay::SessionCreate(void)
 				SDL_BlitSurface(surface, NULL, view.view, &rect);
 				SDL_UpdateRect(view.view, rect.x, rect.y, rect.w, rect.h);
 			}
-			SDL_FreeSurface(splash);
 			SDL_FreeSurface(surface);
 		}
 		SDL_FreeRW(rw);
@@ -1314,11 +1340,13 @@ bool OpenRemotePlay::SessionCreate(void)
 		config.ps3_addr, config.ps3_port) != 0) {
 		orpPrintf("Error resolving address: %s:%d: %s\n",
 			config.ps3_addr, config.ps3_port, SDLNet_GetError());
+		DisplayError("Error resolving address.");
 		return false;
 	}
 	skt = SDLNet_UDP_Open(0);
 	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
 		orpPrintf("Error binding socket: %s\n", SDLNet_GetError());
+		DisplayError("Error binding socket.");
 		return false;
 	}
 
@@ -1352,12 +1380,14 @@ bool OpenRemotePlay::SessionCreate(void)
 
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			orpPrintf("Error sending packet: %s\n", SDLNet_GetError());
+			DisplayError("Error sending packet.");
 			break;
 		}
 
 		Sint32 result;
 		if ((result = SDLNet_UDP_Recv(skt, pkt_resp)) == -1) {
 			orpPrintf("Error receiving packet: %s\n", SDLNet_GetError());
+			DisplayError("Error receiving packet.");
 			break;
 		}
 
@@ -1386,6 +1416,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		i = reply = first = 0;
 	}
 
+	if (i >= ORP_SRCH_TIMEOUT) DisplayError("PlayStation 3 not found.");
 	SDLNet_FreePacket(pkt_srch);
 	SDLNet_FreePacket(pkt_resp);
 	SDLNet_UDP_Close(skt);
@@ -1449,9 +1480,12 @@ bool OpenRemotePlay::CreateView(void)
 	return true;
 }
 
-bool OpenRemotePlay::CreateKeys(const string &nonce)
+bool OpenRemotePlay::CreateKeys(const string &nonce, enum orpAuthType type)
 {
-	if (!orpDecodeKey(config.key.nonce, nonce)) return false;
+	if (!orpDecodeKey(config.key.nonce, nonce)) {
+		orpPrintf("Error decoding nonce: %s\n", nonce.c_str());
+		return false;
+	}
 
 	memcpy(config.key.xor_pkey, config.key.pkey, ORP_KEY_LEN);
 	memcpy(config.key.xor_nonce, config.key.nonce, ORP_KEY_LEN);
@@ -1462,16 +1496,64 @@ bool OpenRemotePlay::CreateKeys(const string &nonce)
 	for (i = 0; i < ORP_KEY_LEN; i++)
 		config.key.xor_nonce[i] ^= config.key.skey2[i];
 
+	Uint8 auth_xor[4], auth_key[4];
+
+	switch (type) {
+	case orpAUTH_CHANGE_BITRATE:
+		auth_key[0] = 'c';
+		auth_key[1] = 'h';
+		auth_key[2] = 'a';
+		auth_key[3] = 'n' + 17;
+		memcpy(auth_xor, config.key.xor_pkey, 4);
+		for (i = 0; i < 4; i++) auth_xor[i] ^= auth_key[i];
+		memcpy(config.key.xor_pkey, auth_xor, 4);
+		break;
+
+	case orpAUTH_SESSION_TERM:
+		auth_key[0] = 's';
+		auth_key[1] = 'e';
+		auth_key[2] = 's';
+		auth_key[3] = 's' + 17;
+		memcpy(auth_xor, config.key.xor_pkey, 4);
+		for (i = 0; i < 4; i++) auth_xor[i] ^= auth_key[i];
+		memcpy(config.key.xor_pkey, auth_xor, 4);
+		break;
+	}
+
 	memcpy(config.key.iv1, config.key.xor_nonce, ORP_KEY_LEN);
 
-	memset(config.key.akey, 0, ORP_KEY_LEN);
-	memcpy(config.key.akey, config.psp_mac, ORP_MAC_LEN);
+	Uint8 akey[ORP_KEY_LEN];
+	memset(akey, 0, ORP_KEY_LEN);
+	memcpy(akey, config.psp_mac, ORP_MAC_LEN);
 
 	AES_KEY aes_key_encrypt;
 	AES_set_encrypt_key(config.key.xor_pkey,
 		ORP_KEY_LEN * 8, &aes_key_encrypt);
-	AES_cbc_encrypt(config.key.akey, config.key.akey, ORP_KEY_LEN,
+	AES_cbc_encrypt(akey, akey, ORP_KEY_LEN,
 		&aes_key_encrypt, config.key.iv1, AES_ENCRYPT);
+
+	Base64 base64;
+	Uint8 *auth_encoded = NULL;
+	auth_encoded = base64.Encode(akey, ORP_KEY_LEN);
+	if (!auth_encoded) return false;
+
+	switch (type) {
+	case orpAUTH_CHANGE_BITRATE:
+		if (config.key.auth_change_bitrate)
+			delete [] config.key.auth_change_bitrate;
+		config.key.auth_change_bitrate = auth_encoded;
+		break;
+	case orpAUTH_SESSION_TERM:
+		if (config.key.auth_session_term)
+			delete [] config.key.auth_session_term;
+		config.key.auth_session_term = auth_encoded;
+		break;
+	default:
+	case orpAUTH_NORMAL:
+		if (config.key.auth_normal) delete [] config.key.auth_normal;
+		config.key.auth_normal = auth_encoded;
+		break;
+	}
 
 	return true;
 }
@@ -1483,8 +1565,14 @@ bool OpenRemotePlay::SetCaption(const char *caption)
 		os << ps3_nickname << " - ";
 		if (!caption) {
 			switch (config.bitrate) {
+			case CTRL_BR_256:
+				os << "256k";
+				break;
 			case CTRL_BR_384:
 				os << "384k";
+				break;
+			case CTRL_BR_512:
+				os << "512k";
 				break;
 			case CTRL_BR_768:
 				os << "768k";
@@ -1566,6 +1654,16 @@ Sint32 OpenRemotePlay::ControlPerform(CURL *curl, struct orpCtrlMode_t *mode)
 		headers = curl_slist_append(headers, os.str().c_str());
 	}
 
+	if (config.net_public) {
+		os.str("");
+		os << orpGetHeader(HEADER_AUTH);
+		if (mode->mode == CTRL_CHANGE_BITRATE)
+			os << ": " << (const char *)config.key.auth_change_bitrate;
+		else if (mode->mode == CTRL_SESSION_TERM)
+			os << ": " << (const char *)config.key.auth_session_term;
+		headers = curl_slist_append(headers, os.str().c_str());
+	}
+
 	os.str("");
 	os << orpGetHeader(HEADER_SESSIONID);
 	os << ": " << session_id;
@@ -1607,7 +1705,7 @@ static void orpDumpPadState(Uint8 *state)
 	}
 }
 
-static Sint32 orpSendPadState(TCPsocket skt, Uint8 *pad, Uint32 id, Uint32 &count, Uint32 timestamp, vector<string> &headers)
+Sint32 OpenRemotePlay::SendPadState(Uint8 *pad, Uint32 id, Uint32 &count, Uint32 timestamp, vector<string> &headers)
 {
 	if (id != 0) {
 		Uint32 be_id = SDL_Swap32(id);
@@ -1617,19 +1715,37 @@ static Sint32 orpSendPadState(TCPsocket skt, Uint8 *pad, Uint32 id, Uint32 &coun
 	}
 	//orpDumpPadState(statePad);
 
-	SDLNet_TCP_Send(skt, pad, ORP_PADSTATE_LEN);
+	if (config.net_public) {
+		Uint8 pad_crypt[ORP_PADSTATE_LEN];
+		memset(pad_crypt, 0, ORP_PADSTATE_LEN);
+		static AES_KEY *aes_key = NULL;
+		if (!aes_key) {
+			aes_key = new AES_KEY;
+			AES_set_encrypt_key(config.key.xor_pkey,
+				ORP_KEY_LEN * 8, aes_key);
+			memcpy(config.key.iv1,
+				config.key.xor_nonce, ORP_KEY_LEN);
+		}
+		AES_cbc_encrypt(pad, pad_crypt,
+			ORP_PADSTATE_LEN,
+			aes_key, config.key.iv1, AES_ENCRYPT);
+
+		SDLNet_TCP_Send(skt_pad, pad_crypt, ORP_PADSTATE_LEN);
+	}
+	else
+		SDLNet_TCP_Send(skt_pad, pad, ORP_PADSTATE_LEN);
 
 	if (count == ORP_PADSTATE_MAX) {
 		// TODO: Yes this is lazy, and not right...
 		Uint8 reply[80];
-		if (SDLNet_TCP_Recv(skt, reply, 80) != 80) {
+		if (SDLNet_TCP_Recv(skt_pad, reply, 80) != 80) {
 			orpPrintf("Error receiving reply: %s\n", SDLNet_GetError());
 			return -1;
 		}
 		count = 0;
 		Uint32 i;
 		for (i = 0; i < headers.size(); i++) {
-			SDLNet_TCP_Send(skt,
+			SDLNet_TCP_Send(skt_pad,
 				headers[i].c_str(), strlen(headers[i].c_str()));
 		}
 	}
@@ -1717,8 +1833,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 		return -1;
 	}
 
-	TCPsocket skt;
-	if ((skt = SDLNet_TCP_Open(&ip)) == NULL) {
+	if ((skt_pad = SDLNet_TCP_Open(&ip)) == NULL) {
 		orpPrintf("Input connection failure: %s\n", SDLNet_GetError());
 		return -1;
 	}
@@ -1750,6 +1865,22 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 	headers.push_back(os.str());
 
 	os.str("");
+	os << orpGetHeader(HEADER_PAD_INDEX) << ": 1\r\n";
+	headers.push_back(os.str());
+#if 0
+	Base64 base64;
+	Uint8 *encoded = base64.Encode(config.key.akey, ORP_KEY_LEN);
+	if (!encoded) return -1;
+
+	string authkey = (const char *)encoded;
+	delete [] encoded;
+
+	os.str("");
+	os << orpGetHeader(HEADER_AUTH);
+	os << ": " << authkey << "\r\n";
+	headers.push_back(os.str());
+#endif
+	os.str("");
 	os << orpGetHeader(HEADER_SESSIONID);
 	os << ": " << session_id << "\r\n";
 	headers.push_back(os.str());
@@ -1767,7 +1898,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 
 	Uint32 i = 0;
 	for (i = 0; i < headers.size(); i++)
-		SDLNet_TCP_Send(skt, headers[i].c_str(), strlen(headers[i].c_str()));
+		SDLNet_TCP_Send(skt_pad, headers[i].c_str(), strlen(headers[i].c_str()));
 
 	Uint8 statePad[ORP_PADSTATE_LEN] = {
 		0x00, 0x00, 0x00, 0x74, 0x00, 0x00, 0x00, 0x00,
@@ -1842,11 +1973,14 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 		case SDL_USEREVENT:
 			switch (event.user.code) {
 			case EVENT_ERROR:
-				orpPrintf("Error event\n");
+				mode.mode = CTRL_SESSION_TERM;
+				ControlPerform(curl, &mode);
+				DisplayError((const char *)event.user.data1);
+				free(event.user.data1);
 				break;
 			case EVENT_RESTORE:
 				orpPrintf("Restore event\n");
-				SDLNet_TCP_Close(skt);
+				SDLNet_TCP_Close(skt_pad);
 				curl_easy_cleanup(curl);
 				return EVENT_RESTORE;
 			case EVENT_SHUTDOWN:
@@ -2336,9 +2470,8 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 
 			if (value == ORP_PAD_PSP_HOME) {
 				//orpDumpPadState(statePadHome);
-				//SDLNet_TCP_Send(skt, statePadHome, ORP_PADSTATE_LEN);
-				orpSendPadState(skt,
-					statePadHome, 0, count, 0, headers);
+				//SDLNet_TCP_Send(skt_pad, statePadHome, ORP_PADSTATE_LEN);
+				SendPadState(statePadHome, 0, count, 0, headers);
 				continue;
 			}
 
@@ -2366,8 +2499,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 			// TODO: This calculation is very approximate, needs to be fixed!
 			timestamp = (SDL_GetTicks() - ticks) / 16;	
 
-			orpSendPadState(skt,
-				statePad, id, count, timestamp, headers);
+			SendPadState(statePad, id, count, timestamp, headers);
 
 		} else if (kbmap_queue.size()) {
 			for (i = 0; i < kbmap_queue.size(); i++) {
@@ -2381,8 +2513,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				statePad[((value & 0xff00) >> 8)] |=
 					((Uint8)(value & 0x00ff));
 
-				orpSendPadState(skt,
-					statePad, id, count, timestamp, headers);
+				SendPadState(statePad, id, count, timestamp, headers);
 
 				// Sleep...
 				SDL_Delay(50);
@@ -2395,8 +2526,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				statePad[((value & 0xff00) >> 8)] &=
 					~((Uint8)(value & 0x00ff));
 
-				orpSendPadState(skt,
-					statePad, id, count, timestamp, headers);
+				SendPadState(statePad, id, count, timestamp, headers);
 
 				// Sleep...
 				SDL_Delay(50);
@@ -2502,6 +2632,17 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		os << ": " << "capable";
 		headers = curl_slist_append(headers, os.str().c_str());
 
+		if (config.net_public) {
+			if (!(encoded = base64.Encode((const Uint8 *)config.psn_login)))
+				throw -1;
+
+			os.str("");
+			os << orpGetHeader(HEADER_SIGNINID);
+			os << ": " << encoded;
+			delete [] encoded;
+			headers = curl_slist_append(headers, os.str().c_str());
+		}
+
 		os.str("");
 		os << "Connection: Keep-Alive";
 		headers = curl_slist_append(headers, os.str().c_str());
@@ -2521,8 +2662,25 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
 
-	if (cc != 0 || code != 200) return -1;
+	if (cc != 0 || code != 200) {
+		if (cc != 0) DisplayError("Connection error.");
+		else {
+			os.str("");
+			os << "Connection error: ";
+			os << orpGetHeaderValue(HEADER_APP_REASON, headerList);
+			DisplayError(os.str().c_str());
+		}
+		return -1;
+	}
+
 	session_id = orpGetHeaderValue(HEADER_SESSIONID, headerList);
+	if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList))) return -1;
+	if (config.net_public) {
+		if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList),
+			orpAUTH_CHANGE_BITRATE)) return -1;
+		if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList),
+			orpAUTH_SESSION_TERM)) return -1;
+	}
 
 	curl = curl_easy_init();
 
@@ -2543,8 +2701,14 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	struct orpCtrlMode_t mode;
 	mode.mode = CTRL_CHANGE_BITRATE;
 	switch (config.bitrate) {
+	case CTRL_BR_256:
+		mode.param1 = "256000";
+		break;
 	case CTRL_BR_384:
 		mode.param1 = "384000";
+		break;
+	case CTRL_BR_512:
+		mode.param1 = "512000";
 		break;
 	case CTRL_BR_768:
 		mode.param1 = "768000";
@@ -2554,16 +2718,14 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 		break;
 	}
 	mode.param2 = "1024000";
-	ControlPerform(curl, &mode);
-
-	if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList)))
-		return -1;
+	if (ControlPerform(curl, &mode) != 200) return -1;
 
 	AVCodec *videoCodec = GetCodec(
 		orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList));
 	if (!videoCodec) {
 		orpPrintf("Required video codec not found: %s\n",
 			orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList));
+		DisplayError("Video codec not found.");
 		return -1;
 	}
 	AVCodec *audioCodec = GetCodec(
@@ -2571,6 +2733,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	if (!audioCodec) {
 		orpPrintf("Required audio codec not found: %s\n",
 			orpGetHeaderValue(HEADER_AUDIO_CODEC, headerList));
+		DisplayError("Audio codec not found.");
 		return -1;
 	}
 
@@ -2736,6 +2899,50 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	thread_audio_connection = thread_audio_decode = NULL;
 
 	return result;
+}
+
+void OpenRemotePlay::DisplayError(const char *text)
+{
+	SDL_WM_SetCaption(text, NULL);
+
+	SDL_Color color;
+	color.r = 0;
+	color.g = 0;
+	color.b = 0;
+	SDL_Surface *surface = TTF_RenderText_Blended(font, text, color);
+
+	int w;
+	TTF_SizeText(font, text, &w, NULL);
+
+	SDL_Rect rect;
+	if (w > ORP_FRAME_WIDTH)
+		rect.x = 0;
+	else
+		rect.x = (ORP_FRAME_WIDTH - w) / 2;
+	rect.y = 218;
+	rect.w = surface->w;
+	rect.h = surface->h;
+	SDL_LockMutex(view.lock);
+	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
+	view.overlay = NULL;
+	if (view.size != VIEW_NORMAL) {
+		view.size = VIEW_NORMAL;
+		CreateView();
+	}
+	SDL_BlitSurface(splash, NULL, view.view, NULL);
+	SDL_BlitSurface(surface, NULL, view.view, &rect);
+	SDL_UpdateRect(view.view, 0, 0, 0, 0);
+	SDL_UnlockMutex(view.lock);
+
+	SDL_Event event;
+	while (SDL_PollEvent(&event) > 0);
+	while (SDL_WaitEvent(&event) > 0) {
+		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN &&
+			event.key.keysym.sym == SDLK_q &&
+			event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))) {
+			break;
+		}
+	}
 }
 
 // vi: ts=4

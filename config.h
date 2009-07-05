@@ -40,7 +40,7 @@
 #define ORP_WOLPKT_LEN		256
 
 // Config format version
-#define ORP_CONFIG_VER		1
+#define ORP_CONFIG_VER		2
 
 // Config header and record flags
 #define ORP_CONFIG_DELETED	0x10000000
@@ -51,6 +51,9 @@
 #define ORP_CONFIG_BR384	0x02000000
 #define ORP_CONFIG_BR768	0x04000000
 #define ORP_CONFIG_BR1024	0x08000000
+#define ORP_CONFIG_BR256	0x00100000
+#define ORP_CONFIG_BR512	0x00200000
+#define ORP_CONFIG_PRIVATE	0x00400000
 
 struct orpConfigHeader_t
 {
@@ -63,7 +66,7 @@ struct orpConfigHeader_t
 	Uint8 skey2[ORP_KEY_LEN];
 };
 
-struct orpConfigRecord_t
+struct orpConfigRecord_v1_t
 {
 	Uint32 flags;
 	Uint16 ps3_port;
@@ -74,6 +77,22 @@ struct orpConfigRecord_t
 	Uint8 psp_id[ORP_KEY_LEN];
 	Uint8 psp_owner[ORP_NICKNAME_LEN];
 	Uint8 pkey[ORP_KEY_LEN];
+};
+
+#define orpConfigRecord_t	orpConfigRecord_v2_t
+
+struct orpConfigRecord_v2_t
+{
+	Uint32 flags;
+	Uint16 ps3_port;
+	Uint8 ps3_hostname[ORP_HOSTNAME_LEN];
+	Uint8 ps3_nickname[ORP_NICKNAME_LEN];
+	Uint8 ps3_mac[ORP_MAC_LEN];
+	Uint8 psp_mac[ORP_MAC_LEN];
+	Uint8 psp_id[ORP_KEY_LEN];
+	Uint8 psp_owner[ORP_NICKNAME_LEN];
+	Uint8 pkey[ORP_KEY_LEN];
+	Uint8 psn_login[ORP_NICKNAME_LEN];
 };
 
 #ifndef ORP_PSP
@@ -91,6 +110,7 @@ enum orpID_KEY {
 };
 
 int orpConfigOpen(struct orpConfigCtx_t *ctx, const char *filename);
+int orpConfigUpgrade(struct orpConfigCtx_t *ctx);
 int orpConfigClose(struct orpConfigCtx_t *ctx);
 int orpConfigRewind(struct orpConfigCtx_t *ctx);
 int orpConfigRead(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec);

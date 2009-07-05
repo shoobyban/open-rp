@@ -50,6 +50,8 @@ BEGIN_EVENT_TABLE(orpUIEditPanel, wxPanel)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(orpUIEditFrame, wxFrame)
+EVT_RADIOBUTTON(orpID_NET_PUB, orpUIEditFrame::OnNetworkType)
+EVT_RADIOBUTTON(orpID_NET_PRIV, orpUIEditFrame::OnNetworkType)
 EVT_BUTTON(wxID_SAVE, orpUIEditFrame::OnSave)
 EVT_BUTTON(wxID_CANCEL, orpUIEditFrame::OnCancel)
 EVT_BUTTON(wxID_DELETE, orpUIEditFrame::OnDelete)
@@ -427,6 +429,37 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 		0, wxRIGHT | wxLEFT | wxBOTTOM | wxTOP, 5);
 	frame_sizer->Add(row_sizer);
 
+	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("Connection Type:")),
+		0, wxRIGHT | wxLEFT | wxBOTTOM | wxTOP, 5);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+
+	row_sizer->Add(50, -1, 0);
+	net_public = new wxRadioButton(panel, orpID_NET_PUB, _T("Public"),
+		wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+	row_sizer->Add(net_public, 0, wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	net_private = new wxRadioButton(panel, orpID_NET_PRIV, _T("Private"));
+	row_sizer->Add(net_private, 0, wxBOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
+	row_sizer = new wxBoxSizer(wxHORIZONTAL);
+	row_sizer->Add(50, -1, 0);
+	psn_login = new wxTextCtrl(panel, wxID_ANY, 
+		wxString((const char *)record->psn_login, wxConvUTF8),
+		wxDefaultPosition, wxSize(180, -1));
+	if (record->flags & ORP_CONFIG_PRIVATE) {
+		psn_login->Enable(false);
+		net_private->SetValue(true);
+	} else {
+		psn_login->Enable(true);
+		net_public->SetValue(true);
+	}
+	row_sizer->Add(psn_login, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+	wxHyperlinkCtrl *link = new wxHyperlinkCtrl(panel, wxID_ANY,
+		_T("Help!"), _T("http://code.google.com/p/open-rp/wiki/EditProfile"));
+	row_sizer->Add(link, 0, wxRIGHT | wxBOTTOM | wxALIGN_BOTTOM, 5);
+	frame_sizer->Add(row_sizer);
+
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(50, -1, 0);
 	ps3_hostname = new wxTextCtrl(panel, wxID_ANY, 
@@ -441,7 +474,7 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	row_sizer->Add(ps3_port, 0, wxRIGHT | wxBOTTOM | wxALIGN_TOP, 5);
 
 	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("Address / Port:")),
-		0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
+		0, wxRIGHT | wxLEFT | wxTOP | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -462,21 +495,27 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	row_sizer->Add(ps3_wolr, 0, wxRIGHT | wxLEFT | wxBOTTOM, 5);
 	frame_sizer->Add(row_sizer);
 
-	wxString choices[3];
-	choices[0] = _T("384k");
-	choices[1] = _T("768k");
-	choices[2] = _T("1024k");
-	ps3_bitrate = new wxRadioBox(panel, wxID_ANY, 
-		wxEmptyString, wxDefaultPosition, wxDefaultSize,
-		3, choices, 1, wxBORDER_NONE | wxRA_SPECIFY_ROWS);
-	if (record->flags & ORP_CONFIG_BR384)
-		ps3_bitrate->SetSelection(0);
+	bitrates[BR_1024] = _T("+2 (1024k)");
+	bitrates[BR_768] = _T("+1 (768k)");
+	bitrates[BR_512] = _T("Normal (512k)");
+	bitrates[BR_384] = _T("-1 (384k)");
+	bitrates[BR_256] = _T("-2 (256k)");
+	ps3_bitrate = new wxComboBox(panel, wxID_ANY, 
+		bitrates[BR_1024], wxDefaultPosition, wxDefaultSize,
+		BR_MAX, bitrates, wxCB_DROPDOWN | wxCB_READONLY);
+
+	if (record->flags & ORP_CONFIG_BR256)
+		ps3_bitrate->SetValue(bitrates[BR_256]);
+	else if (record->flags & ORP_CONFIG_BR384)
+		ps3_bitrate->SetValue(bitrates[BR_384]);
+	else if (record->flags & ORP_CONFIG_BR512)
+		ps3_bitrate->SetValue(bitrates[BR_512]);
 	else if (record->flags & ORP_CONFIG_BR768)
-		ps3_bitrate->SetSelection(1);
+		ps3_bitrate->SetValue(bitrates[BR_768]);
 	else if (record->flags & ORP_CONFIG_BR1024)
-		ps3_bitrate->SetSelection(2);
+		ps3_bitrate->SetValue(bitrates[BR_1024]);
 	else
-		ps3_bitrate->SetSelection(2);
+		ps3_bitrate->SetValue(bitrates[BR_1024]);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(50, -1, 0);
@@ -484,7 +523,7 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 
 	frame_sizer->Add(new wxStaticText(panel, wxID_ANY, _T("Default Bitrate:")),
 		0, wxRIGHT | wxLEFT | wxTOP, 5);
-	frame_sizer->Add(row_sizer, 0, wxTOP, -10);
+	frame_sizer->Add(row_sizer, 0, wxTOP, 5);
 
 	row_sizer = new wxBoxSizer(wxHORIZONTAL);
 	row_sizer->Add(new wxButton(panel, wxID_SAVE),
@@ -508,6 +547,19 @@ orpUIEditFrame::orpUIEditFrame(wxFrame *parent,
 	CenterOnParent();
 }
 
+void orpUIEditFrame::OnNetworkType(wxCommandEvent& event)
+{
+	switch (event.GetId()) {
+	case orpID_NET_PUB:
+		psn_login->Enable();
+		psn_login->SetFocus();
+		break;
+	case orpID_NET_PRIV:
+		psn_login->Enable(false);
+		break;
+	}
+}
+
 void orpUIEditFrame::OnCancel(wxCommandEvent& WXUNUSED(event))
 {
 	Close();
@@ -521,6 +573,14 @@ void orpUIEditFrame::OnDelete(wxCommandEvent& event)
 
 void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 {
+	if (net_public->GetValue() && psn_login->IsEmpty()) {
+		wxMessageDialog msg(this,
+			_T("You must enter your PSN login ID\nfor public connection types.\n"),
+			_T("Save Error!"), wxOK | wxICON_ERROR);
+		msg.ShowModal();
+		return;
+	}
+
 	Close();
 
 	wxString value(ps3_nickname->GetValue().Mid(0, ORP_NICKNAME_LEN - 1));
@@ -536,24 +596,44 @@ void orpUIEditFrame::OnSave(wxCommandEvent& WXUNUSED(event))
 		record->flags |= ORP_CONFIG_WOLR;
 	else
 		record->flags &= ~ORP_CONFIG_WOLR;
-	switch (ps3_bitrate->GetSelection())
-	{
-	case 0:
-		record->flags |= ORP_CONFIG_BR384;
+	if (net_private->GetValue())
+		record->flags |= ORP_CONFIG_PRIVATE;
+	else {
+		record->flags &= ~ORP_CONFIG_PRIVATE;
+		value = wxString(psn_login->GetValue().Mid(0, ORP_NICKNAME_LEN - 1));
+		strcpy((char *)record->psn_login, value.fn_str());
+	}
+
+	if (ps3_bitrate->GetValue() == bitrates[BR_256]) {
+		record->flags |= ORP_CONFIG_BR256;
+		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR512;
 		record->flags &= ~ORP_CONFIG_BR768;
 		record->flags &= ~ORP_CONFIG_BR1024;
-		break;
-	case 1:
+	} else if (ps3_bitrate->GetValue() == bitrates[BR_384]) {
+		record->flags &= ~ORP_CONFIG_BR256;
+		record->flags |= ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR512;
+		record->flags &= ~ORP_CONFIG_BR768;
+		record->flags &= ~ORP_CONFIG_BR1024;
+	} else if (ps3_bitrate->GetValue() == bitrates[BR_512]) {
 		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR256;
+		record->flags |= ORP_CONFIG_BR512;
+		record->flags &= ~ORP_CONFIG_BR768;
+		record->flags &= ~ORP_CONFIG_BR1024;
+	} else if (ps3_bitrate->GetValue() == bitrates[BR_768]) {
+		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR256;
+		record->flags &= ~ORP_CONFIG_BR512;
 		record->flags |= ORP_CONFIG_BR768;
 		record->flags &= ~ORP_CONFIG_BR1024;
-		break;
-	case 2:
-	default:
+	} else if (ps3_bitrate->GetValue() == bitrates[BR_1024]) {
 		record->flags &= ~ORP_CONFIG_BR384;
+		record->flags &= ~ORP_CONFIG_BR256;
+		record->flags &= ~ORP_CONFIG_BR512;
 		record->flags &= ~ORP_CONFIG_BR768;
 		record->flags |= ORP_CONFIG_BR1024;
-		break;
 	}
 	orpConfigSave(config, record);
 
