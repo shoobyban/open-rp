@@ -2903,7 +2903,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 
 void OpenRemotePlay::DisplayError(const char *text)
 {
-	SDL_WM_SetCaption(text, NULL);
+	SDL_WM_SetCaption("Error!", NULL);
 
 	SDL_Color color;
 	color.r = 0;
@@ -2911,14 +2911,11 @@ void OpenRemotePlay::DisplayError(const char *text)
 	color.b = 0;
 	SDL_Surface *surface = TTF_RenderText_Blended(font, text, color);
 
-	int w;
-	TTF_SizeText(font, text, &w, NULL);
-
 	SDL_Rect rect;
-	if (w > ORP_FRAME_WIDTH)
+	if (surface->w > ORP_FRAME_WIDTH)
 		rect.x = 0;
 	else
-		rect.x = (ORP_FRAME_WIDTH - w) / 2;
+		rect.x = (ORP_FRAME_WIDTH - surface->w) / 2;
 	rect.y = 218;
 	rect.w = surface->w;
 	rect.h = surface->h;
@@ -2933,6 +2930,7 @@ void OpenRemotePlay::DisplayError(const char *text)
 	SDL_BlitSurface(surface, NULL, view.view, &rect);
 	SDL_UpdateRect(view.view, 0, 0, 0, 0);
 	SDL_UnlockMutex(view.lock);
+	SDL_FreeSurface(surface);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event) > 0);
