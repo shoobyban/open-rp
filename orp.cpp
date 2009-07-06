@@ -1416,7 +1416,7 @@ bool OpenRemotePlay::SessionCreate(void)
 		i = reply = first = 0;
 	}
 
-	if (i >= ORP_SRCH_TIMEOUT) DisplayError("PlayStation 3 not found.");
+	if (i >= ORP_SRCH_TIMEOUT) DisplayError("PlayStation""\x00AE""3 not found.");
 	SDLNet_FreePacket(pkt_srch);
 	SDLNet_FreePacket(pkt_resp);
 	SDLNet_UDP_Close(skt);
@@ -2909,13 +2909,13 @@ void OpenRemotePlay::DisplayError(const char *text)
 	color.r = 0;
 	color.g = 0;
 	color.b = 0;
-	SDL_Surface *surface = TTF_RenderText_Blended(font, text, color);
+	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, text, color);
 
 	SDL_Rect rect;
 	if (surface->w > ORP_FRAME_WIDTH)
 		rect.x = 0;
 	else
-		rect.x = (ORP_FRAME_WIDTH - surface->w) / 2;
+		rect.x = (ORP_FRAME_WIDTH - surface->w) / 2 + 13;
 	rect.y = 218;
 	rect.w = surface->w;
 	rect.h = surface->h;
@@ -2928,6 +2928,22 @@ void OpenRemotePlay::DisplayError(const char *text)
 	}
 	SDL_BlitSurface(splash, NULL, view.view, NULL);
 	SDL_BlitSurface(surface, NULL, view.view, &rect);
+	SDL_RWops *rw;
+	if ((rw = SDL_RWFromConstMem(error_png, error_png_len))) {
+		SDL_Surface *icon = IMG_Load_RW(rw, 0);
+		if (icon) {
+			rect.x -= (icon->w + 2);
+			if (rect.x > 0) {
+				int h;
+				TTF_SizeUTF8(font, text, NULL, &h);
+				if (icon->h > surface->h)
+					rect.y -= (icon->h - surface->h) / 2;
+				SDL_BlitSurface(icon, NULL, view.view, &rect);
+			}
+			SDL_FreeSurface(icon);
+		}
+		SDL_FreeRW(rw);
+	}
 	SDL_UpdateRect(view.view, 0, 0, 0, 0);
 	SDL_UnlockMutex(view.lock);
 	SDL_FreeSurface(surface);

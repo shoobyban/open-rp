@@ -9,6 +9,7 @@ all:
 	@echo "#define _IMAGES_H" >> ../images.h
 	xxd -i icon.bmp >> ../images.h
 	xxd -i icon-osx.bmp >> ../images.h
+	xxd -i error.png >> ../images.h
 	xxd -i splash-version.png >> ../images.h
 	@echo "#endif // _IMAGES_H" >> ../images.h
 
