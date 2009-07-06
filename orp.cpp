@@ -280,7 +280,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Allocate frame buffer
 	Uint8 *buffer = new Uint8[streamData->len + len];
 	if (!buffer) {
-		orpPostError("Memory allocation error.");
+		orpPostError("Memory allocation error!");
 		return 0;
 	}
 	Uint8 *bp = buffer;
@@ -308,7 +308,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostError("Memory allocation error.");
+			orpPostError("Memory allocation error!");
 			return 0;
 		}
 		memcpy(streamData->data, bp, len);
@@ -319,7 +319,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Expected trailing 0xd 0xa not found!
 	if (bp[6] != 0x0d || bp[7] != 0x0a) {
 		delete [] buffer;
-		orpPostError("Unexpected data.");
+		orpPostError("Unexpected data!");
 		return 0;
 	}
 
@@ -330,7 +330,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	// Extract chunk length
 	if (sscanf((const char *)bp, "%06x", &chunk_len) != 1) {
 		delete [] buffer;
-		orpPostError("Missing chunk size.");
+		orpPostError("Missing chunk size!");
 		return 0;
 	}
 
@@ -348,7 +348,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostError("Memory allocation error.");
+			orpPostError("Memory allocation error!");
 			return 0;
 		}
 		memcpy(streamData->data, bp, len);
@@ -368,7 +368,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 		streamData->data = new Uint8[streamData->len];
 		if (!streamData->data) {
 			delete [] buffer;
-			orpPostError("Memory allocation error.");
+			orpPostError("Memory allocation error!");
 			return 0;
 		}
 		memcpy(streamData->data, bp + chunk_len, streamData->len);
@@ -378,7 +378,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	if (bp[0] != 0x80) {
 		orpPrintf("%s: invalid packet header\n", _config->name.c_str());
 		delete [] buffer;
-		orpPostError("Invalid packet header.");
+		orpPostError("Invalid packet header!");
 		return 0;
 	}
 
@@ -415,7 +415,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	struct orpStreamPacket_t *packet = new struct orpStreamPacket_t;
 	if (!packet) {
 		delete [] buffer;
-		orpPostError("Memory allocation error.");
+		orpPostError("Memory allocation error!");
 		return 0;
 	}
 
@@ -447,7 +447,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	if (!packet->pkt.data) {
 		delete packet;
 		delete [] buffer;
-		orpPostError("Memory allocation error.");
+		orpPostError("Memory allocation error!");
 		return 0;
 	}
 	memset(packet->pkt.data + packet->pkt.size, 0,
@@ -474,7 +474,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 #endif
 			delete [] packet->pkt.data;
 			delete packet;
-			orpPostError("Corrupt video stream.");
+			orpPostError("Corrupt video stream!");
 			return 0;
 		}
 	}
@@ -1340,13 +1340,13 @@ bool OpenRemotePlay::SessionCreate(void)
 		config.ps3_addr, config.ps3_port) != 0) {
 		orpPrintf("Error resolving address: %s:%d: %s\n",
 			config.ps3_addr, config.ps3_port, SDLNet_GetError());
-		DisplayError("Error resolving address.");
+		DisplayError("Error resolving address!");
 		return false;
 	}
 	skt = SDLNet_UDP_Open(0);
 	if ((channel = SDLNet_UDP_Bind(skt, -1, &addr)) == -1) {
 		orpPrintf("Error binding socket: %s\n", SDLNet_GetError());
-		DisplayError("Error binding socket.");
+		DisplayError("Error binding socket!");
 		return false;
 	}
 
@@ -1380,14 +1380,14 @@ bool OpenRemotePlay::SessionCreate(void)
 
 		if (SDLNet_UDP_Send(skt, channel, pkt_srch) == 0) {
 			orpPrintf("Error sending packet: %s\n", SDLNet_GetError());
-			DisplayError("Error sending packet.");
+			DisplayError("Error sending packet!");
 			break;
 		}
 
 		Sint32 result;
 		if ((result = SDLNet_UDP_Recv(skt, pkt_resp)) == -1) {
 			orpPrintf("Error receiving packet: %s\n", SDLNet_GetError());
-			DisplayError("Error receiving packet.");
+			DisplayError("Error receiving packet!");
 			break;
 		}
 
@@ -1416,7 +1416,8 @@ bool OpenRemotePlay::SessionCreate(void)
 		i = reply = first = 0;
 	}
 
-	if (i >= ORP_SRCH_TIMEOUT) DisplayError("PlayStation""\x00AE""3 not found.");
+	if (i >= ORP_SRCH_TIMEOUT)
+		DisplayError("PlayStation""\x00AE""3 not found!");
 	SDLNet_FreePacket(pkt_srch);
 	SDLNet_FreePacket(pkt_resp);
 	SDLNet_UDP_Close(skt);
@@ -2663,7 +2664,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	curl_easy_cleanup(curl);
 
 	if (cc != 0 || code != 200) {
-		if (cc != 0) DisplayError("Connection error.");
+		if (cc != 0) DisplayError("Connection error!");
 		else {
 			os.str("");
 			os << "Connection error: ";
@@ -2725,7 +2726,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	if (!videoCodec) {
 		orpPrintf("Required video codec not found: %s\n",
 			orpGetHeaderValue(HEADER_VIDEO_CODEC, headerList));
-		DisplayError("Video codec not found.");
+		DisplayError("Video codec not found!");
 		return -1;
 	}
 	AVCodec *audioCodec = GetCodec(
@@ -2733,7 +2734,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	if (!audioCodec) {
 		orpPrintf("Required audio codec not found: %s\n",
 			orpGetHeaderValue(HEADER_AUDIO_CODEC, headerList));
-		DisplayError("Audio codec not found.");
+		DisplayError("Audio codec not found!");
 		return -1;
 	}
 
@@ -2905,44 +2906,59 @@ void OpenRemotePlay::DisplayError(const char *text)
 {
 	SDL_WM_SetCaption("Error!", NULL);
 
+	SDL_RWops *rw;
+	SDL_Surface *icon = NULL;
+	if ((rw = SDL_RWFromConstMem(error_png, error_png_len))) {
+		icon = IMG_Load_RW(rw, 0);
+		SDL_FreeRW(rw);
+	}
+
 	SDL_Color color;
-	color.r = 0;
-	color.g = 0;
-	color.b = 0;
+	color.r = color.g = color.b = 0;
 	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, text, color);
 
-	SDL_Rect rect;
-	if (surface->w > ORP_FRAME_WIDTH)
-		rect.x = 0;
-	else
-		rect.x = (ORP_FRAME_WIDTH - surface->w) / 2 + 13;
-	rect.y = 218;
-	rect.w = surface->w;
-	rect.h = surface->h;
+	int width = 0;
+	SDL_Rect pos;
+	memset(&pos, 0, sizeof(SDL_Rect));
+
+	if (icon) width = icon->w + 2;
+	if (surface) width += surface->w;
+	if (width < ORP_FRAME_WIDTH)
+		pos.x = (ORP_FRAME_WIDTH - width) / 2;
+	pos.y = 218;
+
 	SDL_LockMutex(view.lock);
-	if (view.overlay) SDL_FreeYUVOverlay(view.overlay);
-	view.overlay = NULL;
+	if (view.overlay) {
+		SDL_FreeYUVOverlay(view.overlay);
+		view.overlay = NULL;
+	}
 	if (view.size != VIEW_NORMAL) {
 		view.size = VIEW_NORMAL;
 		CreateView();
 	}
 	SDL_BlitSurface(splash, NULL, view.view, NULL);
-	SDL_BlitSurface(surface, NULL, view.view, &rect);
-	SDL_RWops *rw;
-	if ((rw = SDL_RWFromConstMem(error_png, error_png_len))) {
-		SDL_Surface *icon = IMG_Load_RW(rw, 0);
-		if (icon) {
-			rect.x -= (icon->w + 2);
-			if (rect.x > 0) {
-				int h;
-				TTF_SizeUTF8(font, text, NULL, &h);
-				if (icon->h > surface->h)
-					rect.y -= (icon->h - surface->h) / 2;
-				SDL_BlitSurface(icon, NULL, view.view, &rect);
-			}
-			SDL_FreeSurface(icon);
-		}
-		SDL_FreeRW(rw);
+	if (icon && surface) {
+		SDL_Rect rect;
+		rect.x = pos.x;
+		pos.x += icon->w + 2;
+		rect.y = pos.y;
+		rect.w = icon->w;
+		rect.h = icon->h;
+		if (icon->h > surface->h)
+			rect.y -= (icon->h - surface->h) / 2;
+		else if (icon->h < surface->h)
+			rect.y += (surface->h - icon->h) / 2;
+		SDL_BlitSurface(icon, NULL, view.view, &rect);
+		SDL_FreeSurface(icon);
+	}
+	if (surface) {
+		SDL_Rect rect;
+		rect.x = pos.x;
+		rect.y = pos.y;
+		rect.w = surface->w;
+		rect.h = surface->h;
+		SDL_BlitSurface(surface, NULL, view.view, &rect);
+		SDL_FreeSurface(surface);
 	}
 	SDL_UpdateRect(view.view, 0, 0, 0, 0);
 	SDL_UnlockMutex(view.lock);
