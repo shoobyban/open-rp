@@ -458,7 +458,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	memcpy(packet->pkt.data, bp, packet->pkt.size);
 	delete [] buffer;
 
-	// Decrypt video key-frames
+	// Decrypt h2.64 video key-frames
 	if (packet->header.magic[1] == 0xff && packet->header.unk6 == 0x0401) {
 		memcpy(_config->key.iv1,
 			_config->key.xor_nonce, ORP_KEY_LEN);
@@ -478,14 +478,6 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 			return 0;
 		}
 	}
-	// Decrypt ATRAC3 audio
-	else if (packet->header.magic[1] == 0xfc && packet->header.unk6 == 0x0001) {
-		memcpy(_config->key.iv1,
-			_config->key.xor_nonce, ORP_KEY_LEN);
-		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
-			packet->pkt.size - (packet->pkt.size % ORP_KEY_LEN),
-			&_config->aes_key, _config->key.iv1, AES_DECRYPT);
-	}
 	// Decrypt AAC audio
 	else if (packet->header.magic[1] == 0x80 && packet->header.unk8) {
 		memcpy(_config->key.iv1,
@@ -494,7 +486,23 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 			packet->pkt.size - (packet->pkt.size % ORP_KEY_LEN),
 			&_config->aes_key, _config->key.iv1, AES_DECRYPT);
 	}
-
+	// Decrypt MPEG4 video key-frames
+	else if (packet->header.magic[1] == 0xfb && (
+		packet->header.unk6 == 0x0001 || packet->header.unk6 == 0x0401)) {
+		memcpy(_config->key.iv1,
+			_config->key.xor_nonce, ORP_KEY_LEN);
+		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
+			packet->pkt.size - (packet->pkt.size % ORP_KEY_LEN),
+			&_config->aes_key, _config->key.iv1, AES_DECRYPT);
+	}
+	// Decrypt ATRAC3 audio
+	else if (packet->header.magic[1] == 0xfc && packet->header.unk8) {
+		memcpy(_config->key.iv1,
+			_config->key.xor_nonce, ORP_KEY_LEN);
+		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
+			packet->pkt.size - (packet->pkt.size % ORP_KEY_LEN),
+			&_config->aes_key, _config->key.iv1, AES_DECRYPT);
+	}
 #ifdef ORP_DUMP_STREAM_DATA
 	fwrite(packet->pkt.data, 1, packet->pkt.size, _config->h_data);
 #endif
@@ -652,14 +660,17 @@ static Sint32 orpThreadVideoDecode(void *config)
 
 			orpMasterClockUpdate(_config->clock);
 			SDL_LockMutex(_config->clock->lock);
-			//Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
+#ifdef ORP_SYNC_TO_MASTER
 			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->master);
+#else
+			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
+#endif
 			Uint32 decode = _config->clock->decode = SDL_GetTicks() - ticks;
 			SDL_UnlockMutex(_config->clock->lock);
 
 			Sint32 drift = 0;
 			if (delta > 0)
-				drift = (Sint32)((double)delta / (double)90000 * (double)1000);
+				drift = (Sint32)((double)delta / (double)ORP_CLOCKFREQ * (double)1000);
 			if (drift > 0) {
 				Uint32 delay = decode < drift ? drift - decode : drift;
 				if (delay > 1000) {
@@ -758,6 +769,9 @@ static Sint32 orpThreadVideoConnection(void *config)
 	cc = curl_easy_perform(curl);
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
+
+	orpPrintf("%s: stream exit: %d\n", _config->name.c_str(), cc);
+	orpPostEvent(EVENT_STREAM_EXIT);
 
 	return 0;
 }
@@ -1095,11 +1109,15 @@ static Sint32 orpThreadAudioConnection(void *config)
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
 
+	orpPrintf("%s: stream exit: %d\n", _config->name.c_str(), cc);
+	orpPostEvent(EVENT_STREAM_EXIT);
+
 	return 0;
 }
 
 OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
-	: ps3_nickname(NULL), js(NULL), splash(NULL), font(NULL),
+	: terminate(false), ps3_nickname(NULL), js(NULL),
+	splash(NULL), font(NULL),
 #ifdef ORP_CLOCK_DEBUG
 	timer(0),
 #endif
@@ -1412,7 +1430,10 @@ bool OpenRemotePlay::SessionCreate(void)
 #ifdef ORP_CLOCK_DEBUG
 		SDL_RemoveTimer(timer);
 #endif
-		if (result != EVENT_RESTORE) break;
+		if (result != EVENT_RESTORE) {
+			if (!terminate) DisplayError("Connection terminated!");
+			break;
+		}
 		i = reply = first = 0;
 	}
 
@@ -1868,19 +1889,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 	os.str("");
 	os << orpGetHeader(HEADER_PAD_INDEX) << ": 1\r\n";
 	headers.push_back(os.str());
-#if 0
-	Base64 base64;
-	Uint8 *encoded = base64.Encode(config.key.akey, ORP_KEY_LEN);
-	if (!encoded) return -1;
 
-	string authkey = (const char *)encoded;
-	delete [] encoded;
-
-	os.str("");
-	os << orpGetHeader(HEADER_AUTH);
-	os << ": " << authkey << "\r\n";
-	headers.push_back(os.str());
-#endif
 	os.str("");
 	os << orpGetHeader(HEADER_SESSIONID);
 	os << ": " << session_id << "\r\n";
@@ -1967,6 +1976,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 		}
 		switch (event.type) {
 		case SDL_QUIT:
+			terminate = true;
 			mode.mode = CTRL_SESSION_TERM;
 			ControlPerform(curl, &mode);
 			return 0;
@@ -1974,6 +1984,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 		case SDL_USEREVENT:
 			switch (event.user.code) {
 			case EVENT_ERROR:
+				terminate = true;
 				mode.mode = CTRL_SESSION_TERM;
 				ControlPerform(curl, &mode);
 				DisplayError((const char *)event.user.data1);
@@ -1985,9 +1996,16 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				curl_easy_cleanup(curl);
 				return EVENT_RESTORE;
 			case EVENT_SHUTDOWN:
+				terminate = true;
 				mode.mode = CTRL_SESSION_TERM;
 				ControlPerform(curl, &mode);
 				return 0;
+			case EVENT_STREAM_EXIT:
+				orpPrintf("Stream exited\n");
+				SDLNet_TCP_Close(skt_pad);
+				curl_easy_cleanup(curl);
+				if (!terminate) return EVENT_RESTORE;
+				return EVENT_STREAM_EXIT;
 			}
 			break;
 
@@ -2111,6 +2129,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				if (event.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
 					mode.mode = CTRL_SESSION_TERM;
 					ControlPerform(curl, &mode);
+					terminate = true;
 					return 0;
 				}
 				break;

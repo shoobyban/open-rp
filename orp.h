@@ -227,7 +227,8 @@ struct orpKeyboardMap_t {
 enum orpEvent {
 	EVENT_ERROR,
 	EVENT_RESTORE,
-	EVENT_SHUTDOWN
+	EVENT_SHUTDOWN,
+	EVENT_STREAM_EXIT
 };
 
 enum orpViewSize {
@@ -402,6 +403,7 @@ public:
 	void SessionDestroy(void);
 
 protected:
+	bool terminate;
 	struct orpConfig_t config;
 	vector<struct orpCodec_t *> codec;
 	struct orpView_t view;
