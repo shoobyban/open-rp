@@ -2981,7 +2981,6 @@ void OpenRemotePlay::DisplayError(const char *text)
 	}
 	SDL_UpdateRect(view.view, 0, 0, 0, 0);
 	SDL_UnlockMutex(view.lock);
-	SDL_FreeSurface(surface);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event) > 0);
