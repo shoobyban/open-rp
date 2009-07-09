@@ -2940,7 +2940,7 @@ void OpenRemotePlay::DisplayError(const char *text)
 	SDL_Rect pos;
 	memset(&pos, 0, sizeof(SDL_Rect));
 
-	if (icon) width = icon->w + 2;
+	if (icon) width = icon->w + 4;
 	if (surface) width += surface->w;
 	if (width < ORP_FRAME_WIDTH)
 		pos.x = (ORP_FRAME_WIDTH - width) / 2;
@@ -2959,7 +2959,7 @@ void OpenRemotePlay::DisplayError(const char *text)
 	if (icon && surface) {
 		SDL_Rect rect;
 		rect.x = pos.x;
-		pos.x += icon->w + 2;
+		pos.x += icon->w + 4;
 		rect.y = pos.y;
 		rect.w = icon->w;
 		rect.h = icon->h;
