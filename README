@@ -119,31 +119,6 @@ NOTE: You can duplicate a profile by changing the PS3 Name and clicking Save.
 This is useful if you wish to keep two profiles, one for the local LAN, and
 another for Internet connections.
 
-Compilation
--------------------------------------------------------------------------------
-
-The "build system" (if you can call it that) is very simple.  For the player
-and the GUI, edit the Makefile in each and uncomment the platform you wish to
-build for.  For the GUI, ensure there are config sym-links:
-
-        ./config.h -> ../config.h
-        ./config.cpp -> ../config.cpp
-
-If you'll be running the GUI from the gui directory, ensure you have created a
-sym-link back to the player:
-
-        ./orp -> ../orp
-
-If you change any of the logos or images, run make images to generate the
-required header file.
-
-The psp directory contains the RP key export utility.  This requires the PSPSDK
-to be installed and the $PSPDEV environment variable to be set accordingly.
-
-The keys directory contains a simple tool to save the 3 RP static keys (only 2
-are used).  I've seperated the keys in to the configuration file in case they
-need to updated.
-
 Known Issues
 -------------------------------------------------------------------------------
 
