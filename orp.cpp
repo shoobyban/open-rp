@@ -641,8 +641,6 @@ static Sint32 orpThreadVideoDecode(void *config)
 					p.data, p.linesize);
 			}
 
-			SDL_UnlockYUVOverlay(_config->view->overlay);
-
 			SDL_Rect rect;
 			rect.x = 0;
 			if (_config->view->size == VIEW_FULLSCREEN) {
@@ -655,6 +653,19 @@ static Sint32 orpThreadVideoDecode(void *config)
 				rect.h = _config->view->scale.h;
 			}
 
+			if (_config->view->status_sticky ||
+				_config->view->status_ticks >= SDL_GetTicks()) {
+				SDL_Rect src, dst;
+				src.x = src.y = 0;
+				src.w = _config->view->status_bg->w;
+				src.h = _config->view->status_bg->h;
+				dst.x = 0;
+				dst.y = rect.h - _config->view->status_bg->h;
+				dst.w = _config->view->status_bg->w;
+				dst.h = _config->view->status_bg->h;
+				SDL_BlitOverlay(_config->view->status_yuv, &src,
+					_config->view->overlay, &dst);
+			}
 			SDL_DisplayYUVOverlay(_config->view->overlay, &rect);
 			SDL_UnlockMutex(_config->view->lock);
 
@@ -1117,20 +1128,29 @@ static Sint32 orpThreadAudioConnection(void *config)
 
 OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	: terminate(false), ps3_nickname(NULL), js(NULL),
-	splash(NULL), font(NULL),
+	splash(NULL), font_normal(NULL), font_small(NULL),
 #ifdef ORP_CLOCK_DEBUG
 	timer(0),
 #endif
 	thread_video_connection(NULL), thread_video_decode(NULL),
 	thread_audio_connection(NULL), thread_audio_decode(NULL)
 {
-	view.view = NULL;
-	view.overlay = NULL;
-	view.size = VIEW_NORMAL;
-	view.scale.x = view.scale.y = 0;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	rmask = 0xff000000;
+	gmask = 0x00ff0000;
+	bmask = 0x0000ff00;
+	amask = 0x000000ff;
+#else
+	rmask = 0x000000ff;
+	gmask = 0x0000ff00;
+	bmask = 0x00ff0000;
+	amask = 0xff000000;
+#endif
+	memset(&view, 0, sizeof(struct orpView_t));
 	view.scale.w = ORP_FRAME_WIDTH;
 	view.scale.h = ORP_FRAME_HEIGHT;
 	view.lock = SDL_CreateMutex();
+
 	orpAVMutex = SDL_CreateMutex();
 
 	// Copy config
@@ -1262,8 +1282,15 @@ bool OpenRemotePlay::SessionCreate(void)
 		orpPrintf("Error loading font.\n");
 		return false;
 	} else {
-		font = TTF_OpenFontRW(rw, 1, 18);
-		if (!font) {
+		font_small = TTF_OpenFontRW(rw, 1, 12);
+		if (!font_small) {
+			orpPrintf("Error opening font: %s\n",
+				TTF_GetError());
+			return false;
+		}
+		SDL_RWseek(rw, 0, SEEK_SET);
+		font_normal = TTF_OpenFontRW(rw, 1, 18);
+		if (!font_normal) {
 			orpPrintf("Error opening font: %s\n",
 				TTF_GetError());
 			return false;
@@ -1283,19 +1310,6 @@ bool OpenRemotePlay::SessionCreate(void)
 			SDL_BlitSurface(splash, NULL, view.view, &rect);
 
 			SDL_Surface *surface;
-			Uint32 rmask, gmask, bmask, amask;
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			rmask = 0xff000000;
-			gmask = 0x00ff0000;
-			bmask = 0x0000ff00;
-			amask = 0x000000ff;
-#else
-			rmask = 0x000000ff;
-			gmask = 0x0000ff00;
-			bmask = 0x00ff0000;
-			amask = 0xff000000;
-#endif
 			surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 				ORP_FRAME_WIDTH, ORP_FRAME_HEIGHT, 32,
 				rmask, gmask, bmask, amask);
@@ -1309,6 +1323,19 @@ bool OpenRemotePlay::SessionCreate(void)
 			}
 			SDL_FreeSurface(surface);
 		}
+		SDL_FreeRW(rw);
+	}
+
+	if ((rw = SDL_RWFromConstMem(mode_game_png, mode_game_png_len))) {
+		mode_game = IMG_Load_RW(rw, 0);
+		SDL_FreeRW(rw);
+	}
+	if ((rw = SDL_RWFromConstMem(mode_ps1_png, mode_ps1_png_len))) {
+		mode_ps1 = IMG_Load_RW(rw, 0);
+		SDL_FreeRW(rw);
+	}
+	if ((rw = SDL_RWFromConstMem(mode_vsh_png, mode_vsh_png_len))) {
+		mode_vsh = IMG_Load_RW(rw, 0);
 		SDL_FreeRW(rw);
 	}
 
@@ -1496,6 +1523,12 @@ bool OpenRemotePlay::CreateView(void)
 		orpPrintf("SDL_CreateYUVOverlay: %s\n", SDL_GetError());
 		return false;
 	}
+	if (view.status_bg) SDL_FreeSurface(view.status_bg);
+	if (view.status_yuv) SDL_FreeYUVSurface(view.status_yuv);
+	view.status_bg = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		r->w, ORP_OVERLAY_HEIGHT, 32, rmask, gmask, bmask, amask);
+	view.status_yuv = SDL_CreateYUVSurface(r->w, ORP_OVERLAY_HEIGHT);
+	UpdateOverlay();
 	SDL_ShowCursor(!(view.size == VIEW_FULLSCREEN));
 	SDL_WM_GrabInput((view.size == VIEW_FULLSCREEN)
 		? SDL_GRAB_ON : SDL_GRAB_OFF);
@@ -1582,33 +1615,34 @@ bool OpenRemotePlay::CreateKeys(const string &nonce, enum orpAuthType type)
 
 bool OpenRemotePlay::SetCaption(const char *caption)
 {
-	ostringstream os;
+	os_caption.str("");
 	if (ps3_nickname) {
-		os << ps3_nickname << " - ";
+		os_caption << ps3_nickname << " - ";
 		if (!caption) {
 			switch (config.bitrate) {
 			case CTRL_BR_256:
-				os << "256k";
+				os_caption << "256k";
 				break;
 			case CTRL_BR_384:
-				os << "384k";
+				os_caption << "384k";
 				break;
 			case CTRL_BR_512:
-				os << "512k";
+				os_caption << "512k";
 				break;
 			case CTRL_BR_768:
-				os << "768k";
+				os_caption << "768k";
 				break;
 			case CTRL_BR_1024:
-				os << "1024k";
+				os_caption << "1024k";
 				break;
 			}
 		}
 	}
-	else if (!caption) os << "Open Remote Play";
+	else if (!caption) os_caption << "Open Remote Play";
 
-	if (caption) os << caption;
-	SDL_WM_SetCaption(os.str().c_str(), NULL);
+	if (caption) os_caption << caption;
+	SDL_WM_SetCaption(os_caption.str().c_str(), NULL);
+	UpdateOverlay();
 	SDL_Event event;
 	bool quit = false;
 	while (SDL_PollEvent(&event) > 0) {
@@ -2163,6 +2197,15 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 					SetCaption(NULL);
 				}
 				break;
+			case SDLK_s:
+				if ((event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL))) {
+					SDL_LockMutex(view.lock);
+					view.status_sticky = view.status_sticky ? false : true;
+					UpdateOverlay();
+					view.status_ticks = 0;
+					SDL_UnlockMutex(view.lock);
+				}
+				break;
 			case SDLK_d:
 				if ((event.key.keysym.mod & (KMOD_LCTRL |  KMOD_RCTRL)) &&
 					view.size != VIEW_FULLSCREEN) {
@@ -2694,6 +2737,7 @@ Sint32 OpenRemotePlay::SessionPerform(void)
 	}
 
 	session_id = orpGetHeaderValue(HEADER_SESSIONID, headerList);
+	exec_mode = orpGetHeaderValue(HEADER_EXEC_MODE, headerList);
 	if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList))) return -1;
 	if (config.net_public) {
 		if (!CreateKeys(orpGetHeaderValue(HEADER_NONCE, headerList),
@@ -2934,7 +2978,7 @@ void OpenRemotePlay::DisplayError(const char *text)
 
 	SDL_Color color;
 	color.r = color.g = color.b = 0;
-	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, text, color);
+	SDL_Surface *surface = TTF_RenderUTF8_Blended(font_normal, text, color);
 
 	int width = 0;
 	SDL_Rect pos;
@@ -2991,6 +3035,58 @@ void OpenRemotePlay::DisplayError(const char *text)
 			break;
 		}
 	}
+}
+
+void OpenRemotePlay::UpdateOverlay(void)
+{
+	SDL_Color color;
+	color.r = color.g = color.b = 255;
+	SDL_Surface *surface = NULL;
+
+	if (font_normal) {
+		surface = TTF_RenderUTF8_Blended(font_normal,
+			os_caption.str().c_str(), color);
+	}
+	if (!surface) return;
+
+	SDL_Rect rect;
+	rect.x = rect.y = 0;
+	rect.w = view.status_bg->w;
+	rect.h = view.status_bg->h;
+	SDL_FillRect(view.status_bg, &rect,
+		SDL_MapRGBA(surface->format, 0, 0, 0, 128));
+	if (mode_game && !strncasecmp(exec_mode.c_str(), "gam", 3)) {
+		rect.w = mode_game->w;
+		rect.h = mode_game->h;
+		SDL_BlitSurface(mode_game, NULL, view.status_bg, &rect);
+	}
+	else if (mode_ps1 && !strncasecmp(exec_mode.c_str(), "ps1", 3)) {
+		rect.w = mode_ps1->w;
+		rect.h = mode_ps1->h;
+		SDL_BlitSurface(mode_ps1, NULL, view.status_bg, &rect);
+	}
+	else if (mode_vsh && !strncasecmp(exec_mode.c_str(), "vsh", 3)) {
+		rect.w = mode_vsh->w;
+		rect.h = mode_vsh->h;
+		SDL_BlitSurface(mode_vsh, NULL, view.status_bg, &rect);
+	}
+
+	rect.x = ORP_OVERLAY_HEIGHT + 2;
+	rect.y = (ORP_OVERLAY_HEIGHT - surface->h) / 2;
+	rect.w = surface->w;
+	rect.h = surface->h;
+	SDL_BlitSurface(surface, NULL, view.status_bg, &rect);
+#if 0
+	surface = TTF_RenderUTF8_Blended(font_small,
+		exec_mode.c_str(), color);
+	if (!surface) return;
+	rect.w = surface->w;
+	rect.h = surface->h;
+	rect.x = view.status_bg->w - surface->w;
+	SDL_BlitSurface(surface, NULL, view.status_bg, &rect);
+#endif
+	ConvertRGBtoYUV(view.status_bg, view.status_yuv);
+	view.status_ticks = SDL_GetTicks() + 2000;
 }
 
 // vi: ts=4

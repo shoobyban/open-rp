@@ -46,6 +46,7 @@ extern "C" {
 #include <vector>
 #include <queue>
 
+#include "yuv.h"
 #include "config.h"
 
 #define ORP_PREMO_VMAJOR	0
@@ -53,6 +54,7 @@ extern "C" {
 
 #define ORP_FRAME_WIDTH		480
 #define ORP_FRAME_HEIGHT	272
+#define ORP_OVERLAY_HEIGHT	32
 #define ORP_SESSION_LEN		16
 #define ORP_PADSTATE_MAX	60
 #define ORP_PADSTATE_LEN	128
@@ -243,6 +245,10 @@ struct orpView_t {
 	enum orpViewSize prev;
 	SDL_Surface *view;
 	SDL_Overlay *overlay;
+	SDL_Surface *status_bg;
+	SDL_YUVSurface *status_yuv;
+	Uint32 status_ticks;
+	bool status_sticky;
 	SDL_Rect fs;
 	SDL_Rect scale;
 	SDL_Rect desktop;
@@ -409,6 +415,8 @@ protected:
 	struct orpView_t view;
 	string session_id;
 	char *ps3_nickname;
+	ostringstream os_caption;
+	string exec_mode;
 	SDL_Thread *thread_video_connection;
 	SDL_Thread *thread_video_decode;
 	SDL_Thread *thread_audio_connection;
@@ -419,8 +427,13 @@ protected:
 	SDL_TimerID timer;
 #endif
 	TCPsocket skt_pad;
-	TTF_Font *font;
+	TTF_Font *font_small;
+	TTF_Font *font_normal;
 	SDL_Surface *splash;
+	SDL_Surface *mode_game;
+	SDL_Surface *mode_ps1;
+	SDL_Surface *mode_vsh;
+	Uint32 rmask, gmask, bmask, amask;
 
 	bool CreateView(void);
 	bool CreateKeys(const string &nonce,	
@@ -433,6 +446,7 @@ protected:
 	Sint32 SessionControl(CURL *curl);
 	Sint32 SessionPerform(void);
 	void DisplayError(const char *text);
+	void UpdateOverlay(void);
 };
 
 #endif // _ORP_H

@@ -11,6 +11,9 @@ all:
 	xxd -i icon-osx.bmp >> ../images.h
 	xxd -i error.png >> ../images.h
 	xxd -i splash-version.png >> ../images.h
+	xxd -i mode_game.png >> ../images.h
+	xxd -i mode_ps1.png >> ../images.h
+	xxd -i mode_vsh.png >> ../images.h
 	@echo "#endif // _IMAGES_H" >> ../images.h
 
 # vi: ts=4
