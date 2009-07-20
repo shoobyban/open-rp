@@ -1995,6 +1995,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 	Uint32 ticks = SDL_GetTicks();
 	Sint16 jsr_xaxis = 0x80, jsr_yaxis = 0x80;
 	Sint16 jsl_xaxis = 0x80, jsl_yaxis = 0x80;
+	Sint16 mouse_x = 0, mouse_y = 0;
 	Uint8 *keystate = SDL_GetKeyState(NULL);;
 	SDL_Event event;
 
@@ -2310,6 +2311,21 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 		case SDL_MOUSEMOTION:
 			if (SDL_WM_GrabInput(SDL_GRAB_QUERY) != SDL_GRAB_ON) break;
 			if (!keystate[SDLK_RALT] && !keystate[SDLK_LALT]) break;
+			mouse_x += event.motion.xrel;
+			mouse_y += event.motion.yrel;
+			if (mouse_x > SCHAR_MAX) mouse_x = SCHAR_MAX;
+			else if (mouse_x < SCHAR_MIN) mouse_x = SCHAR_MIN;
+			if (mouse_y > SCHAR_MAX) mouse_y = SCHAR_MAX;
+			else if (mouse_y < SCHAR_MIN) mouse_y = SCHAR_MIN;
+			if (event.motion.xrel) {
+				key = ORP_PAD_PSP_LXAXIS;
+				jsl_xaxis = mouse_x + 0x80;
+			}
+			else if (event.motion.yrel) {
+				key = ORP_PAD_PSP_LYAXIS;
+				jsl_yaxis = mouse_y + 0x80;
+			}
+#if 0
 			if (abs(event.motion.xrel) < 3 && abs(event.motion.yrel) < 3) {
 				key = ORP_PAD_KEYUP;
 				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP |
@@ -2331,6 +2347,7 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				key += (ORP_PAD_PSP_DPRIGHT | ORP_PAD_PSP_DPUP |
 					ORP_PAD_PSP_DPLEFT | ORP_PAD_PSP_DPDOWN);
 			}
+#endif
 			break;
 
 		case SDL_JOYBUTTONUP:
