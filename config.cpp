@@ -270,4 +270,103 @@ int orpConfigSetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *src
 	return 0;
 }
 
+#ifdef ORP_CONFIG_DEBUG
+enum orpConfigValueType {
+	CVT_KEY,
+	CVT_MAC,
+	CVT_FLAGS
+};
+
+static void orpConfigPrint(enum orpConfigValueType type, FILE *output, Uint8 *value)
+{
+	Sint32 i, len;
+	Uint32 flags;
+	switch (type) {
+	case CVT_KEY:
+		len = ORP_KEY_LEN;
+		for (i = 0; i < len; i++) fprintf(output, "%02x", value[i]);
+		return;
+	case CVT_MAC:
+		len = ORP_MAC_LEN - 1;
+		for (i = 0; i < len; i++) fprintf(output, "%02x:", value[i]);
+		fprintf(output, "%02x", value[len]);
+		return;
+	case CVT_FLAGS:
+		memcpy(&flags, (Uint32 *)value, sizeof(Uint32));
+		fprintf(output, "%c", flags & ORP_CONFIG_DELETED ? 'd' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_EXPORT ? 'e' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_KEYS ? 'k' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_NOSRCH ? 'n' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_WOLR ? 'w' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_BR256 ? '2' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_BR384 ? '3' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_BR512 ? '5' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_BR768 ? '7' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_BR1024 ? '1' : '-');
+		fprintf(output, "%c", flags & ORP_CONFIG_PRIVATE ? 'p' : '-');
+		return;
+	}
+}
+
+void orpConfigDebug(struct orpConfigCtx_t *ctx, FILE *output)
+{
+	if (!ctx->h_file) {
+		fprintf(output, "Invalid context.\n");
+		return;
+	}
+
+	fprintf(output, "%12s: %c%c%c\n", "magic",
+		ctx->header.magic[0], ctx->header.magic[1], ctx->header.magic[2]);
+	fprintf(output, "%12s: %hhd\n", "version", ctx->header.version);
+	fprintf(output, "%12s: ", "flags");
+	orpConfigPrint(CVT_FLAGS, output, (Uint8 *)&ctx->header.flags);
+	fprintf(output, "\n");
+	fprintf(output, "%12s: ", "skey0");
+	orpConfigPrint(CVT_KEY, output, ctx->header.skey0);
+	fprintf(output, "\n");
+	fprintf(output, "%12s: ", "skey1");
+	orpConfigPrint(CVT_KEY, output, ctx->header.skey1);
+	fprintf(output, "\n");
+	fprintf(output, "%12s: ", "skey2");
+	orpConfigPrint(CVT_KEY, output, ctx->header.skey2);
+	fprintf(output, "\n\n");
+
+	long cpos = ftell(ctx->h_file);
+	fseek(ctx->h_file, sizeof(struct orpConfigHeader_t), SEEK_SET);
+	struct orpConfigRecord_t rec;
+
+	while (!feof(ctx->h_file)) {
+		if (fread(&rec, 1, sizeof(orpConfigRecord_t), ctx->h_file) !=
+			sizeof(orpConfigRecord_t)) break;
+		fprintf(output, "%12s: ", "flags");
+		orpConfigPrint(CVT_FLAGS, output, (Uint8 *)&rec.flags);
+		fprintf(output, "\n");
+		fprintf(output, "%12s: %hd\n", "ps3_port", rec.ps3_port);
+		fprintf(output, "%12s: \"%s\"\n", "ps3_hostname",
+			(const char *)rec.ps3_hostname);
+		fprintf(output, "%12s: \"%s\"\n", "ps3_nickname",
+			(const char *)rec.ps3_nickname);
+		fprintf(output, "%12s: ", "ps3_mac");
+		orpConfigPrint(CVT_MAC, output, rec.ps3_mac);
+		fprintf(output, "\n");
+		fprintf(output, "%12s: ", "psp_mac");
+		orpConfigPrint(CVT_MAC, output, rec.psp_mac);
+		fprintf(output, "\n");
+		fprintf(output, "%12s: ", "psp_id");
+		orpConfigPrint(CVT_KEY, output, rec.psp_id);
+		fprintf(output, "\n");
+		fprintf(output, "%12s: \"%s\"\n", "psp_owner",
+			(const char *)rec.psp_owner);
+		fprintf(output, "%12s: ", "pkey");
+		orpConfigPrint(CVT_KEY, output, rec.pkey);
+		fprintf(output, "\n");
+		fprintf(output, "%12s: \"%s\"\n\n", "psn_login",
+			(const char *)rec.psn_login);
+	}
+
+orpConfigDebug_Return:
+	fseek(ctx->h_file, cpos, SEEK_SET);
+}
+#endif
+
 // vi: ts=4

@@ -1,0 +1,22 @@
+SOURCE=SDL_image-1.2.7
+PATCHES=
+export LIBS="-lm ../root/lib/libpng.a ../root/lib/libz.a"
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--disable-shared \
+	--enable-static \
+	--enable-bmp 
+	--disable-gif \
+	--disable-jpg \
+	--disable-lbm \
+	--disable-pcx \
+	--enable-png \
+	--disable-png-shared \
+	--disable-pnm \
+	--disable-tga \
+	--disable-tif \
+	--disable-xcf \
+	--disable-xpm \
+	--disable-xv"
+
+# vi: syntax=sh

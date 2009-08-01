@@ -119,6 +119,9 @@ int orpConfigDelete(struct orpConfigCtx_t *ctx, const char *nickname);
 int orpConfigSave(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec);
 int orpConfigGetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *dst);
 int orpConfigSetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *src);
+#ifdef ORP_CONFIG_DEBUG
+void orpConfigDebug(struct orpConfigCtx_t *ctx, FILE *output);
+#endif
 
 #endif // ORP_PSP
 #endif // _CONFIG_H

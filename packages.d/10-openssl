@@ -1,0 +1,11 @@
+SOURCE=openssl-0.9.8k
+PATCHES=
+if [ "$OS" == "Linux" ]; then
+	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-elf"
+elif [ "$OS" == "Darwin" ]; then
+	CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin-i386-cc"
+elif [ "$OS" == "MINGW32_NT-5.1" ]; then
+	CONFIGURE="./Configure --prefix=$PREFIX no-shared mingw"
+fi
+
+# vi: syntax=sh

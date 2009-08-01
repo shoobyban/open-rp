@@ -1,0 +1,12 @@
+SOURCE=SDL_net-1.2.7
+PATCHES=
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--disable-shared \
+	--enable-static"
+
+if [ "$OS" == "Darwin" ]; then
+	PATCHES="$PATCHES SDL_net-1.2.7-TCP_NODELAY.patch"
+fi
+
+# vi: syntax=sh

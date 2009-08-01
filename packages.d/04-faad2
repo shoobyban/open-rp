@@ -1,0 +1,11 @@
+SOURCE=faad2-2.7
+PATCHES=
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--disable-shared \
+	--enable-static \
+	--without-xmms \
+	--without-drm \
+	--without-mpeg4ip"
+
+# vi: syntax=sh

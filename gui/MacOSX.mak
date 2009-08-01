@@ -1,9 +1,7 @@
 CXX=g++
-INCLUDE=-I.
-CFLAGS=-O2 -pipe $(INCLUDE) $(shell wx-config --cflags)
-CXXFLAGS=$(CFLAGS)
-LDFLAGS=
-LIBS=$(shell wx-config --libs)
+OS_CFLAGS=
+OS_LDFLAGS=
+OS_LIBS=
 DEFS=
 TARGET=orpui
 VER_PLIST=$(VER_MAJOR).$(VER_MINOR)

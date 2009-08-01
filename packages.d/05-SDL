@@ -1,0 +1,15 @@
+SOURCE=SDL-1.2.13
+PATCHES=
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--disable-cdrom \
+	--disable-shared \
+	--enable-static"
+
+if [ "$OS" != "Linux" ]; then
+	CONFIGURE="$CONFIGURE \
+		--disable-loadso \
+		--disable-sdl-dlopen"
+fi
+
+# vi: syntax=sh

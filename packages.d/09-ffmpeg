@@ -1,0 +1,28 @@
+SOURCE=ffmpeg-svn
+PATCHES=
+export LIBS=../root/lib/libfaad.a
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--enable-gpl \
+	--disable-ffmpeg \
+	--disable-ffplay \
+	--disable-ffserver \
+	--disable-network \
+	--disable-encoders \
+	--disable-decoders \
+	--disable-muxers \
+	--disable-demuxers \
+	--enable-demuxer=m4v \
+	--disable-parsers \
+	--disable-bsfs \
+	--disable-protocols \
+	--disable-indevs \
+	--disable-outdevs \
+	--disable-filters \
+	--enable-decoder=libfaad \
+	--enable-decoder=atrac3 \
+	--enable-decoder=h264 \
+	--enable-decoder=mpeg4 \
+	--enable-libfaad"
+
+# vi: syntax=sh

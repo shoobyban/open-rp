@@ -1,0 +1,93 @@
+SOURCE=wxWidgets-2.8.10
+PATCHES=
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--enable-monolithic \
+	--disable-shared \
+	--enable-stl \
+	--disable-debug_flag \
+	--disable-debug_info \
+	--disable-debug_gdb \
+	--disable-mem_tracing \
+	--disable-profile \
+	--disable-protocols \
+	--disable-sockets \
+	--disable-ipc \
+	--disable-arcstream \
+	--disable-backtrace \
+	--disable-debugreport \
+	--disable-dialupman \
+	--disable-dynlib \
+	--disable-dynamicloader \
+	--disable-fs_archive \
+	--disable-fs_inet \
+	--disable-fs_zip \
+	--disable-log \
+	--disable-snglinst \
+	--enable-stdpaths \
+	--disable-stopwatch \
+	--disable-tarstream \
+	--enable-unicode \
+	--disable-sound \
+	--disable-mediactrl \
+	--disable-zipstream \
+	--enable-url \
+	--disable-protocol \
+	--disable-docview \
+	--disable-help \
+	--disable-mshtmlhelp \
+	--disable-htmlhelp \
+	--disable-xrc \
+	--disable-aui \
+	--disable-printarch \
+	--disable-mdi \
+	--disable-mdidoc \
+	--disable-loggui \
+	--disable-logwin \
+	--disable-logdialog \
+	--disable-webkit \
+	--disable-postscript \
+	--disable-animatectrl \
+	--disable-calendar \
+	--enable-choicebook \
+	--enable-collpane \
+	--disable-colourpicker \
+	--disable-datepick \
+	--disable-fontpicker \
+  	--disable-progressdlg \
+	--enable-gauge \
+	--disable-dataviewctrl \
+	--enable-hyperlink \
+	--disable-sash \
+	--disable-splash \
+	--disable-tipdlg \
+	--enable-joystick \
+	--disable-gif \
+	--disable-pcx \
+	--disable-tga \
+	--disable-iff \
+	--disable-pnm \
+	--disable-sdltest \
+	--with-libpng=builtin \
+	--without-libjpeg \
+	--without-libtiff \
+	--without-libxpm \
+	--without-sdl \
+  	--with-zlib=builtin \
+	--without-opengl \
+	--without-expat"
+
+if [ "$OS" == "Linux" ]; then
+  	CONFIGURE="$CONFIGURE \
+		--without-gnomeprint \
+		--without-gnomevfs"
+elif [ "$OS" == "Darwin" ]; then
+	CONFIGURE="$CONFIGURE \
+		--with-mac \
+		--with-cocoa"
+elif [ "$OS" == "MINGW32_NT-5.1" ]; then
+	CONFIGURE="$CONFIGURE \
+		--with-msw"
+fi
+
+# vi: syntax=sh

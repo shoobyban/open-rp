@@ -1,0 +1,34 @@
+SOURCE=curl-7.19.5
+PATCHES=curl-7.19.4-blank-header-fix.patch
+CONFIGURE="./configure \
+	--prefix=$PREFIX \
+	--enable-optimize \
+	--disable-shared \
+	--enable-static \
+	--enable-http \
+	--disable-ftp \
+	--disable-file \
+	--disable-ldap \
+	--disable-ldaps \
+	--disable-proxy \
+	--disable-dict \
+	--disable-telnet \
+	--disable-tftp \
+	--disable-manual \
+	--disable-ares \
+	--disable-crypto-auth \
+	--disable-cookies \
+	--without-ssl \
+  	--without-zlib \
+  	--without-libssh2 \
+  	--without-gnutls \
+  	--without-nss \
+  	--without-ca-bundle \
+  	--without-ca-path \
+  	--without-libidn"
+
+if [ "$OS" == "MINGW32_NT-5.1" ]; then
+	PATCHES="$PATCHES curl-7.19.4-EINTR.patch"
+fi
+
+# vi: syntax=sh

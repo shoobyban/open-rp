@@ -1,0 +1,9 @@
+SOURCE=SDL_ttf-2.0.9
+PATCHES=
+CONFIGURE="./configure
+	--prefix=$PREFIX \
+	--disable-shared \
+	--enable-static \
+	--with-freetype-prefix=$PREFIX"
+
+# vi: syntax=sh

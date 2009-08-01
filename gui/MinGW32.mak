@@ -1,7 +1,7 @@
 CXX=g++
-INCLUDE=-I.
-CXXFLAGS=$(CFLAGS) $(shell wx-config --cflags)
-LIBS=$(shell wx-config --libs)
+OS_CFLAGS=
+OS_LDFLAGS=
+OS_LIBS=
 DEFS=
 TARGET=orpui.exe
 
