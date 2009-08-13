@@ -64,7 +64,7 @@ struct orpKeyBind_t {
 struct orpKeyTable_t {
 	SDLKey sdl;
 	int wx;
-	char *name;
+	const char *name;
 };
 
 struct orpUIKeyData_t {
