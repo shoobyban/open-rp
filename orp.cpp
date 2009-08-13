@@ -37,7 +37,7 @@ static void orpOutput(const char *format, va_list ap)
 	static SDL_mutex *lock = NULL;
 	if (lock == NULL) lock = SDL_CreateMutex();
 	SDL_LockMutex(lock);
-	static FILE *log;
+	static FILE *log = NULL;
 	if (!log) {
 		log = fopen("orp.log", "w");
 		if (log) fprintf(log, "Open Remote Play v%s\n", ORP_VERSION);
