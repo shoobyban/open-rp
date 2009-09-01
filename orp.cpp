@@ -403,7 +403,8 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 #endif
 
 	// Audio or video header?
-	if (bp[1] != 0x80 && bp[1] != 0xff && bp[1] != 0xfb && bp[1] != 0xfc) {
+	if (bp[1] != 0x80 && bp[1] != 0xff && bp[1] != 0xfb && bp[1] != 0xfc &&
+		bp[1] != 0xfe) {
 		orpPrintf("%s: invalid magic: 0x%02x%02x\n", _config->name.c_str(),
 			bp[0], bp[1]);
 		delete [] buffer;
@@ -459,7 +460,8 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	delete [] buffer;
 
 	// Decrypt h2.64 video key-frames
-	if (packet->header.magic[1] == 0xff && packet->header.unk6 == 0x0401) {
+	if ((packet->header.magic[1] == 0xff || packet->header.magic[1] == 0xfe)
+		&& packet->header.unk6 == 0x0401) {
 		memcpy(_config->key.iv1,
 			_config->key.xor_nonce, ORP_KEY_LEN);
 		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,

@@ -60,6 +60,7 @@ extern "C" {
 #define ORP_PADSTATE_LEN	128
 #define ORP_CLOCKFREQ		90000
 
+#define ORP_VIDEO_MAXQUEUE	2
 #define ORP_AUDIO_BUF_LEN 	1024
 #define ORP_AUDIO_DIFFAVGNB	20
 #define ORP_AUDIO_NOSYNC	100.0
@@ -354,8 +355,14 @@ struct orpThreadVideoDecode_t {
 	struct orpStreamData_t *stream;
 };
 
+enum orpStreamType {
+	ST_AUDIO,
+	ST_VIDEO
+};
+
 struct orpConfigStream_t {
 	string name;
+	enum orpStreamType type;
 #ifdef ORP_DUMP_STREAM_HEADER
 	FILE *h_header;
 #endif
