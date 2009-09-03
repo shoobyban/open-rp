@@ -1670,6 +1670,7 @@ AVCodec *OpenRemotePlay::GetCodec(const string &name)
 		if (strcasecmp(name.c_str(), codec[i]->name.c_str())) continue;
 		return codec[i]->codec;
 	}
+	return NULL;
 }
 
 Sint32 OpenRemotePlay::ControlPerform(CURL *curl, struct orpCtrlMode_t *mode)
