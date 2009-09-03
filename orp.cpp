@@ -112,9 +112,11 @@ static void orpAVDebug(void *ptr, Sint32 level, const char *format, va_list ap)
 static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_APP_REASON, "PREMO-Application-Reason" },
 	{ HEADER_AUDIO_BITRATE, "PREMO-Audio-Bitrate" },
+	{ HEADER_AUDIO_BITRATE_ABILITY, "PREMO-Audio-Bitrate-Ability" },
 	{ HEADER_AUDIO_CHANNELS, "PREMO-Audio-Channels" },
 	{ HEADER_AUDIO_CLOCKFREQ, "PREMO-Audio-ClockFrequency" },
 	{ HEADER_AUDIO_CODEC, "PREMO-Audio-Codec" },
+	{ HEADER_AUDIO_CONFIG, "PREMO-Audio-Config" },
 	{ HEADER_AUDIO_SAMPLERATE, "PREMO-Audio-SamplingRate" },
 	{ HEADER_AUTH, "PREMO-Auth" },
 	{ HEADER_CTRL_BITRATE, "Bitrate" },
@@ -138,10 +140,14 @@ static struct orpHeader_t orpHeaderList[] = {
 	{ HEADER_USERNAME, "PREMO-UserName" },
 	{ HEADER_VERSION, "PREMO-Version" },
 	{ HEADER_VIDEO_BITRATE, "PREMO-Video-Bitrate" },
+	{ HEADER_VIDEO_BITRATE_ABILITY, "PREMO-Video-Bitrate-Ability" },
 	{ HEADER_VIDEO_CLOCKFREQ, "PREMO-Video-ClockFrequency" },
 	{ HEADER_VIDEO_CODEC, "PREMO-Video-Codec" },
+	{ HEADER_VIDEO_CONFIG, "PREMO-Video-Config" },
 	{ HEADER_VIDEO_FRAMERATE, "PREMO-Video-Framerate" },
+	{ HEADER_VIDEO_FRAMERATE_ABILITY, "PREMO-Video-Framerate-Ability" },
 	{ HEADER_VIDEO_RESOLUTION, "PREMO-Video-Resolution" },
+	{ HEADER_VIDEO_RESOLUTION_ABILITY, "PREMO-Video-Resolution-Ability" },
 
 	{ HEADER_NULL, "null" },
 };
