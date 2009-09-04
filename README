@@ -51,6 +51,7 @@ CTRL-2		Select bit-rate: 768k
 CTRL-3		Select bit-rate: 384k
 CTRL-D		Toggle through window sizes (normal, medium, and large)
 CTRL-F		Enter/exit full-screen mode
+CTRL-S		Toggle the status OSD on/off
 CTRL-Q          Quit Remote Play
 
 Virtual keyboard:
