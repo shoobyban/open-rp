@@ -32,19 +32,16 @@ psp::
 	$(MAKE) -C psp
 
 deps: $(wildcard *.cpp)
-	@echo -en "\e]2;Depend: $^\a"
 	@echo "[D] $^"
 	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) -D'ORP_VERSION=$(VERSION)' $^ > /dev/null
 
 %.o : %.cpp
-	@echo -en "\e]2;Compile: $@\a"
 	@echo "[C] $@"
 	@$(CXX) -c $(CXXFLAGS) $(DEFS) -D'ORP_VERSION=$(VERSION)' -o $@ $<
 
 -include $(DEPS)
 
 $(TARGET): $(OBJECTS)
-	@echo -en "\e]2;Link: $@\a"
 	@echo "[L] $@"
 	@$(CXX) $(LDFLAGS) $(CXXFLAGS) $(OBJECTS) $(LIBS) -o $@
 

@@ -7,7 +7,7 @@ all: orp-build
 
 orp-build:
 	@rm -rf ./work/root
-	@OS=$(OS) PKGREPO=$(PKGREPO) ./build.sh
+	@OS=$(OS) PKGREPO=$(PKGREPO) $(SHELL) ./build.sh
 	@touch orp-build
 
 build:
@@ -15,7 +15,6 @@ build:
 	@make all
 
 clean:
-	@echo -en "\e]2;Cleaning: packages.d\a"
 	@rm -rf ./work orp-build
 
 dist-clean:

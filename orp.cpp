@@ -680,8 +680,10 @@ static Sint32 orpThreadVideoDecode(void *config)
 			orpMasterClockUpdate(_config->clock);
 			SDL_LockMutex(_config->clock->lock);
 #ifdef ORP_SYNC_TO_MASTER
+#warning "Video sync to master clock"
 			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->master);
 #else
+#warning "Video sync to audio clock"
 			Sint32 delta = (Sint32)(_config->clock->video - _config->clock->audio);
 #endif
 			Uint32 decode = _config->clock->decode = SDL_GetTicks() - ticks;

@@ -1,12 +1,6 @@
 # Include version
 -include ../Version.mak
 
-# Uncomment one of these
-#-include Linux.mak
-#-include MacOSX.mak
-#-include MinGW32.mak
-#-include Custom.mak
-
 CFLAGS=-g -pipe -I. $(shell ../packages.d/work/root/bin/wx-config --cflags) $(shell ../packages.d/work/root/bin/sdl-config --cflags) $(OS_CFLAGS)
 CXXFLAGS=$(CFLAGS)
 LDFLAGS=$(OS_LDFLAGS)
@@ -29,19 +23,16 @@ all:
 	$(MAKE) $(TARGET)
 
 deps: $(wildcard *.cpp)
-	@echo -en "\e]2;Depend: $^\a"
 	@echo "[D] $^"
 	@$(CXX) -MD -E $(CXXFLAGS) $(DEFS) -D__WXWINDOWS__ -D'ORP_VERSION="$(VERSION)"' $^ > /dev/null
 
 %.o : %.cpp
-	@echo -en "\e]2;Compile: $@\a"
 	@echo "[C] $@"
 	@$(CXX) -c $(CXXFLAGS) $(DEFS) -D__WXWINDOWS__ -D'ORP_VERSION="$(VERSION)"' -o $@ $<
 
 -include $(DEPS)
 
 $(TARGET): $(OBJECTS)
-	@echo -en "\e]2;Link: $@\a"
 	@echo "[L] $@"
 	@$(CXX) $(LDFLAGS) $(CXXFLAGS) $(OBJECTS) $(LIBS) -o $@
 

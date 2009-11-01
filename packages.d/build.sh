@@ -1,4 +1,5 @@
-#!/bin/sh
+# Download, unpack, (possibly) patch, configure, and install required
+# packages for Open Remote Play
 
 if [ -z "$OS" ]; then
 	echo "Unknown Host OS."
@@ -22,31 +23,26 @@ mkdir -p "$PREFIX" || exit 1
 
 PACKAGES=$(ls ??-*)
 for PKG in $PACKAGES; do
-	source $PKG || exit 1
+	. $PKG || exit 1
 	if [ ! -d "$WORKDIR/$SOURCE" ]; then
-		if [ ! -f "$WORKDIR/$SOURCE/tar.gz" ]; then
-			echo -en "\e]2;Downloading: $SOURCE\a"
+		if [ ! -f "$WORKDIR/$SOURCE.tar.gz" ]; then
 			wget -c "$PKGREPO/packages/$SOURCE.tar.gz" -O "$SRCDIR/$SOURCE.tar.gz" || exit 1
 		fi
-		echo -en "\e]2;Unpacking: $SOURCE\a"
 		tar -xzf "$SRCDIR/$SOURCE.tar.gz" -C "$WORKDIR" || exit 1
 		cd ..
 		if [ ! -z "$PATCHES" ]; then
-			echo -en "\e]2;Patching: $SOURCE\a"
 			for PATCH in "$PATCHES"; do
 				cd "$WORKDIR/$SOURCE" && patch -p1 -i "../../../patches/$PATCH" || exit 1
 				cd ../..
 			done
 		fi
-		echo -en "\e]2;Configuring: $SOURCE\a"
-		cd "$WORKDIR/$SOURCE" && PREFIX=../root $CONFIGURE || exit 1
-		cd ../..
 	fi
 
-	echo -en "\e]2;Compiling: $SOURCE\a"
+	cd "$WORKDIR/$SOURCE" && PREFIX=../root $CONFIGURE || exit 1
+	cd ../..
+
 	make -C "$WORKDIR/$SOURCE" || exit 1
 
-	echo -en "\e]2;Installing: $SOURCE\a"
 	make -C "$WORKDIR/$SOURCE" install || exit 1
 
 	unset LIBS
