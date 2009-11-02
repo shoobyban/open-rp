@@ -2,7 +2,7 @@
 CXX=g++
 OS_CFLAGS=-g -pipe
 OS_LDFLAGS=
-OS_LIBS=-ldl
+OS_LIBS=-ldl -lz -lm -lpthread -lrt
 DEFS=-DORP_CLOCK_DEBUG -DORP_SYNC_TO_MASTER
 TARGET=orp
 PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-Linux"

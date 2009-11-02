@@ -1,3 +1,5 @@
+BUILD_ROOT=./packages.d/work/root
+
 # Include version
 -include Version.mak
 
@@ -5,10 +7,10 @@ SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))
 DEPS=$(patsubst %.o,%.d,$(OBJECTS))
 VERSION="$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)"
-BUILD_ROOT=./packages.d/work/root
 CFLAGS=-I. -I$(BUILD_ROOT)/include $(shell $(BUILD_ROOT)/bin/sdl-config --cflags) $(shell $(BUILD_ROOT)/bin/curl-config --cflags) $(shell $(BUILD_ROOT)/bin/libpng-config --cflags) $(OS_CFLAGS)
 CXXFLAGS=$(CFLAGS)
-LIBS=-lSDL_net -lSDL_image -lSDL_ttf -lavcodec -lavutil -lavformat -lswscale -lfreetype -lz -lfaad -lcrypto $(shell $(BUILD_ROOT)/bin/sdl-config --libs) $(shell $(BUILD_ROOT)/bin/curl-config --libs) $(shell $(BUILD_ROOT)/bin/libpng-config --libs) $(OS_LIBS)
+LIBS=$(BUILD_ROOT)/lib/libSDL.a $(BUILD_ROOT)/lib/libSDL_image.a $(BUILD_ROOT)/lib/libpng.a $(BUILD_ROOT)/lib/libSDL_net.a $(BUILD_ROOT)/lib/libSDL_ttf.a $(BUILD_ROOT)/lib/libfreetype.a $(BUILD_ROOT)/lib/libcrypto.a $(BUILD_ROOT)/lib/libavformat.a $(BUILD_ROOT)/lib/libavcodec.a $(BUILD_ROOT)/lib/libswscale.a $(BUILD_ROOT)/lib/libavutil.a $(BUILD_ROOT)/lib/libfaad.a $(BUILD_ROOT)/lib/libcurl.a $(OS_LIBS)
+#LIBS=-lSDL_net -lSDL_image -lSDL_ttf -lavcodec -lavutil -lavformat -lswscale -lfreetype -lz -lfaad -lcrypto $(shell $(BUILD_ROOT)/bin/sdl-config --libs) $(shell $(BUILD_ROOT)/bin/curl-config --libs) $(shell $(BUILD_ROOT)/bin/libpng-config --libs) $(OS_LIBS)
 LDFLAGS=-L$(BUILD_ROOT)/lib $(OS_LDFLAGS)
 
 all:
