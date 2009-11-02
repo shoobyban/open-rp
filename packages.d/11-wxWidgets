@@ -1,6 +1,3 @@
-SOURCE=wxWidgets-2.8.10
-PATCHES=
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-monolithic \
@@ -69,19 +66,20 @@ CONFIGURE="./configure \
 	--disable-iff \
 	--disable-pnm \
 	--disable-sdltest \
-	--with-libpng=builtin \
 	--without-libjpeg \
 	--without-libtiff \
 	--without-libxpm \
 	--without-sdl \
-  	--with-zlib=builtin \
 	--without-opengl \
 	--without-expat"
+SOURCE=wxWidgets-2.8.10
 
 if [ "$OS" == "Linux" ]; then
   	CONFIGURE="$CONFIGURE \
 		--without-gnomeprint \
-		--without-gnomevfs"
+		--without-gnomevfs \
+		--with-zlib=builtin"
+	LIBS=
 elif [ "$OS" == "Darwin" ]; then
 	CONFIGURE="$CONFIGURE \
 		--with-mac \

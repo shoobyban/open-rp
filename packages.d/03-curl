@@ -1,6 +1,3 @@
-SOURCE=curl-7.19.5
-PATCHES=curl-7.19.4-blank-header-fix.patch
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-optimize \
@@ -27,6 +24,8 @@ CONFIGURE="./configure \
   	--without-ca-bundle \
   	--without-ca-path \
   	--without-libidn"
+PATCHES=curl-7.19.4-blank-header-fix.patch
+SOURCE=curl-7.19.5
 
 if [ "$OS" == "MINGW32_NT-5.1" ]; then
 	PATCHES="$PATCHES curl-7.19.4-EINTR.patch"

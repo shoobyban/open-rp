@@ -14,7 +14,7 @@ fi
 WORKDIR="$PWD/$(dirname $0)/work"
 SRCDIR="$PWD/$(dirname $0)/source"
 PREFIX="$WORKDIR/root"
-LIBS="$PREFIX/lib/libz.a"
+PATH=$WORKDIR/root/bin:$PATH
 
 mkdir -p "$WORKDIR" || exit 1
 mkdir -p "$SRCDIR" || exit 1
@@ -22,7 +22,13 @@ mkdir -p "$PREFIX" || exit 1
 
 PACKAGES=$(ls ??-*)
 for PKG in $PACKAGES; do
+	CFLAGS=-I$PREFIX/include
+	LDFLAGS=-L$PREFIX/lib
+	LIBS=$PREFIX/lib/libz.a
+	PATCHES=
+	TARGET=
 	. $PKG || exit 1
+
 	if [ ! -d "$WORKDIR/$SOURCE" ]; then
 		if [ ! -f "$SRCDIR/$SOURCE.tar.gz" ]; then
 			wget -c "$PKGREPO/packages/$SOURCE.tar.gz" \
@@ -43,13 +49,9 @@ for PKG in $PACKAGES; do
 	fi
 
 	cd "$WORKDIR/$SOURCE" && \
-		PATH=$WORKDIR/root/bin:$PATH \
-		PREFIX=$WORKDIR/root \
-		CFLAGS=-I$WORKDIR/root/include \
-		CXXFLAGS=-I$WORKDIR/root/include \
-		LDFLAGS=-L$WORKDIR/root/lib \
-		LIBS=$LIBS \
-		$CONFIGURE || exit 1
+		PREFIX=$PREFIX CFLAGS=$CFLAGS \
+		CXXFLAGS=$CFLAGS LDFLAGS=$LDFLAGS
+		LIBS=$LIBS $CONFIGURE || exit 1
 	cd ../..
 
 	make -C "$WORKDIR/$SOURCE/$TARGET" || exit 1

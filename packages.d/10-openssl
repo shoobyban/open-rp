@@ -1,7 +1,5 @@
-#SOURCE=openssl-0.9.8k
 SOURCE=openssl-1.0.0-beta3
-TARGET=
-PATCHES=
+
 if [ "$OS" == "Linux" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-elf"
 elif [ "$OS" == "Darwin" ]; then

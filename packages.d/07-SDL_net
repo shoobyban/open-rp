@@ -1,10 +1,8 @@
-SOURCE=SDL_net-1.2.7
-PATCHES=
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-shared \
 	--enable-static"
+SOURCE=SDL_net-1.2.7
 
 if [ "$OS" == "Darwin" ]; then
 	PATCHES="$PATCHES SDL_net-1.2.7-TCP_NODELAY.patch"

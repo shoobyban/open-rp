@@ -1,8 +1,7 @@
-SOURCE=freetype-2.3.9
-PATCHES=
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-shared --enable-static"
+LIBS=$PREFIX/lib/libz.a
+SOURCE=freetype-2.3.9
 
 # vi: syntax=sh

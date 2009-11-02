@@ -1,6 +1,3 @@
-SOURCE=faad2-2.7
-PATCHES=
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-shared \
@@ -8,6 +5,7 @@ CONFIGURE="./configure \
 	--without-xmms \
 	--without-drm \
 	--without-mpeg4ip"
+SOURCE=faad2-2.7
 
 if [ "$OS" == "MINGW32_NT-5.1" ]; then
 	TARGET=libfaad

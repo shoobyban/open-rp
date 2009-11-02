@@ -15,10 +15,10 @@ build:
 
 clean:
 	@rm -f .orp-stamp
-	@find ./work -maxdepth 2 -name .orp-stamp | xargs rm
+	@rm -rf work
 
 dist-clean:
 	@make clean
-	@rm -rf source work
+	@rm -rf source
 
 # vi: ts=4

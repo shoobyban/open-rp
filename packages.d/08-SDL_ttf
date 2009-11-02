@@ -1,10 +1,9 @@
-SOURCE=SDL_ttf-2.0.9
-PATCHES=
-TARGET=
 CONFIGURE="./configure
 	--prefix=$PREFIX \
 	--enable-shared \
 	--enable-static \
 	--with-freetype-prefix=$PREFIX"
+LIBS=$PREFIX/lib/libz.a
+SOURCE=SDL_ttf-2.0.9
 
 # vi: syntax=sh

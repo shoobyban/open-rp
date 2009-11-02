@@ -1,8 +1,7 @@
-SOURCE=libpng-1.2.37
-PATCHES=
-TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-shared --enable-static"
+LIBS=$PREFIX/lib/libz.a
+SOURCE=libpng-1.2.37
 
 # vi: syntax=sh
