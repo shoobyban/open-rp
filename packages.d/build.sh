@@ -14,8 +14,7 @@ fi
 WORKDIR="$PWD/$(dirname $0)/work"
 SRCDIR="$PWD/$(dirname $0)/source"
 PREFIX="$WORKDIR/root"
-export CFLAGS="-I\"$PREFIX/include\""
-export LDFLAGS="-L\"$PREFIX/lib\""
+LIBS="$PREFIX/lib/libz.a"
 
 mkdir -p "$WORKDIR" || exit 1
 mkdir -p "$SRCDIR" || exit 1
@@ -25,27 +24,37 @@ PACKAGES=$(ls ??-*)
 for PKG in $PACKAGES; do
 	. $PKG || exit 1
 	if [ ! -d "$WORKDIR/$SOURCE" ]; then
-		if [ ! -f "$WORKDIR/$SOURCE.tar.gz" ]; then
-			wget -c "$PKGREPO/packages/$SOURCE.tar.gz" -O "$SRCDIR/$SOURCE.tar.gz" || exit 1
+		if [ ! -f "$SRCDIR/$SOURCE.tar.gz" ]; then
+			wget -c "$PKGREPO/packages/$SOURCE.tar.gz" \
+				-O "$SRCDIR/$SOURCE.tar.gz" || exit 1
 		fi
+		echo "Extracting: $SOURCE"
 		tar -xzf "$SRCDIR/$SOURCE.tar.gz" -C "$WORKDIR" || exit 1
 		cd ..
 		if [ ! -z "$PATCHES" ]; then
-			for PATCH in "$PATCHES"; do
-				cd "$WORKDIR/$SOURCE" && patch -p1 -i "../../../patches/$PATCH" || exit 1
+			for PATCH in $PATCHES; do
+				cd "$WORKDIR/$SOURCE" && \
+				patch -p1 -i "../../../patches/$PATCH" || exit 1
 				cd ../..
 			done
 		fi
+	elif [ -f "$WORKDIR/$SOURCE/.orp-stamp" ]; then
+		continue
 	fi
 
-	cd "$WORKDIR/$SOURCE" && PREFIX=../root $CONFIGURE || exit 1
+	cd "$WORKDIR/$SOURCE" && \
+		PATH=$WORKDIR/root/bin:$PATH \
+		PREFIX=$WORKDIR/root \
+		CFLAGS=-I$WORKDIR/root/include \
+		CXXFLAGS=-I$WORKDIR/root/include \
+		LDFLAGS=-L$WORKDIR/root/lib \
+		LIBS=$LIBS \
+		$CONFIGURE || exit 1
 	cd ../..
 
-	make -C "$WORKDIR/$SOURCE" || exit 1
-
-	make -C "$WORKDIR/$SOURCE" install || exit 1
-
-	unset LIBS
+	make -C "$WORKDIR/$SOURCE/$TARGET" || exit 1
+	make -C "$WORKDIR/$SOURCE/$TARGET" install || exit 1
+	touch "$WORKDIR/$SOURCE/.orp-stamp"
 done
 
 exit 0

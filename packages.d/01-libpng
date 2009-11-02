@@ -1,7 +1,8 @@
 SOURCE=libpng-1.2.37
 PATCHES=
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
-	--disable-shared --enable-static"
+	--enable-shared --enable-static"
 
 # vi: syntax=sh

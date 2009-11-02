@@ -1,5 +1,6 @@
 SOURCE=wxWidgets-2.8.10
 PATCHES=
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-monolithic \
@@ -17,8 +18,8 @@ CONFIGURE="./configure \
 	--disable-backtrace \
 	--disable-debugreport \
 	--disable-dialupman \
-	--disable-dynlib \
-	--disable-dynamicloader \
+	--enable-dynlib \
+	--enable-dynamicloader \
 	--disable-fs_archive \
 	--disable-fs_inet \
 	--disable-fs_zip \
@@ -86,7 +87,24 @@ elif [ "$OS" == "Darwin" ]; then
 		--with-mac \
 		--with-cocoa"
 elif [ "$OS" == "MINGW32_NT-5.1" ]; then
-	CONFIGURE="$CONFIGURE \
+	CONFIGURE="./configure \
+		--prefix=$PREFIX \
+		--enable-monolithic \
+		--disable-shared \
+		--enable-stl \
+		--disable-debug_flag \
+		--disable-debug_info \
+		--disable-debug_gdb \
+		--disable-mem_tracing \
+		--disable-profile \
+		--disable-protocols \
+		--disable-sockets \
+		--disable-ipc \
+		--disable-arcstream \
+		--disable-backtrace \
+		--disable-debugreport \
+		--without-opengl \
+		--without-expat \
 		--with-msw"
 fi
 

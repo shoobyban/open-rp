@@ -1,9 +1,10 @@
 SOURCE=SDL-1.2.13
 PATCHES=
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--disable-cdrom \
-	--disable-shared \
+	--enable-shared \
 	--enable-static"
 
 if [ "$OS" != "Linux" ]; then

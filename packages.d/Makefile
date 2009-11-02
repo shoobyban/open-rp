@@ -2,23 +2,23 @@
 
 PKGREPO=http://orp.ps3-hacks.com
 
-all: orp-build
+all: .orp-stamp
 	@mkdir -vp work
 
-orp-build:
-	@rm -rf ./work/root
+.orp-stamp:
 	@OS=$(OS) PKGREPO=$(PKGREPO) $(SHELL) ./build.sh
-	@touch orp-build
+	@touch .orp-stamp
 
 build:
-	@rm orp-build
+	@rm .orp-stamp
 	@make all
 
 clean:
-	@rm -rf ./work orp-build
+	@rm -f .orp-stamp
+	@find ./work -maxdepth 2 -name .orp-stamp | xargs rm
 
 dist-clean:
 	@make clean
-	@rm -rf source
+	@rm -rf source work
 
 # vi: ts=4

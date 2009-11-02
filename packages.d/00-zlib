@@ -1,5 +1,6 @@
 SOURCE=zlib-1.2.3
 PATCHES=
+TARGET=
 CONFIGURE="./configure --prefix=$PREFIX"
 
 # vi: syntax=sh

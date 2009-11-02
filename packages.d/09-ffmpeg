@@ -1,6 +1,7 @@
 SOURCE=ffmpeg-svn
 PATCHES=
-export LIBS=../root/lib/libfaad.a
+TARGET=
+#export LIBS=../root/lib/libfaad.a
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-gpl \
@@ -24,5 +25,9 @@ CONFIGURE="./configure \
 	--enable-decoder=h264 \
 	--enable-decoder=mpeg4 \
 	--enable-libfaad"
+
+if [ "$OS" == "MINGW32_NT-5.1" ]; then
+	CONFIGURE="$CONFIGURE --enable-memalign-hack"
+fi
 
 # vi: syntax=sh

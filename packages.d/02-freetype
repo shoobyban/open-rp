@@ -1,7 +1,8 @@
 SOURCE=freetype-2.3.9
 PATCHES=
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
-	--disable-shared --enable-static"
+	--enable-shared --enable-static"
 
 # vi: syntax=sh

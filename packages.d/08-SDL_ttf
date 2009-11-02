@@ -1,8 +1,9 @@
 SOURCE=SDL_ttf-2.0.9
 PATCHES=
+TARGET=
 CONFIGURE="./configure
 	--prefix=$PREFIX \
-	--disable-shared \
+	--enable-shared \
 	--enable-static \
 	--with-freetype-prefix=$PREFIX"
 

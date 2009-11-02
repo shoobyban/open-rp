@@ -1,9 +1,9 @@
 SOURCE=SDL_image-1.2.7
 PATCHES=
-export LIBS="-lm ../root/lib/libpng.a ../root/lib/libz.a"
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
-	--disable-shared \
+	--enable-shared \
 	--enable-static \
 	--enable-bmp 
 	--disable-gif \

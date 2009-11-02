@@ -1,9 +1,10 @@
 SOURCE=curl-7.19.5
 PATCHES=curl-7.19.4-blank-header-fix.patch
+TARGET=
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--enable-optimize \
-	--disable-shared \
+	--enable-shared \
 	--enable-static \
 	--enable-http \
 	--disable-ftp \
