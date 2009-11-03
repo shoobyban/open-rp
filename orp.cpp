@@ -695,7 +695,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 			if (drift > 0) {
 				Uint32 delay = decode < drift ? drift - decode : drift;
 				if (delay > 1000) {
-					orpPrintf("Delay too large: %u\n", delay);
+					//orpPrintf("Delay too large: %u\n", delay);
 				} else SDL_Delay(delay);
 			}
 		}
