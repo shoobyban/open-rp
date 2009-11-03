@@ -2,7 +2,7 @@
 CXX=g++
 OS_CFLAGS=-I/mingw/include
 OS_LDFLAGS=-mthreads  -Wl,--subsystem,windows -mwindows
-OS_LIBS=-mwindows -Wl,-Bsymbolic $(BUILD_ROOT)/lib/libz.a /mingw/lib/libdxguid.a -lwsock32 -lgdi32 -lwinmm -lmingw32
+OS_LIBS=-mwindows -Wl,-Bsymbolic $(BUILD_ROOT)/lib/libz.a /mingw/lib/libdxguid.a -lwsock32 -lgdi32 -lwinmm -lmingw32 -static
 DEFS=-DCURL_STATICLIB -D_WIN32
 TARGET=orp.exe
 PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-W32"
