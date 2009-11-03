@@ -9,7 +9,7 @@ DEPS=$(patsubst %.o,%.d,$(OBJECTS))
 VERSION=$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)
 CFLAGS=-pipe -I. -I$(BUILD_ROOT)/include $(shell $(BUILD_ROOT)/bin/wx-config --cflags) $(shell $(BUILD_ROOT)/bin/sdl-config --cflags) $(shell $(BUILD_ROOT)/bin/libpng-config --cflags) $(OS_CFLAGS)
 CXXFLAGS=$(CFLAGS)
-LIBS=-mthreads -Wl,--subsystem,windows -mwindows $(BUILD_ROOT)/lib/libwx_msw-2.8.a $(BUILD_ROOT)/lib/libwxregex-2.8.a $(BUILD_ROOT)/lib/libwxtiff-2.8.a $(BUILD_ROOT)/lib/libwxjpeg-2.8.a $(BUILD_ROOT)/lib/libpng.a $(BUILD_ROOT)/lib/libz.a -lrpcrt4 -loleaut32 -lole32 -lwinspool -lwinmm -lshell32 -lcomctl32 -lcomdlg32 -lctl3d32 -ladvapi32 -lwsock32 -lgdi32 $(OS_LIBS)
+LIBS=$(OS_LIBS) $(BUILD_ROOT)/lib/libpng.a $(BUILD_ROOT)/lib/libz.a
 LDFLAGS=-L$(BUILD_ROOT)/lib $(OS_LDFLAGS)
 
 all:
