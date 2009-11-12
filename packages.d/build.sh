@@ -40,7 +40,7 @@ for PKG in $PACKAGES; do
 		if [ ! -z "$PATCHES" ]; then
 			for PATCH in $PATCHES; do
 				cd "$WORKDIR/$SOURCE" && \
-				patch -p1 -i "../../../patches/$PATCH" || exit 1
+				patch -p1 -i "../../patches/$PATCH" || exit 1
 				cd ../..
 			done
 		fi

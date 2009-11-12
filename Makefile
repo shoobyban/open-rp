@@ -54,6 +54,7 @@ dist-clean:
 	$(MAKE) -C gui clean
 	$(MAKE) -C keys clean
 	$(MAKE) -C psp clean
+	$(MAKE) -C util clean
 	$(MAKE) -C packages.d clean
 
 # vi: ts=4
