@@ -1,5 +1,4 @@
--include ../Version.mak
-
+-include ../Config.mak
 PKGREPO=http://orp.ps3-hacks.com
 
 all: .orp-stamp

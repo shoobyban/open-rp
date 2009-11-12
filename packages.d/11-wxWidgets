@@ -77,8 +77,8 @@ SOURCE=wxWidgets-2.8.10
 if [ "$OS" == "Linux" ]; then
   	CONFIGURE="$CONFIGURE \
 		--without-gnomeprint \
-		--without-gnomevfs \
-		--with-zlib=builtin"
+		--without-gnomevfs"
+#		--with-zlib=builtin"
 	LIBS=
 elif [ "$OS" == "Darwin" ]; then
 	CONFIGURE="$CONFIGURE \

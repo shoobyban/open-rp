@@ -1,8 +1,5 @@
+-include ../Config.mak
 BUILD_ROOT=../packages.d/work/root
-
-# Include version
--include ../Version.mak
-
 SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))
 DEPS=$(patsubst %.o,%.d,$(OBJECTS))
