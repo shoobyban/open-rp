@@ -10,7 +10,7 @@ all:
 	$(MAKE) config-debug export-debug stream-debug
 
 config-debug: config-debug.cpp
-	$(CXX) -g -pipe -I. -I.. -DORP_CONFIG_DEBUG config-debug.cpp ../config.cpp -o config-debug $(LDFLAGS)
+	$(CXX) $(CFLAGS) -DORP_CONFIG_DEBUG config-debug.cpp ../config.cpp -o config-debug $(LDFLAGS)
 
 export-debug: export-debug.cpp
 	$(CXX) $(CFLAGS) export-debug.cpp ../config.cpp -o export-debug $(LDFLAGS)
