@@ -4,9 +4,9 @@ SOURCE=$(wildcard *.cpp)
 OBJECTS=$(patsubst %.cpp,%.o,$(SOURCE))
 DEPS=$(patsubst %.o,%.d,$(OBJECTS))
 VERSION="$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)"
-CFLAGS=-pipe -I. -I$(BUILD_ROOT)/include $(shell $(BUILD_ROOT)/bin/sdl-config --cflags) $(shell $(BUILD_ROOT)/bin/curl-config --cflags) $(shell $(BUILD_ROOT)/bin/libpng-config --cflags) $(OS_CFLAGS)
+CFLAGS=-I. -I$(BUILD_ROOT)/include $(OS_CFLAGS)
 CXXFLAGS=$(CFLAGS)
-LIBS=$(BUILD_ROOT)/lib/libSDL.a $(BUILD_ROOT)/lib/libSDL_image.a $(BUILD_ROOT)/lib/libpng.a $(BUILD_ROOT)/lib/libSDL_net.a $(BUILD_ROOT)/lib/libSDL_ttf.a $(BUILD_ROOT)/lib/libfreetype.a $(BUILD_ROOT)/lib/libcrypto.a $(BUILD_ROOT)/lib/libavformat.a $(BUILD_ROOT)/lib/libavcodec.a $(BUILD_ROOT)/lib/libswscale.a $(BUILD_ROOT)/lib/libavutil.a $(BUILD_ROOT)/lib/libfaad.a $(BUILD_ROOT)/lib/libcurl.a $(OS_LIBS)
+LIBS=$(OS_LIBS)
 LDFLAGS=-L$(BUILD_ROOT)/lib $(OS_LDFLAGS)
 
 all:
@@ -17,8 +17,8 @@ all:
 	@echo "Libraries: $(LIBS)"
 	$(MAKE) -C packages.d
 	$(MAKE) MAKEFLAGS= deps
-	$(MAKE) -C gui
 	$(MAKE) $(TARGET)
+	$(MAKE) -C gui
 
 gui::
 	$(MAKE) -C gui

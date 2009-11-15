@@ -84,8 +84,7 @@ if [ "$OS" == "Linux" ]; then
 	LIBS=
 elif [ "$OS" == "Darwin" ]; then
 	CONFIGURE="$CONFIGURE \
-		--with-mac \
-		--with-cocoa"
+		--with-mac"
 elif [ "$OS" == "MINGW32_NT-5.1" ]; then
 	CONFIGURE="./configure \
 		--prefix=$PREFIX \

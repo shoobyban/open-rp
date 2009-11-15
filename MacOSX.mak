@@ -1,11 +1,7 @@
 CXX=g++
-OS_CFLAGS=-g -pipe $(shell sdl-config --cflags) $(shell curl-config --cflags)
-OS_LDFLAGS=-Wl,-framework,OpenGL -Wl,-framework,Cocoa -Wl,-framework,QuickTime -Wl,-framework,ApplicationServices -Wl,-framework,Carbon -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,IOKit
-LIBDIR=/usr/local/lib
-LIBS_SHARED=-lcrypto -lpthread -lz
-LIBS_STATIC=$(LIBDIR)/libSDL.a $(LIBDIR)/libSDLmain.a $(LIBDIR)/libSDL_image.a $(LIBDIR)/libSDL_net.a $(LIBDIR)/libSDL_ttf.a $(LIBDIR)/libfreetype.a $(LIBDIR)/libcurl.a $(LIBDIR)/libfaad.a $(LIBDIR)/libavcodec.a $(LIBDIR)/libavformat.a $(LIBDIR)/libavutil.a $(LIBDIR)/libpng.a $(LIBDIR)/libswscale.a
-OS_LIBS=$(LIBS_STATIC) $(LIBS_SHARED) $(LIBS_SHARED_EXTRA)
-#LIBS=$(shell sdl-config --libs) $(shell curl-config --libs) -lSDL_image -lSDL_net -lcrypto -lavcodec -lavutil -lavformat -lswscale -lfaad
+OS_CFLAGS=$(shell sdl-config --cflags) $(shell curl-config --cflags) $(shell $(BUILD_ROOT)/bin/libpng-config --cflags)
+OS_LDFLAGS=
+OS_LIBS=$(shell $(BUILD_ROOT)/bin/sdl-config --static-libs) $(BUILD_ROOT)/lib/libSDL_image.a $(BUILD_ROOT)/lib/libpng.a $(BUILD_ROOT)/lib/libSDL_net.a $(BUILD_ROOT)/lib/libSDL_ttf.a $(BUILD_ROOT)/lib/libfreetype.a $(BUILD_ROOT)/lib/libcrypto.a $(BUILD_ROOT)/lib/libavformat.a $(BUILD_ROOT)/lib/libavcodec.a $(BUILD_ROOT)/lib/libswscale.a $(BUILD_ROOT)/lib/libavutil.a $(BUILD_ROOT)/lib/libfaad.a $(BUILD_ROOT)/lib/libcurl.a
 DEFS=-D_MACOSX_ -DORP_CLOCK_DEBUG
 TARGET=orp
 PKG_VERSION="ORP-$(VER_MAJOR).$(VER_MINOR)-$(VER_RELEASE)-OSX"
