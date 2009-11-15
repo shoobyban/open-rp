@@ -7,7 +7,7 @@ CONFIGURE="./configure \
 	--without-mpeg4ip"
 SOURCE=faad2-2.7
 
-if [ "$OS" == "MINGW32_NT-5.1" ]; then
+if [ "$OS" == "MINGW32_NT-5.1" -o "$OS" == "MINGW32_NT-6.1" ]; then
 	TARGET=libfaad
 fi
 

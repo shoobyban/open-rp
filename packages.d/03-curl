@@ -27,7 +27,7 @@ CONFIGURE="./configure \
 PATCHES=curl-7.19.4-blank-header-fix.patch
 SOURCE=curl-7.19.5
 
-if [ "$OS" == "MINGW32_NT-5.1" ]; then
+if [ "$OS" == "MINGW32_NT-5.1" -o "$OS" == "MINGW32_NT-6.1" ]; then
 	PATCHES="$PATCHES curl-7.19.4-EINTR.patch"
 fi
 

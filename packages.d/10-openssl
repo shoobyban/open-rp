@@ -4,7 +4,7 @@ if [ "$OS" == "Linux" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-elf"
 elif [ "$OS" == "Darwin" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin-i386-cc"
-elif [ "$OS" == "MINGW32_NT-5.1" ]; then
+elif [ "$OS" == "MINGW32_NT-5.1" -o "$OS" == "MINGW32_NT-6.1" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared mingw"
 fi
 
