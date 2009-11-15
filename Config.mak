@@ -13,4 +13,7 @@ endif
 ifeq ($(OS),MINGW32_NT-5.1)
 -include MinGW32.mak
 endif
+ifeq ($(OS),MINGW32_NT-6.1)
+-include MinGW32.mak
+endif
 
