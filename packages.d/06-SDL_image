@@ -18,4 +18,8 @@ CONFIGURE="./configure \
 LIBS=$PREFIX/lib/libz.a
 SOURCE=SDL_image-1.2.7
 
+if [ "$OS" == "Darwin" ]; then
+	LIBFIX=libSDL_image
+fi
+
 # vi: syntax=sh

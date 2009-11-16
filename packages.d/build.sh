@@ -25,6 +25,7 @@ for PKG in $PACKAGES; do
 	CFLAGS=-I$PREFIX/include
 	LDFLAGS=-L$PREFIX/lib
 	LIBS=$PREFIX/lib/libz.a
+	LIBFIX=
 	PATCHES=
 	TARGET=
 	. $PKG || exit 1
@@ -56,6 +57,9 @@ for PKG in $PACKAGES; do
 
 	make -C "$WORKDIR/$SOURCE/$TARGET" || exit 1
 	make -C "$WORKDIR/$SOURCE/$TARGET" install || exit 1
+	if [ ! -z "$LIBFIX" ]; then
+		PREFIX=$PREFIX LIB=$LIBFIX ./libfix.sh || exit 1
+	fi
 	touch "$WORKDIR/$SOURCE/.orp-stamp"
 done
 
