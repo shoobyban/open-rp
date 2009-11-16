@@ -58,8 +58,8 @@ Virtual keyboard:
 NOTE: This is a hack and is bound to be buggy!
 
 While you are in a PS3 text-input dialog, you can enter virtual keyboard mode
-using CTRL-ENTER.  The window caption will be append with "Virtual Keyboard
-Enabled".  While in this mode, keys pressed on your real keyboard are translated
+using CTRL-ENTER.  The window caption will be appended with "Virtual Keyboard
+Mode".  While in this mode, keys pressed on your real keyboard are translated
 in to D-Pad presses followed by X to speed up text entry.  The right and left
 arrow keys send L1/R1 and the ENTER key sends a line-break instead of X.  Always
 ensure that the letter 'g' is high-lighted *before* entering virtual keyboard
