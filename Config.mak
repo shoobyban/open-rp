@@ -10,10 +10,8 @@ endif
 ifeq ($(OS),Darwin)
 -include MacOSX.mak
 endif
-ifeq ($(OS),MINGW32_NT-5.1)
+ifeq ($(OS:MINGW32%=MINGW32),MINGW32)
 -include MinGW32.mak
-endif
-ifeq ($(OS),MINGW32_NT-6.1)
--include MinGW32.mak
+OS=MINGW32
 endif
 

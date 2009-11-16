@@ -24,7 +24,7 @@ CONFIGURE="./configure \
 LIBS=$PREFIX/lib/libfaad.a
 SOURCE=ffmpeg-svn
 
-if [ "$OS" == "MINGW32_NT-5.1" -o "$OS" == "MINGW32_NT-6.1" ]; then
+if [ "$OS" == "MINGW32" ]; then
 	CONFIGURE="$CONFIGURE --enable-memalign-hack"
 fi
 
