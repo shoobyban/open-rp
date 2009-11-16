@@ -1,7 +1,7 @@
 CXX=g++
 OS_CFLAGS=
 OS_LDFLAGS=
-OS_LIBS=
+OS_LIBS=$(shell $(BUILD_ROOT)/bin/wx-config --static=yes --libs)
 DEFS=
 TARGET=orpui
 VER_PLIST=$(VER_MAJOR).$(VER_MINOR)
