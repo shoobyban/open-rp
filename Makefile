@@ -18,7 +18,7 @@ all:
 	$(MAKE) -C packages.d
 	$(MAKE) MAKEFLAGS= deps
 	$(MAKE) $(TARGET)
-	$(MAKE) -C gui
+	$(MAKE) -C gui all
 
 gui::
 	$(MAKE) -C gui
