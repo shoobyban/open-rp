@@ -53,8 +53,8 @@ dist-clean:
 	$(MAKE) clean
 	$(MAKE) -C gui clean
 	$(MAKE) -C keys clean
-	$(MAKE) -C psp clean
 	$(MAKE) -C util clean
 	$(MAKE) -C packages.d clean
+	$(MAKE) -C psp clean
 
 # vi: ts=4
