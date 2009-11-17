@@ -1,5 +1,6 @@
--include ../Version.mak
-VERSION="v$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)"
+-include ../Config.mak
+REVISION=$(shell svn info https://open-rp.googlecode.com/svn/trunk | grep Revision | cut -d: -f2)
+VERSION="v$(VER_MAJOR).$(VER_MINOR) $(VER_RELEASE)$(REVISION)"
 
 all:
 	@pbmtext -font ter-u16b.bdf -nomargins $(VERSION) > version.pbm
