@@ -19,3 +19,4 @@ release: all
 	@cp keys/keys.orp $(PKG_VERSION)
 	@cp /mingw/bin/mingwm10.dll $(PKG_VERSION)
 	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
+	@[ -x $(which zip) ] && zip -r $(PKG_VERSION).zip $(PKG_VERSION)
