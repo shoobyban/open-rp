@@ -12,6 +12,9 @@ for archive in $archives; do
 	mv -v $archive $snap || exit 1
 	scp -i $HOME/.ssh/id_rsa $snap orp@orp.ps3-hacks.com:
 	ssh -i $HOME/.ssh/id_rsa orp@orp.ps3-hacks.com mv $snap /tmp
+	rm -f ORP-SVN*.zip
+	touch $snap
 	break
 done
+echo "$0: done"
 exit 0
