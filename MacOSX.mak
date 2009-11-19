@@ -13,6 +13,7 @@ release: all
 	@cp README.zh $(PKG_VERSION)/README-zh.txt
 	@cp -r psp/ORP_Export $(PKG_VERSION)
 	@cp keys/keys.orp $(PKG_VERSION)
+	@$(MAKE) -C gui install
 	@cp -r "gui/Open Remote Play.app" $(PKG_VERSION)
 	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
 	@[ -x $(which zip) ] || exit 0
