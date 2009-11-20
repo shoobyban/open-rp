@@ -15,9 +15,9 @@ release: all
 	@cp -r psp/ORP_Export $(PKG_VERSION)
 	@cp orp.exe $(PKG_VERSION)
 	@cp gui/orpui.exe $(PKG_VERSION)
-	@[ -x $(which strip) ] && strip $(PKG_VERSION)/orp.exe $(PKG_VERSION)/orpui.exe
 	@cp gui/icon.ico $(PKG_VERSION)
 	@cp keys/keys.orp $(PKG_VERSION)
 	@cp /mingw/bin/mingwm10.dll $(PKG_VERSION)
 	@find $(PKG_VERSION) -type d -name '.svn' -print0 | xargs -0 rm -rf
+	@[ -x $(which strip) ] && strip $(PKG_VERSION)/orp.exe $(PKG_VERSION)/orpui.exe
 	@[ -x $(which zip) ] && zip -r $(PKG_VERSION).zip $(PKG_VERSION)
