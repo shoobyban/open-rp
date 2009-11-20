@@ -13,8 +13,9 @@ release: all
 	@cp README $(PKG_VERSION)/README.txt
 	@cp README.zh $(PKG_VERSION)/README-zh.txt
 	@cp -r psp/ORP_Export $(PKG_VERSION)
-	@cp orp $(PKG_VERSION)
-	@cp gui/orpui $(PKG_VERSION)
+	@cp orp.exe $(PKG_VERSION)
+	@cp gui/orpui.exe $(PKG_VERSION)
+	@[ -x $(which strip) ] && strip $(PKG_VERSION)/orp.exe $(PKG_VERSION)/orpui.exe
 	@cp gui/icon.ico $(PKG_VERSION)
 	@cp keys/keys.orp $(PKG_VERSION)
 	@cp /mingw/bin/mingwm10.dll $(PKG_VERSION)
