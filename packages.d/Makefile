@@ -1,4 +1,5 @@
 -include ../Config.mak
+SHELL=/bin/bash
 PKGREPO=http://orp.ps3-hacks.com
 
 all: .orp-stamp
