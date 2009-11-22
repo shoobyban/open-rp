@@ -3,7 +3,7 @@ CONFIGURE="./configure \
 	--disable-cdrom \
 	--enable-shared \
 	--enable-static"
-SOURCE=SDL-1.2.13
+SOURCE=SDL-1.2.14
 
 if [ "$OS" != "Linux" ]; then
 	CONFIGURE="$CONFIGURE \
