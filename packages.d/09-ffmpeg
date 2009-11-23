@@ -26,6 +26,11 @@ SOURCE=ffmpeg-svn
 
 if [ "$OS" == "MINGW32" ]; then
 	CONFIGURE="$CONFIGURE --enable-memalign-hack"
+elif [ "$OS" == "Darwin" -a -x "$(which sysctl)" ]; then
+	OS_64BIT=$(sysctl hw.optional.x86_64 | cut -d' ' -f 2)
+	if [ "$OS_64BIT" != "0" ]; then
+		CONFIGURE="$CONFIGURE --arch=x86_x64"
+	fi
 fi
 
 # vi: syntax=sh
