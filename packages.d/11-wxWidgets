@@ -9,7 +9,6 @@ CONFIGURE="./configure \
 	--disable-mem_tracing \
 	--disable-profile \
 	--disable-protocols \
-	--disable-sockets \
 	--disable-ipc \
 	--disable-arcstream \
 	--disable-backtrace \
@@ -23,7 +22,6 @@ CONFIGURE="./configure \
 	--disable-log \
 	--disable-snglinst \
 	--enable-stdpaths \
-	--disable-stopwatch \
 	--disable-tarstream \
 	--enable-unicode \
 	--disable-sound \
@@ -78,13 +76,25 @@ if [ "$OS" == "Linux" ]; then
   	CONFIGURE="$CONFIGURE \
 		--without-gnomeprint \
 		--without-gnomevfs \
-		--with-zlib=builtin"
+		--with-zlib=builtin \
+		--disable-sockets \
+		--disable-stopwatch"
 	CFLAGS=
 	LDFLAGS=
 	LIBS=
 elif [ "$OS" == "Darwin" ]; then
-	CONFIGURE="$CONFIGURE \
-		--with-mac"
+	if [ "$OS_64BIT" == "0" ]; then
+		CONFIGURE="$CONFIGURE \
+			--disable-sockets \
+			--disable-stopwatch \
+			--with-mac"
+	else
+		SOURCE=wxWidgets-2.9.0
+		CONFIGURE="$CONFIGURE \
+			--with-osx_cocoa \
+			--with-macosx-version-min=10.5"
+		PATCHES=wxWidgets-2.9.0-textctrlfix.patch
+	fi
 elif [ "$OS" == "MINGW32" ]; then
 	CONFIGURE="./configure \
 		--prefix=$PREFIX \

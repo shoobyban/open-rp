@@ -4,7 +4,7 @@ PKGREPO=http://orp.ps3-hacks.com
 
 all:
 	@mkdir -vp work
-	@OS=$(OS) PKGREPO=$(PKGREPO) $(SHELL) ./build.sh
+	@OS=$(OS) OS_64BIT=$(OS_64BIT) PKGREPO=$(PKGREPO) $(SHELL) ./build.sh
 
 build:
 	@make all

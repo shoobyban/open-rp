@@ -3,7 +3,11 @@ SOURCE=openssl-1.0.0-beta3
 if [ "$OS" == "Linux" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-elf"
 elif [ "$OS" == "Darwin" ]; then
-	CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin-i386-cc"
+	if [ "$OS_64BIT" == "0" ]; then
+		CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin-i386-cc"
+	else
+		CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin64-x86_64-cc"
+	fi	
 elif [ "$OS" == "MINGW32" ]; then
 	CONFIGURE="./Configure --prefix=$PREFIX no-shared mingw"
 fi

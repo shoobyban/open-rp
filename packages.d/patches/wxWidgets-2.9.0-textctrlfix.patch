@@ -1,0 +1,37 @@
+--- wxWidgets-2.9.0/src/osx/cocoa/textctrl.mm	2009-09-04 00:53:00.000000000 -0400
++++ wxWidgets-2.9.0-textctrlfix/src/osx/cocoa/textctrl.mm	2009-11-23 23:36:43.000000000 -0500
+@@ -141,7 +141,7 @@
+ 
+ - (void) keyDown:(NSEvent*) event
+ {
+-    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( [self delegate] );
++    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( (WXWidget)[self delegate] );
+     lastKeyDownEvent = event;
+     if ( impl == NULL || !impl->DoHandleKeyEvent(event) )
+         [super keyDown:event];
+@@ -150,14 +150,14 @@
+ 
+ - (void) keyUp:(NSEvent*) event
+ {
+-    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( [self delegate] );
++    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( (WXWidget)[self delegate] );
+     if ( impl == NULL || !impl->DoHandleKeyEvent(event) )
+         [super keyUp:event];
+ }
+ 
+ - (void) flagsChanged:(NSEvent*) event
+ {
+-    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( [self delegate] );
++    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( (WXWidget)[self delegate] );
+     if ( impl == NULL || !impl->DoHandleKeyEvent(event) )
+         [super flagsChanged:event];
+ }
+@@ -170,7 +170,7 @@
+ 
+ - (void) insertText:(id) str
+ {
+-    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( [self delegate] );
++    wxWidgetCocoaImpl* impl = (wxWidgetCocoaImpl* ) wxWidgetImpl::FindFromWXWidget( (WXWidget)[self delegate] );
+     if ( impl == NULL || lastKeyDownEvent==nil || !impl->DoHandleCharEvent(lastKeyDownEvent, str) )
+     {
+         [super insertText:str];
