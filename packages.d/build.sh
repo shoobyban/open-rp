@@ -32,8 +32,16 @@ for PKG in $PACKAGES; do
 
 	if [ ! -d "$WORKDIR/$SOURCE" ]; then
 		if [ ! -f "$SRCDIR/$SOURCE.tar.gz" ]; then
-			wget -c "$PKGREPO/packages/$SOURCE.tar.gz" \
-				-O "$SRCDIR/$SOURCE.tar.gz" || exit 1
+			if [ -x "$(which wget)" ]; then
+				wget "$PKGREPO/packages/$SOURCE.tar.gz" \
+					-O "$SRCDIR/$SOURCE.tar.gz" || exit 1
+			elif [ -x "$(which curl)" ]; then
+				curl -o "$SRCDIR/$SOURCE.tar.gz" \
+					"$PKGREPO/packages/$SOURCE.tar.gz" || exit 1
+			else
+				echo "Please install wget or curl."
+				exit 1
+			fi
 		fi
 		echo "Extracting: $SOURCE"
 		tar -xzf "$SRCDIR/$SOURCE.tar.gz" -C "$WORKDIR" || exit 1
