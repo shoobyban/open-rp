@@ -1,6 +1,7 @@
 CONFIGURE="./configure \
 	--prefix=$PREFIX \
 	--disable-cdrom \
+        --disable-video-ps3 \
 	--enable-shared \
 	--enable-static"
 SOURCE=SDL-1.2.14

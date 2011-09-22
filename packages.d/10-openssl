@@ -1,7 +1,14 @@
 SOURCE=openssl-1.0.0-beta3
 
 if [ "$OS" == "Linux" ]; then
-	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-elf"
+	MACHINE=`uname -m`
+	case "$MACHINE" in
+	  ppc|ppc64|armv4|ia64|x86_64|s390x) ;;
+	  i?86) MACHINE=elf;;
+	  *64) MACHINE=generic64;;
+	  *) MACHINE=generic32;;
+	esac
+	CONFIGURE="./Configure --prefix=$PREFIX no-shared linux-$MACHINE"
 elif [ "$OS" == "Darwin" ]; then
 	if [ "$OS_64BIT" == "0" ]; then
 		CONFIGURE="./Configure --prefix=$PREFIX no-shared darwin-i386-cc"
