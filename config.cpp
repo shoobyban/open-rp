@@ -23,6 +23,18 @@
 
 #include "config.h"
 
+#ifndef ORP_PSP
+#include <SDL_endian.h>
+#endif
+
+#if defined(ORP_PSP) || SDL_BYTEORDER == SDL_LIL_ENDIAN
+#define SWAP16(x) do{}while(0)
+#define SWAP32(x) do{}while(0)
+#else
+#define SWAP16(x) ((x) = SDL_Swap16((x)))
+#define SWAP32(x) ((x) = SDL_Swap32((x)))
+#endif
+
 int orpConfigOpen(struct orpConfigCtx_t *ctx, const char *filename)
 {
 	FILE *h_file;
@@ -66,6 +78,7 @@ int orpConfigOpen(struct orpConfigCtx_t *ctx, const char *filename)
 	ctx->h_file = h_file;
 	ctx->filename = strdup(filename);
 	memcpy(&ctx->header, &header, sizeof(struct orpConfigHeader_t));
+	SWAP32(ctx->header.flags);
 
 	if (header.version < ORP_CONFIG_VER) {
 		if (orpConfigUpgrade(ctx) < 0) {
@@ -148,6 +161,8 @@ int orpConfigRead(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec)
 		if (fread((void *)&_rec, 1, sizeof(struct orpConfigRecord_t),
 			ctx->h_file) != sizeof(struct orpConfigRecord_t))
 			return 0;
+		SWAP32(_rec.flags);
+		SWAP16(_rec.ps3_port);
 		if (!(_rec.flags & ORP_CONFIG_DELETED)) break;
 	}
 	memcpy(rec, &_rec, sizeof(struct orpConfigRecord_t));
@@ -197,6 +212,7 @@ int orpConfigSave(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec)
 		for ( ;; ) {
 			if (fread(&_rec, 1, sizeof(struct orpConfigRecord_t),
 				ctx->h_file) != sizeof(struct orpConfigRecord_t)) break;
+			SWAP32(_rec.flags);
 			if (_rec.flags & ORP_CONFIG_DELETED) {
 				offset = ftell(ctx->h_file) - sizeof(struct orpConfigRecord_t);
 				break;
@@ -211,11 +227,17 @@ int orpConfigSave(struct orpConfigCtx_t *ctx, struct orpConfigRecord_t *rec)
 		fseek(ctx->h_file, pos, SEEK_SET);
 		return -1;
 	}
+	SWAP32(rec->flags);
+	SWAP16(rec->ps3_port);
 	if (fwrite(rec, 1, sizeof(struct orpConfigRecord_t),
 		ctx->h_file) != sizeof(struct orpConfigRecord_t)) {
+		SWAP32(rec->flags);
+		SWAP16(rec->ps3_port);
 		fseek(ctx->h_file, pos, SEEK_SET);
 		return -1;
 	}
+	SWAP32(rec->flags);
+	SWAP16(rec->ps3_port);
 	fflush(ctx->h_file);
 	fseek(ctx->h_file, pos, SEEK_SET);
 	return 0;
@@ -260,11 +282,14 @@ int orpConfigSetKey(struct orpConfigCtx_t *ctx, enum orpID_KEY which, Uint8 *src
 	memcpy(dst, src, ORP_KEY_LEN);
 	long pos = ftell(ctx->h_file);
 	fseek(ctx->h_file, 0, SEEK_SET);
+	SWAP32(ctx->header.flags);
 	if (fwrite(&ctx->header, 1, sizeof(struct orpConfigHeader_t),
 		ctx->h_file) != sizeof(struct orpConfigHeader_t)) {
+		SWAP32(ctx->header.flags);
 		fseek(ctx->h_file, pos, SEEK_SET);
 		return -1;
 	}
+	SWAP32(ctx->header.flags);
 	fflush(ctx->h_file);
 	fseek(ctx->h_file, pos, SEEK_SET);
 	return 0;
@@ -338,6 +363,8 @@ void orpConfigDebug(struct orpConfigCtx_t *ctx, FILE *output)
 	while (!feof(ctx->h_file)) {
 		if (fread(&rec, 1, sizeof(orpConfigRecord_t), ctx->h_file) !=
 			sizeof(orpConfigRecord_t)) break;
+		SWAP32(rec.flags);
+		SWAP16(rec.ps3_port);
 		fprintf(output, "%12s: ", "flags");
 		orpConfigPrint(CVT_FLAGS, output, (Uint8 *)&rec.flags);
 		fprintf(output, "\n");

@@ -43,8 +43,11 @@ static void orpOutput(const char *format, va_list ap)
 		if (log) fprintf(log, "Open Remote Play v%s\n", ORP_VERSION);
 	}
 	if (log) {
+		va_list ap2;
+		va_copy(ap2, ap);
 		fprintf(log, "%10u: ", SDL_GetTicks());
-		vfprintf(log, format, ap);
+		vfprintf(log, format, ap2);
+		va_end(ap2);
 		fflush(log);
 	}
 #ifndef _WIN32
@@ -432,7 +435,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	packet->pkt.size = chunk_len - sizeof(struct orpStreamPacketHeader_t);
 
 	// Header size must match packet length
-	if (packet->pkt.size != SDL_Swap16(packet->header.len)) {
+	if (packet->pkt.size != SDL_SwapBE16(packet->header.len)) {
 //		FILE *fh = fopen("bad-header.dat", "w+");
 //		if (fh) {
 //			fwrite(&packet->header, 1, sizeof(orpStreamPacketHeader_t), fh);
@@ -440,12 +443,12 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 //		}
 		orpPrintf("%s: packet length mis-match: %u, expected: %u\n",
 			_config->name.c_str(), packet->pkt.size,
-			SDL_Swap16(packet->header.len));
+			SDL_SwapBE16(packet->header.len));
 
 		// TODO: For now we just accept the header length over the
 		// chunk size.  This only seems to happen with MPEG4 video, ex:
 		// PixelJunk Monsers/Eden
-		packet->pkt.size = SDL_Swap16(packet->header.len);
+		packet->pkt.size = SDL_SwapBE16(packet->header.len);
 	}
 
 	// Allocate payload
@@ -467,7 +470,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 
 	// Decrypt h2.64 video key-frames
 	if ((packet->header.magic[1] == 0xff || packet->header.magic[1] == 0xfe)
-		&& packet->header.unk6 == 0x0401) {
+		&& packet->header.unk6 == SDL_SwapLE16(0x0401)) {
 		memcpy(_config->key.iv1,
 			_config->key.xor_nonce, ORP_KEY_LEN);
 		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
@@ -496,7 +499,7 @@ static size_t orpParseStreamData(void *ptr, size_t size, size_t nmemb, void *str
 	}
 	// Decrypt MPEG4 video key-frames
 	else if (packet->header.magic[1] == 0xfb && (
-		packet->header.unk6 == 0x0001 || packet->header.unk6 == 0x0401)) {
+		packet->header.unk6 == SDL_SwapLE16(0x0001) || packet->header.unk6 == SDL_SwapLE16(0x0401))) {
 		memcpy(_config->key.iv1,
 			_config->key.xor_nonce, ORP_KEY_LEN);
 		AES_cbc_encrypt(packet->pkt.data, packet->pkt.data,
@@ -601,7 +604,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 		delete packet;
 		continue;
 #endif
-		Uint32 clock = SDL_Swap32(packet->header.clock);
+		Uint32 clock = SDL_SwapBE32(packet->header.clock);
 		if (!_config->clock_offset ||
 			clock < _config->clock_offset) {
 			_config->clock_offset = clock;
@@ -856,7 +859,8 @@ static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32
 	if (codec->id == CODEC_ID_ATRAC3) {
 		struct atrac3_config_t {
 			Uint16 unk0;	// 2
-			Uint32 unk1;	// 6
+			Uint16 unk1lo;	// 4 \ actually an Uint32, but split
+			Uint16 unk1hi;	// 6 / it to avoid alignment problems
 			Uint16 unk2;	// 8
 			Uint16 unk3;	// 10
 			Uint16 unk4;	// 12
@@ -865,12 +869,12 @@ static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32
 		struct atrac3_config_t *at3_config;
 		at3_config = (struct atrac3_config_t *)av_malloc(sizeof(struct atrac3_config_t));
 		memset(at3_config, 0, sizeof(struct atrac3_config_t));
-		at3_config->unk0 = 1;
-		at3_config->unk1 = 1024;
-		at3_config->unk2 = 1;
-		at3_config->unk3 = 1;
-		at3_config->unk4 = 1;
-		at3_config->unk5 = 0;
+		at3_config->unk0 = SDL_SwapLE16(1);
+		at3_config->unk1lo = SDL_SwapLE16(1024);
+		at3_config->unk2 = SDL_SwapLE16(1);
+		at3_config->unk3 = SDL_SwapLE16(1);
+		at3_config->unk4 = SDL_SwapLE16(1);
+		at3_config->unk5 = SDL_SwapLE16(0);
 		context->extradata = (Uint8 *)at3_config;
 		context->extradata_size = 14;
 		context->block_align = 192 * channels;
@@ -962,7 +966,7 @@ static Sint32 orpThreadAudioDecode(void *config)
 		
 			audioFrame->len = (Uint32)frame_size;
 			audioFrame->data = new Uint8[audioFrame->len];
-			audioFrame->clock = SDL_Swap32(packet->header.clock);
+			audioFrame->clock = SDL_SwapBE32(packet->header.clock);
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
 			orpMasterClockUpdate(_config->clock);
@@ -1008,7 +1012,7 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 
 	SDL_AudioSpec audioSpec, requestedSpec;
 	requestedSpec.freq = sample_rate;
-	requestedSpec.format = AUDIO_S16SYS;
+	requestedSpec.format = AUDIO_S16LSB;
 	requestedSpec.channels = channels;
 	requestedSpec.silence = 0;
 	requestedSpec.samples = ORP_AUDIO_BUF_LEN;
@@ -1775,8 +1779,8 @@ static void orpDumpPadState(Uint8 *state)
 Sint32 OpenRemotePlay::SendPadState(Uint8 *pad, Uint32 id, Uint32 &count, Uint32 timestamp, vector<string> &headers)
 {
 	if (id != 0) {
-		Uint32 be_id = SDL_Swap32(id);
-		Uint32 be_timestamp = SDL_Swap32(timestamp);
+		Uint32 be_id = SDL_SwapBE32(id);
+		Uint32 be_timestamp = SDL_SwapBE32(timestamp);
 		memcpy(pad + ORP_PAD_EVENTID, &be_id, 4);
 		memcpy(pad + ORP_PAD_TIMESTAMP, &be_timestamp, 4);
 	}
@@ -2573,16 +2577,16 @@ Sint32 OpenRemotePlay::SessionControl(CURL *curl)
 				statePad[((value & 0xff00) >> 8)] |=
 					((Uint8)(value & 0x00ff));
 			} else if (key == ORP_PAD_PSP_LXAXIS) {
-				jsl_xaxis = SDL_Swap16(jsl_xaxis);
+				jsl_xaxis = SDL_SwapBE16(jsl_xaxis);
 				memcpy(statePad + key, &jsl_xaxis, sizeof(Sint16));
 			} else if (key == ORP_PAD_PSP_LYAXIS) {
-				jsl_yaxis = SDL_Swap16(jsl_yaxis);
+				jsl_yaxis = SDL_SwapBE16(jsl_yaxis);
 				memcpy(statePad + key, &jsl_yaxis, sizeof(Sint16));
 			} else if (key == ORP_PAD_PSP_RXAXIS) {
-				jsr_xaxis = SDL_Swap16(jsr_xaxis);
+				jsr_xaxis = SDL_SwapBE16(jsr_xaxis);
 				memcpy(statePad + key, &jsr_xaxis, sizeof(Sint16));
 			} else if (key == ORP_PAD_PSP_RYAXIS) {
-				jsr_yaxis = SDL_Swap16(jsr_yaxis);
+				jsr_yaxis = SDL_SwapBE16(jsr_yaxis);
 				memcpy(statePad + key, &jsr_yaxis, sizeof(Sint16));
 			}
 
