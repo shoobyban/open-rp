@@ -813,7 +813,7 @@ orpAudioFeed_GetFrame:
 	SDL_LockMutex(_config->lock);
 	if (_config->frame.size()) {
 		frame = _config->frame.front();
-		_config->frame.pop();
+		_config->frame.pop_front();
 	} else memset(stream, 0, len);
 	if (_config->clock)
 		_config->clock->audio_queue = _config->frame.size();
@@ -845,9 +845,25 @@ orpAudioFeed_GetFrame:
 #endif
 	}
 
-	memcpy(stream, frame->data, len);
-	delete [] frame->data;
-	delete frame;
+	int flen = frame->len - frame->consumed;
+	if (flen > len)
+		flen = len;
+
+	memcpy(stream, frame->data + frame->consumed, flen);
+	stream += flen;
+	len -= flen;
+	frame->consumed += flen;
+	if (frame->consumed >= frame->len) {
+		delete [] frame->data;
+		delete frame;
+	} else {
+		SDL_LockMutex(_config->lock);
+		_config->frame.push_front(frame);
+		SDL_UnlockMutex(_config->lock);
+	}
+
+	if (len > 0)
+		goto orpAudioFeed_GetFrame;
 }
 
 static AVCodecContext *orpInitAudioCodec(AVCodec *codec, Sint32 channels, Sint32 sample_rate, Sint32 bit_rate)
@@ -967,12 +983,13 @@ static Sint32 orpThreadAudioDecode(void *config)
 			audioFrame->len = (Uint32)frame_size;
 			audioFrame->data = new Uint8[audioFrame->len];
 			audioFrame->clock = SDL_SwapBE32(packet->header.clock);
+			audioFrame->consumed = 0;
 			memcpy(audioFrame->data, buffer, audioFrame->len);
 
 			orpMasterClockUpdate(_config->clock);
 
 			SDL_LockMutex(feed.lock);
-			feed.frame.push(audioFrame);
+			feed.frame.push_back(audioFrame);
 			SDL_UnlockMutex(feed.lock);
 
 			decode_errors = 0;
@@ -1034,13 +1051,14 @@ static Sint32 orpPlaySound(Uint8 *data, Uint32 len)
 
 		audioFrame->len = frame_size;
 		audioFrame->data = new Uint8[frame_size];
+		audioFrame->consumed = 0;
 		memset(audioFrame->data, 0, frame_size);
 		memcpy(audioFrame->data, data + i,
 			(len > frame_size) ? frame_size : len);
 		len -= (len > frame_size ? frame_size : len);
 
 		SDL_LockMutex(feed.lock);
-		feed.frame.push(audioFrame);
+		feed.frame.push_back(audioFrame);
 		SDL_UnlockMutex(feed.lock);
 	}
 

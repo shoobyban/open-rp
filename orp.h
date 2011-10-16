@@ -44,6 +44,7 @@ extern "C" {
 
 #include <string>
 #include <vector>
+#include <deque>
 #include <queue>
 
 #include "yuv.h"
@@ -392,6 +393,7 @@ struct orpAudioFrame_t {
 	Uint32 len;
 	Uint8 *data;
 	Uint32 clock;
+	Uint32 consumed;
 };
 
 struct orpConfigAudioFeed_t {
@@ -404,7 +406,7 @@ struct orpConfigAudioFeed_t {
 	Uint32 audio_diff_avg_count;
 	Uint32 clock_offset;
 	struct orpClock_t *clock;
-	queue<struct orpAudioFrame_t *> frame;
+	deque<struct orpAudioFrame_t *> frame;
 };
 
 struct orpCodec_t {
