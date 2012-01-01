@@ -28,22 +28,16 @@
 #ifndef SDLYUVADDON_H
 #define SDLYUVADDON_H
 
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-
-//#include <stdlib.h>
-//#include <string.h>
-#include "SDL.h"
-#include <SDL_endian.h>
-//#include <time.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_endian.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /********************************************************************
  * Type definitions

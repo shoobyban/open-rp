@@ -33,20 +33,23 @@
 /* Define to 1 if you have the `freetype' library (-lfreetype). */
 #undef HAVE_LIBFREETYPE
 
-/* Define to 1 if you have the `IMG_Load_RW' library (-lIMG_Load_RW). */
-#undef HAVE_LIBIMG_LOAD_RW
-
 /* Define to 1 if you have the `png' library (-lpng). */
 #undef HAVE_LIBPNG
 
 /* Define to 1 if you have the `SDL' library (-lSDL). */
 #undef HAVE_LIBSDL
 
+/* Define to 1 if you have the `SDL_image' library (-lSDL_image). */
+#undef HAVE_LIBSDL_IMAGE
+
+/* Define to 1 if you have the `SDL_net' library (-lSDL_net). */
+#undef HAVE_LIBSDL_NET
+
+/* Define to 1 if you have the `SDL_ttf' library (-lSDL_ttf). */
+#undef HAVE_LIBSDL_TTF
+
 /* Define to 1 if you have the `swscale' library (-lswscale). */
 #undef HAVE_LIBSWSCALE
-
-/* Define to 1 if you have the `TTF_Init' library (-lTTF_Init). */
-#undef HAVE_LIBTTF_INIT
 
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ

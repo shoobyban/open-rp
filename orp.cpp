@@ -21,6 +21,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -40,7 +44,7 @@ static void orpOutput(const char *format, va_list ap)
 	static FILE *log = NULL;
 	if (!log) {
 		log = fopen("orp.log", "w");
-		if (log) fprintf(log, "Open Remote Play v%s\n", ORP_VERSION);
+		if (log) fprintf(log, "Open Remote Play v%s\n", PACKAGE_VERSION);
 	}
 	if (log) {
 		va_list ap2;

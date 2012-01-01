@@ -15221,13 +15221,13 @@ else
 	as_fn_error $? "libSDL not found but is required." "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_ttf in -lTTF_Init" >&5
-$as_echo_n "checking for SDL_ttf in -lTTF_Init... " >&6; }
-if ${ac_cv_lib_TTF_Init_SDL_ttf+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TTF_Init in -lSDL_ttf" >&5
+$as_echo_n "checking for TTF_Init in -lSDL_ttf... " >&6; }
+if ${ac_cv_lib_SDL_ttf_TTF_Init+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lTTF_Init  $LIBS"
+LIBS="-lSDL_ttf  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -15237,45 +15237,45 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char SDL_ttf ();
+char TTF_Init ();
 int
 main ()
 {
-return SDL_ttf ();
+return TTF_Init ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_TTF_Init_SDL_ttf=yes
+  ac_cv_lib_SDL_ttf_TTF_Init=yes
 else
-  ac_cv_lib_TTF_Init_SDL_ttf=no
+  ac_cv_lib_SDL_ttf_TTF_Init=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_TTF_Init_SDL_ttf" >&5
-$as_echo "$ac_cv_lib_TTF_Init_SDL_ttf" >&6; }
-if test "x$ac_cv_lib_TTF_Init_SDL_ttf" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_ttf_TTF_Init" >&5
+$as_echo "$ac_cv_lib_SDL_ttf_TTF_Init" >&6; }
+if test "x$ac_cv_lib_SDL_ttf_TTF_Init" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBTTF_INIT 1
+#define HAVE_LIBSDL_TTF 1
 _ACEOF
 
-  LIBS="-lTTF_Init $LIBS"
+  LIBS="-lSDL_ttf $LIBS"
 
 else
 
 	as_fn_error $? "libSDL_ttf not found but is required." "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_image in -lIMG_Load_RW" >&5
-$as_echo_n "checking for SDL_image in -lIMG_Load_RW... " >&6; }
-if ${ac_cv_lib_IMG_Load_RW_SDL_image+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_Load_RW in -lSDL_image" >&5
+$as_echo_n "checking for IMG_Load_RW in -lSDL_image... " >&6; }
+if ${ac_cv_lib_SDL_image_IMG_Load_RW+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lIMG_Load_RW  $LIBS"
+LIBS="-lSDL_image  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -15285,36 +15285,84 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char SDL_image ();
+char IMG_Load_RW ();
 int
 main ()
 {
-return SDL_image ();
+return IMG_Load_RW ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_IMG_Load_RW_SDL_image=yes
+  ac_cv_lib_SDL_image_IMG_Load_RW=yes
 else
-  ac_cv_lib_IMG_Load_RW_SDL_image=no
+  ac_cv_lib_SDL_image_IMG_Load_RW=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_IMG_Load_RW_SDL_image" >&5
-$as_echo "$ac_cv_lib_IMG_Load_RW_SDL_image" >&6; }
-if test "x$ac_cv_lib_IMG_Load_RW_SDL_image" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_image_IMG_Load_RW" >&5
+$as_echo "$ac_cv_lib_SDL_image_IMG_Load_RW" >&6; }
+if test "x$ac_cv_lib_SDL_image_IMG_Load_RW" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBIMG_LOAD_RW 1
+#define HAVE_LIBSDL_IMAGE 1
 _ACEOF
 
-  LIBS="-lIMG_Load_RW $LIBS"
+  LIBS="-lSDL_image $LIBS"
 
 else
 
 	as_fn_error $? "libSDL_image not found but is required." "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDLNet_UDP_Open in -lSDL_net" >&5
+$as_echo_n "checking for SDLNet_UDP_Open in -lSDL_net... " >&6; }
+if ${ac_cv_lib_SDL_net_SDLNet_UDP_Open+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lSDL_net  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SDLNet_UDP_Open ();
+int
+main ()
+{
+return SDLNet_UDP_Open ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_SDL_net_SDLNet_UDP_Open=yes
+else
+  ac_cv_lib_SDL_net_SDLNet_UDP_Open=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_net_SDLNet_UDP_Open" >&5
+$as_echo "$ac_cv_lib_SDL_net_SDLNet_UDP_Open" >&6; }
+if test "x$ac_cv_lib_SDL_net_SDLNet_UDP_Open" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSDL_NET 1
+_ACEOF
+
+  LIBS="-lSDL_net $LIBS"
+
+else
+
+	as_fn_error $? "libSDL_net not found but is required." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for FT_Init_FreeType in -lfreetype" >&5

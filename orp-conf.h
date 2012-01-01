@@ -25,7 +25,7 @@
 #define _CONFIG_H
 
 #ifndef ORP_PSP
-#include <SDL_stdinc.h>
+#include <SDL/SDL_stdinc.h>
 #endif
 
 #define ORP_KEY_LEN			16

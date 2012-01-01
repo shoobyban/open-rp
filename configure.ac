@@ -19,10 +19,12 @@ AM_PROG_LIBTOOL
 # Checks for libraries.
 AC_CHECK_LIB([SDL], [SDL_Init], [], [
 	AC_MSG_ERROR([libSDL not found but is required.])])
-AC_CHECK_LIB([TTF_Init], [SDL_ttf], [], [
+AC_CHECK_LIB([SDL_ttf], [TTF_Init], [], [
 	AC_MSG_ERROR([libSDL_ttf not found but is required.])])
-AC_CHECK_LIB([IMG_Load_RW], [SDL_image], [], [
+AC_CHECK_LIB([SDL_image], [IMG_Load_RW], [], [
 	AC_MSG_ERROR([libSDL_image not found but is required.])])
+AC_CHECK_LIB([SDL_net], [SDLNet_UDP_Open], [], [
+	AC_MSG_ERROR([libSDL_net not found but is required.])])
 AC_CHECK_LIB([freetype], [FT_Init_FreeType], [], [
 	AC_MSG_ERROR([libfreetype not found but is required.])])
 AC_CHECK_LIB([crypto], [AES_cbc_encrypt], [], [

@@ -30,11 +30,11 @@ using namespace std;
 
 #include <openssl/aes.h>
 
-#include <SDL.h>
-#include <SDL_thread.h>
-#include <SDL_image.h>
-#include <SDL_net.h>
-#include <SDL_ttf.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_thread.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_net.h>
+#include <SDL/SDL_ttf.h>
 
 extern "C" {
 #include <libavutil/avutil.h>
@@ -48,7 +48,7 @@ extern "C" {
 #include <queue>
 
 #include "yuv.h"
-#include "config.h"
+#include "orp-conf.h"
 
 #define ORP_PREMO_VMAJOR	0
 #define ORP_PREMO_VMINOR	3

@@ -1,6 +1,10 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 
-#include <SDL.h>
+#include <SDL/SDL.h>
 
 #include "base64.h"
 

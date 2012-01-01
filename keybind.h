@@ -26,7 +26,7 @@
 
 #include <vector>
 
-#include <SDL_keyboard.h>
+#include <SDL/SDL_keyboard.h>
 #ifdef __WXWINDOWS__
 #include <wx/event.h>
 #endif
