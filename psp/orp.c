@@ -41,7 +41,7 @@ typedef unsigned char Uint8;
 typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 
-#include "../config.h"
+#include "../orp-conf.h"
 
 PSP_MODULE_INFO("ORP_Exporter", PSP_MODULE_USER, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
