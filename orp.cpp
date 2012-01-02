@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // Open Remote Play
-// http://ps3-hacks.com
+// http://code.google.com/p/open-rp/
 //
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1410,7 +1410,7 @@ bool OpenRemotePlay::SessionCreate(void)
 	if (config.ps3_wolr) {
 		skt = SDLNet_UDP_Open(0);
 		if (SDLNet_ResolveHost(&addr,
-			"wol.ps3-hacks.com", config.ps3_port) == 0 &&
+			"wol.k0r3dump.net", config.ps3_port) == 0 &&
 			(channel = SDLNet_UDP_Bind(skt, -1, &addr)) != -1) {
 
 			// Send WoL packet to reflector

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // Open Remote Play
-// http://ps3-hacks.com
+// http://code.google.com/p/open-rp/
 //
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -119,21 +119,14 @@ orpUIPanel::orpUIPanel(wxFrame *parent)
 	image = new wxMemoryInputStream(__images_logo_png, __images_logo_png_len);
 	logo = new wxImage(*image);
 	delete image;
-	image = new wxMemoryInputStream(__images_dash_hacks_png, __images_dash_hacks_png_len);
-	dash_hacks = new wxImage(*image);
-	delete image;
 }
 
 void orpUIPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 	wxBitmap *bitmap;
-	bitmap = new wxBitmap(*dash_hacks);
-	dc.DrawBitmap(*bitmap, 0, 0, TRUE);
-	int width = bitmap->GetWidth();
-	delete bitmap;
 	bitmap = new wxBitmap(*logo);
-	dc.DrawBitmap(*bitmap, 5 + width, 5, TRUE);
+	dc.DrawBitmap(*bitmap, 5, 5, TRUE);
 	delete bitmap;
 }
 
@@ -157,7 +150,7 @@ orpUIFrame::orpUIFrame(const wxString& title)
 	wxBoxSizer *frame_sizer = new wxBoxSizer(wxVERTICAL);
 	frame_sizer->AddSpacer(98);
 	wxHyperlinkCtrl *link = new wxHyperlinkCtrl(panel, wxID_ANY,
-		_T("v"PACKAGE_VERSION), _T("http://ps3-hacks.com/"));
+		_T("v"PACKAGE_VERSION), _T("http://code.google.com/p/open-rp/"));
 	link->SetNormalColour(wxColour(0, 134, 174));
 	frame_sizer->Add(link, 0, wxALIGN_RIGHT | wxRIGHT, 5);
 	frame_sizer->Add(lb, 1, wxEXPAND | wxALL, 5);
@@ -195,7 +188,7 @@ orpUIFrame::orpUIFrame(const wxString& title)
 	panel->SetSizer(frame_sizer);
 
 	CreateStatusBar();
-	SetStatusText(_T("http://ps3-hacks.com"));
+	SetStatusText(_T("http://code.google.com/p/open-rp/"));
 
 	frame_sizer->SetSizeHints(panel);
 	SetInitialSize(wxSize(480, -1));
