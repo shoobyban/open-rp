@@ -1,4 +1,0 @@
-CONFIGURE="./configure --prefix=$PREFIX"
-SOURCE=zlib-1.2.3
-
-# vi: syntax=sh
