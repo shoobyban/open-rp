@@ -27,7 +27,7 @@
 #include <vector>
 
 #include <SDL/SDL_keyboard.h>
-#ifdef __WXWINDOWS__
+#ifdef __WXWIDGETS__
 #include <wx/event.h>
 #endif
 
@@ -60,7 +60,7 @@ struct orpKeyBind_t {
 	SDLMod mod;
 };
 
-#ifdef __WXWINDOWS__
+#ifdef __WXWIDGETS__
 struct orpKeyTable_t {
 	SDLKey sdl;
 	int wx;
@@ -85,7 +85,7 @@ public:
 
 	bool Load(void);
 	void LoadDefaults(void);
-#ifdef __WXWINDOWS__
+#ifdef __WXWIDGETS__
 	bool Save(void);
 	void Bind(enum orpButton button, struct orpUIKeyData_t *key);
 	struct orpKeyBind_t *ButtonLookup(enum orpButton button);

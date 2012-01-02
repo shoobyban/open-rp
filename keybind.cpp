@@ -33,7 +33,7 @@
 
 using namespace std;
 
-#ifdef __WXWINDOWS__
+#ifdef __WXWIDGETS__
 static struct orpKeyTable_t orpKeyTable[] = {
 	{ SDLK_BACKSPACE, WXK_BACK, "Backspace" },
 	{ SDLK_TAB, WXK_TAB, "Tab" },
@@ -302,7 +302,7 @@ void orpKeyBinding::LoadDefaults(void)
 	map.push_back(kb);
 }
 
-#ifdef __WXWINDOWS__
+#ifdef __WXWIDGETS__
 void orpKeyBinding::Bind(enum orpButton button, struct orpUIKeyData_t *key)
 {
 	struct orpKeyBind_t *kb;
@@ -387,8 +387,9 @@ bool orpKeyBinding::Save(void)
 	if (!fh) return false;
 	rewind(fh);
 	long i;
-	for (i = 0; i < map.size(); i++)
-		fwrite(map[i], 1, sizeof(struct orpKeyBind_t), fh);
+	for (i = 0; i < map.size(); i++) {
+		size_t bytes = fwrite(map[i], 1, sizeof(struct orpKeyBind_t), fh);
+	}
 	fflush(fh);
 	return true;
 }
@@ -403,6 +404,6 @@ enum orpButton orpKeyBinding::KeyLookup(SDL_keysym *keysym)
 	}
 	return OBT_NONE;
 }
-#endif // __WXWINDOWS__
+#endif // __WXWIDGETS__
 
 // vi: ts=4
