@@ -21,8 +21,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef _ORPUI_H
-#define _ORPUI_H
+#ifndef _WXORP_H
+#define _WXORP_H
 
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
@@ -30,7 +30,7 @@
 #include <wx/listctrl.h>
 #include <wx/combo.h>
 
-#include "config.h"
+#include "orp-conf.h"
 #include "keybind.h"
 
 #define orpID_LAUNCH	(wxID_HIGHEST + 1)
@@ -232,5 +232,5 @@ private:
 	void RefreshProfileList(void);
 };
 
-#endif // _ORPUI_H
+#endif // _WXORP_H
 // vi: ts=4
