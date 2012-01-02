@@ -21,8 +21,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _ORP_CONFIG_H
+#define _ORP_CONFIG_H
 
 #ifndef ORP_PSP
 #include <SDL/SDL_stdinc.h>
@@ -124,5 +124,5 @@ void orpConfigDebug(struct orpConfigCtx_t *ctx, FILE *output);
 #endif
 
 #endif // ORP_PSP
-#endif // _CONFIG_H
+#endif // _ORP_CONFIG_H
 // vi: ts=4
