@@ -35,8 +35,8 @@ AC_CHECK_LIB([avutil], [av_log_set_callback], [], [
 	AC_MSG_ERROR([libavutil not found but is required.])])
 AC_CHECK_LIB([swscale], [sws_getContext], [], [
 	AC_MSG_ERROR([libswscale not found but is required.])])
-AC_CHECK_LIB([faad], [faad_malloc], [], [
-	AC_MSG_ERROR([libfaad not found but is required.])])
+#AC_CHECK_LIB([faad], [faad_malloc], [], [
+#	AC_MSG_ERROR([libfaad not found but is required.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [
 	AC_MSG_ERROR([libcurl not found but is required.])])
 AC_CHECK_LIB([png], [png_malloc], [], [
@@ -71,6 +71,5 @@ if test "x$with_wxorp" = xyes; then
 fi
 AC_SUBST(ORP_SUBDIRS)
 
-#AC_CONFIG_FILES([Makefile images/Makefile keys/Makefile open-rp.spec])
-AC_CONFIG_FILES([Makefile keys/Makefile util/Makefile])
+AC_CONFIG_FILES([Makefile images/Makefile keys/Makefile util/Makefile])
 AC_OUTPUT
