@@ -57,6 +57,20 @@ AC_TYPE_UINT8_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([getpagesize gettimeofday inet_ntoa memset select socket strcasecmp strdup strerror strncasecmp])
 
+# Configure sub-projects
+ORP_SUBDIRS="keys util"
+AC_ARG_WITH([wxorp],
+	[AS_HELP_STRING([--with-wxorp],
+		[build wxWidgets GUI @<:@default=yes@:>@])],
+	[],
+	[with_wxorp=yes])
+
+if test "x$with_wxorp" = xyes; then
+	ORP_SUBDIRS="$ORP_SUBDIRS wxorp"
+	AC_CONFIG_SUBDIRS([wxorp])
+fi
+AC_SUBST(ORP_SUBDIRS)
+
 #AC_CONFIG_FILES([Makefile images/Makefile keys/Makefile open-rp.spec])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile keys/Makefile util/Makefile])
 AC_OUTPUT

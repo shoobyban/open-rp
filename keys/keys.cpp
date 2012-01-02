@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#include "orp-conf.h"
 
 static uint8_t skey0[ORP_KEY_LEN] = {
 	0xD1, 0xB2, 0x12, 0xEB, 0x73, 0x86, 0x6C, 0x7B,
