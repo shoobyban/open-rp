@@ -18,31 +18,27 @@ AM_PROG_LIBTOOL
 
 # Checks for libraries.
 AC_CHECK_LIB([SDL], [SDL_Init], [], [
-	AC_MSG_ERROR([libSDL not found but is required.])])
+	AC_MSG_ERROR([libSDL not found.])])
 AC_CHECK_LIB([SDL_ttf], [TTF_Init], [], [
-	AC_MSG_ERROR([libSDL_ttf not found but is required.])])
-AC_CHECK_LIB([SDL_image], [IMG_Load_RW], [], [
-	AC_MSG_ERROR([libSDL_image not found but is required.])])
+	AC_MSG_ERROR([libSDL_ttf not found.])])
+AC_CHECK_LIB([SDL_image], [IMG_LoadPNG_RW], [], [
+	AC_MSG_ERROR([libSDL_image with PNG support not found.])])
 AC_CHECK_LIB([SDL_net], [SDLNet_UDP_Open], [], [
-	AC_MSG_ERROR([libSDL_net not found but is required.])])
+	AC_MSG_ERROR([libSDL_net not found.])])
 AC_CHECK_LIB([freetype], [FT_Init_FreeType], [], [
-	AC_MSG_ERROR([libfreetype not found but is required.])])
+	AC_MSG_ERROR([libfreetype not found.])])
 AC_CHECK_LIB([crypto], [AES_cbc_encrypt], [], [
-	AC_MSG_ERROR([libcrypto not found but is required.])])
+	AC_MSG_ERROR([libcrypto not found.])])
 AC_CHECK_LIB([avcodec], [avcodec_init], [], [
-	AC_MSG_ERROR([libavcodec not found but is required.])])
+	AC_MSG_ERROR([libavcodec not found.])])
 AC_CHECK_LIB([avutil], [av_log_set_callback], [], [
-	AC_MSG_ERROR([libavutil not found but is required.])])
+	AC_MSG_ERROR([libavutil not found.])])
 AC_CHECK_LIB([swscale], [sws_getContext], [], [
-	AC_MSG_ERROR([libswscale not found but is required.])])
-#AC_CHECK_LIB([faad], [faad_malloc], [], [
-#	AC_MSG_ERROR([libfaad not found but is required.])])
+	AC_MSG_ERROR([libswscale not found.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [
-	AC_MSG_ERROR([libcurl not found but is required.])])
-AC_CHECK_LIB([png], [png_malloc], [], [
-	AC_MSG_ERROR([libpng not found but is required.])])
+	AC_MSG_ERROR([libcurl not found.])])
 AC_CHECK_LIB([z], [deflate], [], [
-	AC_MSG_ERROR([libz not found but is required.])])
+	AC_MSG_ERROR([libz not found.])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([malloc.h netinet/in.h stdint.h stdlib.h string.h sys/socket.h sys/time.h syslog.h unistd.h])

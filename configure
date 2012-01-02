@@ -15223,7 +15223,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libSDL not found but is required." "$LINENO" 5
+	as_fn_error $? "libSDL not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for TTF_Init in -lSDL_ttf" >&5
@@ -15271,12 +15271,12 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libSDL_ttf not found but is required." "$LINENO" 5
+	as_fn_error $? "libSDL_ttf not found." "$LINENO" 5
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_Load_RW in -lSDL_image" >&5
-$as_echo_n "checking for IMG_Load_RW in -lSDL_image... " >&6; }
-if ${ac_cv_lib_SDL_image_IMG_Load_RW+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5
+$as_echo_n "checking for IMG_LoadPNG_RW in -lSDL_image... " >&6; }
+if ${ac_cv_lib_SDL_image_IMG_LoadPNG_RW+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -15290,27 +15290,27 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char IMG_Load_RW ();
+char IMG_LoadPNG_RW ();
 int
 main ()
 {
-return IMG_Load_RW ();
+return IMG_LoadPNG_RW ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_SDL_image_IMG_Load_RW=yes
+  ac_cv_lib_SDL_image_IMG_LoadPNG_RW=yes
 else
-  ac_cv_lib_SDL_image_IMG_Load_RW=no
+  ac_cv_lib_SDL_image_IMG_LoadPNG_RW=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_image_IMG_Load_RW" >&5
-$as_echo "$ac_cv_lib_SDL_image_IMG_Load_RW" >&6; }
-if test "x$ac_cv_lib_SDL_image_IMG_Load_RW" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL_image_IMG_LoadPNG_RW" >&5
+$as_echo "$ac_cv_lib_SDL_image_IMG_LoadPNG_RW" >&6; }
+if test "x$ac_cv_lib_SDL_image_IMG_LoadPNG_RW" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBSDL_IMAGE 1
 _ACEOF
@@ -15319,7 +15319,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libSDL_image not found but is required." "$LINENO" 5
+	as_fn_error $? "libSDL_image with PNG support not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDLNet_UDP_Open in -lSDL_net" >&5
@@ -15367,7 +15367,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libSDL_net not found but is required." "$LINENO" 5
+	as_fn_error $? "libSDL_net not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for FT_Init_FreeType in -lfreetype" >&5
@@ -15415,7 +15415,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libfreetype not found but is required." "$LINENO" 5
+	as_fn_error $? "libfreetype not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for AES_cbc_encrypt in -lcrypto" >&5
@@ -15463,7 +15463,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libcrypto not found but is required." "$LINENO" 5
+	as_fn_error $? "libcrypto not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for avcodec_init in -lavcodec" >&5
@@ -15511,7 +15511,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libavcodec not found but is required." "$LINENO" 5
+	as_fn_error $? "libavcodec not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for av_log_set_callback in -lavutil" >&5
@@ -15559,7 +15559,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libavutil not found but is required." "$LINENO" 5
+	as_fn_error $? "libavutil not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sws_getContext in -lswscale" >&5
@@ -15607,11 +15607,9 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libswscale not found but is required." "$LINENO" 5
+	as_fn_error $? "libswscale not found." "$LINENO" 5
 fi
 
-#AC_CHECK_LIB([faad], [faad_malloc], [], [
-#	AC_MSG_ERROR([libfaad not found but is required.])])
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
 $as_echo_n "checking for curl_easy_init in -lcurl... " >&6; }
 if ${ac_cv_lib_curl_curl_easy_init+:} false; then :
@@ -15657,55 +15655,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libcurl not found but is required." "$LINENO" 5
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for png_malloc in -lpng" >&5
-$as_echo_n "checking for png_malloc in -lpng... " >&6; }
-if ${ac_cv_lib_png_png_malloc+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lpng  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char png_malloc ();
-int
-main ()
-{
-return png_malloc ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_png_png_malloc=yes
-else
-  ac_cv_lib_png_png_malloc=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_png_png_malloc" >&5
-$as_echo "$ac_cv_lib_png_png_malloc" >&6; }
-if test "x$ac_cv_lib_png_png_malloc" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBPNG 1
-_ACEOF
-
-  LIBS="-lpng $LIBS"
-
-else
-
-	as_fn_error $? "libpng not found but is required." "$LINENO" 5
+	as_fn_error $? "libcurl not found." "$LINENO" 5
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for deflate in -lz" >&5
@@ -15753,7 +15703,7 @@ _ACEOF
 
 else
 
-	as_fn_error $? "libz not found but is required." "$LINENO" 5
+	as_fn_error $? "libz not found." "$LINENO" 5
 fi
 
 
