@@ -15,6 +15,7 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 AC_PROG_MAKE_SET
 AM_PROG_LIBTOOL
+AC_CHECK_PROG([PROG_ZIP], [zip], [zip], [false])
 
 # Checks for libraries.
 AC_CHECK_LIB([SDL], [SDL_Init], [], [
