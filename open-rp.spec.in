@@ -66,3 +66,6 @@ make install DESTDIR=%{buildroot}
 %doc AUTHORS
 %doc README
 %doc README.zh
+
+%changelog
+
