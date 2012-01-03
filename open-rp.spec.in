@@ -17,19 +17,25 @@
 Name: @PACKAGE_TARNAME@
 Version: @PACKAGE_VERSION@
 Release: 1%{dist}
-License: GPL
+License: GPLv2+
 Group: Amusements/Games/Other
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %_tmppath/%name-%version-build
 Summary: Open Remote Play
 BuildRequires: curl-devel
-BuildRequires: ffmpeg-devel
+BuildRequires: libffmpeg-devel
 BuildRequires: openssl-devel
 BuildRequires: SDL-devel
 BuildRequires: SDL_image-devel
 BuildRequires: SDL_net-devel
 BuildRequires: SDL_ttf-devel
+%if %suse_version >= 1140
 BuildRequires: wxWidgets-devel
+%define _use_internal_dependency_generator 0
+%define __find_requires %wx_requires
+%else
+BuildRequires: wxGTK-devel
+%endif
 
 %description
 Open Remote Play is an open source implementation of Sony Computer
