@@ -5,7 +5,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ps3-hacks.wxorp</string>
+	<string>com.google.code.wxorp</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -19,15 +19,15 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>%VERSION%</string>
+	<string>@PACKAGE_VERSION@</string>
 	<key>CFBundleShortVersionString</key>
-	<string>%VERSION%</string>
+	<string>@PACKAGE_VERSION@</string>
 	<key>CFBundleGetInfoString</key>
-	<string>ORPui version %VERSION%, http://ps3-hacks.com</string>
+	<string>wxORP version @PACKAGE_VERSION@, @PACKAGE_BUGREPORT@</string>
 	<key>CFBundleLongVersionString</key>
-	<string>v%VERSION%, http://ps3-hacks.com</string>
+	<string>v@PACKAGE_VERSION@, @PACKAGE_BUGREPORT@</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>http://ps3-hacks.com</string>
+	<string>@PACKAGE_BUGREPORT@</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>CSResourcesFileMapped</key>

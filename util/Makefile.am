@@ -1,9 +1,10 @@
 AUTOMAKE_OPTIONS = foreign
 
 ACLOCAL_AMFLAGS = -I ../m4
+
 AM_CXXFLAGS = ${CXXFLAGS} -I. -I..
 
-#EXTRA_DIST = csmain.h doc/clearsync.conf doc/clearsyncd.init
+#EXTRA_DIST =
 
 bin_PROGRAMS = config-debug
 

@@ -10,6 +10,7 @@ AC_CONFIG_HEADERS([config.h])
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_CHECK_PROG([PROG_ZIP], [zip], [zip], [false])
 
 # Checks for libraries.
 AM_OPTIONS_WXCONFIG
@@ -39,5 +40,5 @@ AC_HEADER_STDBOOL
 
 # Checks for library functions.
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile Info.plist])
 AC_OUTPUT

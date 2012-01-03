@@ -1,12 +1,17 @@
 AUTOMAKE_OPTIONS = foreign
 
 ACLOCAL_AMFLAGS = -I m4
+
 AM_CXXFLAGS = ${CXXFLAGS} -I. -I..
 
-#EXTRA_DIST = csmain.h doc/clearsync.conf doc/clearsyncd.init
+#EXTRA_DIST =
 
 bin_PROGRAMS = wxorp
 
 wxorp_SOURCES = wxorp.cpp ../config.cpp ../keybind.cpp
 wxorp_CXXFLAGS = ${AM_CXXFLAGS} -D__WXWIDGETS__
 
+all-local:
+	@ln -vfs ../orp .
+	@cp -v Info.plist "./Open Remote Play.app/Contents/"
+	@cp -v wxorp "Open Remote Play.app/Contents/MacOS/wxorp"
