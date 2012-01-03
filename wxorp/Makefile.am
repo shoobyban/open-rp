@@ -4,7 +4,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CXXFLAGS = ${CXXFLAGS} -I. -I..
 
-#EXTRA_DIST =
+EXTRA_DIST = images.h wxorp.h
 
 bin_PROGRAMS = wxorp
 
