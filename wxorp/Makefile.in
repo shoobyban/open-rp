@@ -681,7 +681,6 @@ all-local:
 	@ln -vfs ../orp .
 	@cp -v Info.plist "./Open Remote Play.app/Contents/"
 	@cp -v wxorp "Open Remote Play.app/Contents/MacOS/wxorp"
-	@PROG_ZIP@ "Open Remote Play.app" "Open Remote Play.app"
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
