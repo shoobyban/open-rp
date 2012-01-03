@@ -29,6 +29,7 @@ BuildRequires: SDL-devel
 BuildRequires: SDL_image-devel
 BuildRequires: SDL_net-devel
 BuildRequires: SDL_ttf-devel
+BuildRequires: wxWidgets-devel
 
 %description
 Open Remote Play is an open source implementation of Sony Computer
