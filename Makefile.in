@@ -38,8 +38,9 @@ bin_PROGRAMS = orp$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure $(top_srcdir)/images/Makefile.in \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	$(srcdir)/open-rp.spec.in $(top_srcdir)/configure \
+	$(top_srcdir)/images/Makefile.in config.guess config.sub \
+	depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -51,7 +52,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = images/Makefile
+CONFIG_CLEAN_FILES = images/Makefile open-rp.spec
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
@@ -314,6 +315,8 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 images/Makefile: $(top_builddir)/config.status $(top_srcdir)/images/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+open-rp.spec: $(top_builddir)/config.status $(srcdir)/open-rp.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)

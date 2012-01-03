@@ -15992,7 +15992,7 @@ subdirs="$subdirs wxorp"
 fi
 
 
-ac_config_files="$ac_config_files Makefile images/Makefile keys/Makefile util/Makefile"
+ac_config_files="$ac_config_files Makefile images/Makefile keys/Makefile util/Makefile open-rp.spec"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -17111,6 +17111,7 @@ do
     "images/Makefile") CONFIG_FILES="$CONFIG_FILES images/Makefile" ;;
     "keys/Makefile") CONFIG_FILES="$CONFIG_FILES keys/Makefile" ;;
     "util/Makefile") CONFIG_FILES="$CONFIG_FILES util/Makefile" ;;
+    "open-rp.spec") CONFIG_FILES="$CONFIG_FILES open-rp.spec" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

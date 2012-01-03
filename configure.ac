@@ -68,5 +68,5 @@ if test "x$with_wxorp" = xyes; then
 fi
 AC_SUBST(ORP_SUBDIRS)
 
-AC_CONFIG_FILES([Makefile images/Makefile keys/Makefile util/Makefile])
+AC_CONFIG_FILES([Makefile images/Makefile keys/Makefile util/Makefile open-rp.spec])
 AC_OUTPUT
