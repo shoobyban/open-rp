@@ -6,7 +6,7 @@ AM_CXXFLAGS = ${CXXFLAGS} -I.
 
 EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h yuv.h README.zh
 
-SUBDIRS = ${ORP_SUBDIRS}
+SUBDIRS = . ${ORP_SUBDIRS}
 
 bin_PROGRAMS = orp
 
