@@ -12,6 +12,6 @@ wxorp_SOURCES = wxorp.cpp ../config.cpp ../keybind.cpp
 wxorp_CXXFLAGS = ${AM_CXXFLAGS} -D__WXWIDGETS__
 
 all-local:
-	@ln -vfs ../orp .
+	@ln -vfs ../orp$(EXEEXT) .
 	@cp -v Info.plist "./Open Remote Play.app/Contents/"
-	@cp -v wxorp "Open Remote Play.app/Contents/MacOS/wxorp"
+	@cp -v wxorp$(EXEEXT) "Open Remote Play.app/Contents/MacOS/wxorp$(EXEEXT)"
