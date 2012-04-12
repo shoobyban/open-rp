@@ -69,6 +69,7 @@ make install DESTDIR=%{buildroot}
 %defattr(-,root,root)
 %{_bindir}/orp
 %{_bindir}/wxorp
+%{_datadir}/%{name}
 %doc AUTHORS
 %doc README
 %doc README.zh

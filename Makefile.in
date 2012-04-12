@@ -55,7 +55,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = images/Makefile open-rp.spec
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(docdir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(docdir)" \
+	"$(DESTDIR)$(pspextradir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_orp_OBJECTS = orp-base64.$(OBJEXT) orp-config.$(OBJEXT) \
 	orp-keybind.$(OBJEXT) orp-main.$(OBJEXT) orp-orp.$(OBJEXT) \
@@ -108,7 +109,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-DATA = $(doc_DATA)
+DATA = $(doc_DATA) $(pspextra_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -277,11 +278,13 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4
 AM_CXXFLAGS = ${CXXFLAGS} -I.
-EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h yuv.h README.zh
+EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h psp/orp.c psp/ICON0.PNG psp/Makefile psp/ORP_Exporter/EBOOT.PBP yuv.h README.zh
 SUBDIRS = . ${ORP_SUBDIRS}
 orp_SOURCES = base64.cpp config.cpp keybind.cpp main.cpp orp.cpp yuv.cpp
 orp_CXXFLAGS = ${AM_CXXFLAGS} -D__STDC_CONSTANT_MACROS -DORP_CLOCK_DEBUG -DORP_SYNC_TO_MASTER
 doc_DATA = AUTHORS README README.zh
+pspextradir = $(datadir)/@PACKAGE@/ORP_Exporter
+pspextra_DATA = psp/ORP_Exporter/EBOOT.PBP
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -535,6 +538,26 @@ uninstall-docDATA:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(docdir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(docdir)" && rm -f $$files
+install-pspextraDATA: $(pspextra_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pspextradir)" || $(MKDIR_P) "$(DESTDIR)$(pspextradir)"
+	@list='$(pspextra_DATA)'; test -n "$(pspextradir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pspextradir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pspextradir)" || exit $$?; \
+	done
+
+uninstall-pspextraDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pspextra_DATA)'; test -n "$(pspextradir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(pspextradir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pspextradir)" && rm -f $$files
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -851,7 +874,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(docdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pspextradir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -902,7 +925,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-docDATA
+install-data-am: install-docDATA install-pspextraDATA
 
 install-dvi: install-dvi-recursive
 
@@ -950,7 +973,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-docDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
+	uninstall-pspextraDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all \
 	ctags-recursive install-am install-strip tags-recursive
@@ -967,16 +991,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-docDATA
 	install-docDATA install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-docDATA
+	install-ps install-ps-am install-pspextraDATA install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-docDATA uninstall-pspextraDATA
 
 
 launch.h: launch.wav
-	xxd -i launch.wav > launch.h
+	@xxd -i launch.wav > launch.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

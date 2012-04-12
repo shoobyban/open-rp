@@ -21,6 +21,6 @@ PSPBIN = $(PSPSDK)/../bin
 include $(PSPSDK)/lib/build.mak
 
 install: $(EXTRA_TARGETS)
-	@mkdir -p ORP_Export
-	@cp -v EBOOT.PBP ORP_Export
-	@zip -r ORP_Export.zip ORP_Export
+	@mkdir -p ORP_Exporter
+	@cp -v EBOOT.PBP ORP_Exporter
+	@zip -r ORP_Exporter.zip ORP_Exporter
