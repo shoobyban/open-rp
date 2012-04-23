@@ -30,16 +30,18 @@ AC_CHECK_LIB([freetype], [FT_Init_FreeType], [], [
 	AC_MSG_ERROR([libfreetype not found.])])
 AC_CHECK_LIB([crypto], [AES_cbc_encrypt], [], [
 	AC_MSG_ERROR([libcrypto not found.])])
-AC_CHECK_LIB([avcodec], [avcodec_init], [], [
-	AC_MSG_ERROR([libavcodec not found.])])
-AC_CHECK_LIB([avutil], [av_log_set_callback], [], [
-	AC_MSG_ERROR([libavutil not found.])])
-AC_CHECK_LIB([swscale], [sws_getContext], [], [
-	AC_MSG_ERROR([libswscale not found.])])
+#AC_CHECK_LIB([avcodec], [avcodec_init], [], [
+#	AC_MSG_ERROR([libavcodec not found.])])
+#AC_CHECK_LIB([avutil], [av_log_set_callback], [], [
+#	AC_MSG_ERROR([libavutil not found.])])
+#AC_CHECK_LIB([swscale], [sws_getContext], [], [
+#	AC_MSG_ERROR([libswscale not found.])])
 AC_CHECK_LIB([curl], [curl_easy_init], [], [
 	AC_MSG_ERROR([libcurl not found.])])
 AC_CHECK_LIB([z], [deflate], [], [
 	AC_MSG_ERROR([libz not found.])])
+
+PKG_CHECK_MODULES([FFMPEG], [libavcodec libavutil libswscale])
 
 # Checks for header files.
 AC_CHECK_HEADERS([malloc.h netinet/in.h stdint.h stdlib.h string.h sys/socket.h sys/time.h syslog.h unistd.h])

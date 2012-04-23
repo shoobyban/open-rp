@@ -552,7 +552,7 @@ static Sint32 orpThreadVideoDecode(void *config)
 //	Uint32 fps = (Uint32)(1000 / 30);
 
 	SDL_LockMutex(orpAVMutex);
-	AVCodecContext *context = avcodec_alloc_context();
+	AVCodecContext *context = avcodec_alloc_context3(_config->codec);
 	if (avcodec_open(context, _config->codec) < 0) {
 		SDL_UnlockMutex(orpAVMutex);
 		return -1;
@@ -1195,8 +1195,9 @@ OpenRemotePlay::OpenRemotePlay(struct orpConfig_t *config)
 	// Init libcurl
 	curl_global_init(CURL_GLOBAL_WIN32);
 
+	// XXX: Deprecated...
+	//avcodec_init();
 	// Init libavcodec, load all codecs
-	avcodec_init();
 	avcodec_register_all();
 	av_log_set_callback(orpAVDebug);
 

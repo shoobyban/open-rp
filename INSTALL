@@ -1,0 +1,8 @@
+COMPILATION AND INSTALLATION NOTES FOR OPEN REMOTE PLAY
+-------------------------------------------------------
+
+Build against an alternate FFMPEG installation using pkg-config:
+- Assuming FFMPEG source is located in ./ffmpeg-build/
+- Assuming FFMPEG installation is location in ./ffmpeg-install
+
+# ./configure PKG_CONFIG_LIBDIR=./ffmpeg-install/lib/pkgconfig PKG_CONFIG_SYSROOT_DIR=./ffmpeg-build/ --prefix=/usr

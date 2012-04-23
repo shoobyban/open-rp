@@ -62,7 +62,8 @@ am_orp_OBJECTS = orp-base64.$(OBJEXT) orp-config.$(OBJEXT) \
 	orp-keybind.$(OBJEXT) orp-main.$(OBJEXT) orp-orp.$(OBJEXT) \
 	orp-yuv.$(OBJEXT)
 orp_OBJECTS = $(am_orp_OBJECTS)
-orp_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+orp_DEPENDENCIES = $(am__DEPENDENCIES_1)
 orp_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(orp_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -181,6 +182,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FFMPEG_CFLAGS = @FFMPEG_CFLAGS@
+FFMPEG_LIBS = @FFMPEG_LIBS@
 FGREP = @FGREP@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -214,6 +217,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROG_ZIP = @PROG_ZIP@
 RANLIB = @RANLIB@
 SED = @SED@
@@ -277,11 +283,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 ACLOCAL_AMFLAGS = -I m4
-AM_CXXFLAGS = ${CXXFLAGS} -I.
+AM_CXXFLAGS = ${CXXFLAGS} ${FFMPEG_CFLAGS} -I.
 EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h psp/orp.c psp/ICON0.PNG psp/Makefile psp/ORP_Exporter/EBOOT.PBP yuv.h README.zh
 SUBDIRS = . ${ORP_SUBDIRS}
 orp_SOURCES = base64.cpp config.cpp keybind.cpp main.cpp orp.cpp yuv.cpp
 orp_CXXFLAGS = ${AM_CXXFLAGS} -D__STDC_CONSTANT_MACROS -DORP_CLOCK_DEBUG -DORP_SYNC_TO_MASTER
+orp_LDADD = ${FFMPEG_LIBS}
 doc_DATA = AUTHORS README README.zh
 pspextradir = $(datadir)/@PACKAGE@/ORP_Exporter
 pspextra_DATA = psp/ORP_Exporter/EBOOT.PBP
