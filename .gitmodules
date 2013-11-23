@@ -1,0 +1,4 @@
+[submodule "ffmpeg-build"]
+	path = ffmpeg-build
+	url = https://github.com/FFmpeg/FFmpeg.git
+	branch = release/0.7
