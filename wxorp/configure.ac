@@ -2,15 +2,20 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([wxopen-rp], [1.4], [http://code.google.com/p/open-rp/])
-AM_INIT_AUTOMAKE([wxopen-rp], [1.4])
+AC_INIT([wxopen-rp], [1.4], [https://github.com/uberushaximus/open-rp])
 AC_CONFIG_SRCDIR([wxorp.h])
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+AC_SUBST([LIBTOOL_DEPS])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
 AC_CHECK_PROG([PROG_ZIP], [zip], [zip], [false])
+
+# Set language.
+AC_LANG([C++])
 
 # Checks for libraries.
 AM_OPTIONS_WXCONFIG

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([open-rp], [1.4], [http://code.google.com/p/open-rp/])
+AC_INIT([open-rp], [1.4], [https://github.com/uberushaximus/open-rp])
 AC_CONFIG_SRCDIR([orp.cpp])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])

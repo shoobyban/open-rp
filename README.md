@@ -138,6 +138,10 @@ required submodules (ex: FFMpeg) are included:
 
     # git clone --recursive git@github.com:uberushaximus/open-rp.git
 
+Running ./autogen.sh is required to create required build system files/scripts:
+
+    # ./autogen.sh
+
 Build against an alternate FFMPEG installation using pkg-config:
 - Assuming FFMPEG source is located in ./ffmpeg-build/
 - Assuming FFMPEG installation is location in ./ffmpeg-install
