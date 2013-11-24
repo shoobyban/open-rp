@@ -11,3 +11,59 @@
 *.lai
 *.la
 *.a
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log
+*.log
+*/*.log
+
+# Automake and Autoconf
+/.deps
+*/.deps
+Makefile.in
+Makefile
+*/Makefile
+config.guess
+config.h*
+*/config.h*
+config.s*
+*/config.status
+libtool
+ltmain.sh
+m4
+/autom4te.cache
+*/autom4te.cache
+/aclocal.m4
+*/aclocal.m4
+/compile
+/configure
+*/configure
+/depcomp
+*/depcomp
+/install-sh
+*/install-sh
+/missing
+*/missing
+/stamp-h1
+*/stamp-h1
+
+# FFmpeg static
+/ffmpeg-install
+
+# Repo specific
+keys/keys
+*/orp
+orp
+*/wxorp
+*/Info.plist
+*.spec
+util/config-debug
+
