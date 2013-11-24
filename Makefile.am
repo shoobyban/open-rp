@@ -3,7 +3,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_CXXFLAGS = ${CXXFLAGS} ${FFMPEG_CFLAGS} -I.
 
-EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h psp/orp.c psp/ICON0.PNG psp/Makefile psp/ORP_Exporter/EBOOT.PBP yuv.h README.zh
+EXTRA_DIST = base64.h font.h images.h keybind.h launch.h launch.wav orp-conf.h orp.h psp/orp.c psp/ICON0.PNG psp/Makefile psp/ORP_Exporter/EBOOT.PBP yuv.h README.md
 
 SUBDIRS = . ${ORP_SUBDIRS}
 
@@ -13,8 +13,13 @@ orp_SOURCES = base64.cpp config.cpp keybind.cpp main.cpp orp.cpp yuv.cpp
 orp_CXXFLAGS = ${AM_CXXFLAGS} -D__STDC_CONSTANT_MACROS -DORP_CLOCK_DEBUG -DORP_SYNC_TO_MASTER
 orp_LDADD = ${FFMPEG_LIBS}
 
+install-data-local:
+	@./keys/keys$(EXEEXT)
+	$(MKDIR_P) $(datadir)/@PACKAGE@
+	$(INSTALL_DATA) keys.orp $(datadir)/@PACKAGE@
+
 docdir = $(datadir)/doc/@PACKAGE@
-doc_DATA = AUTHORS README README.zh
+doc_DATA = AUTHORS README.md
 
 pspextradir = $(datadir)/@PACKAGE@/ORP_Exporter
 pspextra_DATA = psp/ORP_Exporter/EBOOT.PBP

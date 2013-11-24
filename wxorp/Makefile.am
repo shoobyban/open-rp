@@ -1,5 +1,4 @@
 AUTOMAKE_OPTIONS = foreign
-
 ACLOCAL_AMFLAGS = -I m4
 
 AM_CXXFLAGS = ${CXXFLAGS} -I. -I..
@@ -13,5 +12,9 @@ wxorp_CXXFLAGS = ${AM_CXXFLAGS} -D__WXWIDGETS__
 
 all-local:
 	@ln -vfs ../orp$(EXEEXT) .
-	@cp -v Info.plist "./Open Remote Play.app/Contents/"
-	@cp -v wxorp$(EXEEXT) "Open Remote Play.app/Contents/MacOS/wxorp$(EXEEXT)"
+
+install-data-local:
+	$(MKDIR_P) "./Open Remote Play.app/Contents/MacOS"
+	$(INSTALL_DATA) Info.plist "./Open Remote Play.app/Contents/"
+	$(INSTALL_DATA) wxorp$(EXEEXT) "./Open Remote Play.app/Contents/MacOS/wxorp$(EXEEXT)"
+

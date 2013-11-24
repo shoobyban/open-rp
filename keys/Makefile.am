@@ -11,9 +11,3 @@ noinst_PROGRAMS = keys
 keys_SOURCES = keys.cpp ../config.cpp
 keys_CXXFLAGS = ${AM_CXXFLAGS}
 
-keysextradir = $(datadir)/@PACKAGE@
-keysextra_DATA = keys.orp
-
-all-local:
-	@./keys$(EXEEXT)
-
