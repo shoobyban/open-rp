@@ -142,11 +142,11 @@ Running ./autogen.sh is required to create required build system files/scripts:
 
     # ./autogen.sh
 
-Build against an alternate FFMPEG installation using pkg-config:
-- Assuming FFMPEG source is located in ./ffmpeg-build/
-- Assuming FFMPEG installation is location in ./ffmpeg-install
+To build against an alternate FFMPEG installation using pkg-config:
 
-
+    # cd ./ffmpeg-build
+    # ./configure --prefix=../ffmpeg-install [<your custom FFMpeg optoins>]
+    # make && make install
+    # cd ..
     # ./configure PKG_CONFIG_LIBDIR=./ffmpeg-install/lib/pkgconfig PKG_CONFIG_SYSROOT_DIR=./ffmpeg-build/ --prefix=/usr
-
 
