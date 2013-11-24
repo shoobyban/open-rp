@@ -20,7 +20,7 @@ Thanks to Greg for the MacBook loan and beer!
 Thanks to MohammadAG for the virtual keyboard idea!
 
 Controls
-========
+--------
 
 If you connect your SIXAXIS or DualShock 3 controller to your PC *before* you
 start Open Remote Play, it should be detected and automatically configured.
