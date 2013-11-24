@@ -1,6 +1,7 @@
-                             Open Remote Play BETA
--------------------------------------------------------------------------------
-		       http://code.google.com/p/open-rp/
+Open Remote Play
+================
+https://github.com/uberushaximus/open-rp
+Previously: https://code.google.com/p/open-rp/
 
 Wouldn't it be cool if you could run Remote Play from your laptop, desktop, or
 perhaps your phone?
@@ -17,40 +18,40 @@ Thanks to Greg for the MacBook loan and beer!
 Thanks to MohammadAG for the virtual keyboard idea!
 
 Controls
--------------------------------------------------------------------------------
+========
 
 If you connect your SIXAXIS or DualShock 3 controller to your PC *before* you
 start Open Remote Play, it should be detected and automatically configured.
 Remember to press the PlayStation button to activate the controller.
 
 For Windows users, you require to download and install the DualShock driver:
-  http://www.motioninjoy.com/
+http://www.motioninjoy.com/
 
 Ensure that the controller is functioning properly by testing it using the
 Game Controllers program found in the Control Panel.
 
 The player currently implements these keyboard bindings:
 
-ENTER           X
-SPACE		Triangle
-F1              Triangle
-F2              Square
-F3              Select
-F4              Start
-ESCAPE          Circle
-PAGE-UP         L1
-PAGE-DOWN       R1
-ARROW KEYS      D-Pad
-HOME            PS Button
-BACKSPACE	Square
+    ENTER        X
+    SPACE        Triangle
+    F1           Triangle
+    F2           Square
+    F3           Select
+    F4           Start
+    ESCAPE       Circle
+    PAGE-UP      L1
+    PAGE-DOWN    R1
+    ARROW KEYS   D-Pad
+    HOME         PS Button
+    BACKSPACE    Square
 
-CTRL-1		Select bit-rate: 1024k
-CTRL-2		Select bit-rate: 768k
-CTRL-3		Select bit-rate: 384k
-CTRL-D		Toggle through window sizes (normal, medium, and large)
-CTRL-F		Enter/exit full-screen mode
-CTRL-S		Toggle the status OSD on/off
-CTRL-Q          Quit Remote Play
+    CTRL-1       Select bit-rate: 1024k
+    CTRL-2       Select bit-rate: 768k
+    CTRL-3       Select bit-rate: 384k
+    CTRL-D       Toggle through window sizes (normal, medium, and large)
+    CTRL-F       Enter/exit full-screen mode
+    CTRL-S       Toggle the status OSD on/off
+    CTRL-Q       Quit Remote Play
 
 Virtual keyboard:
 NOTE: This is a hack and is bound to be buggy!
@@ -78,15 +79,15 @@ while the ALT key is held down.  In window-mode, mouse motion does nothing.
 The mouse buttons are mapped the same as when you plug a USB mouse in to the
 PS3:
 
-LEFT BUTTON	X
-RIGHT BUTTON	Triangle
-MIDDLE BUTTON	Home
+    LEFT BUTTON     X
+    RIGHT BUTTON    Triangle
+    MIDDLE BUTTON   Home
 
-WHEEL UP	D-Pad Up
-WHEEL DOWN	D-Pad Down
+    WHEEL UP        D-Pad Up
+    WHEEL DOWN      D-Pad Down
 
 Configuration
--------------------------------------------------------------------------------
+-------------
 
 You require a PlayStation Portable (or access to one), that is able to run
 homebrew software.
@@ -94,42 +95,51 @@ homebrew software.
 After installing the application on your PC, you need to import existing RP
 settings from a registered PSP.  The steps are as follows:
 
-1 - If you have not done so already, register your PSP with your PS3 for
+1.  If you have not done so already, register your PSP with your PS3 for
     Remote Play.
 
-2 - Copy the ORP_Export folder to your PSP under /PSP/GAME
+2.  Copy the ORP_Export folder to your PSP under /PSP/GAME
 
-3 - Run Open Remote Play Export on your PSP.  This will create a file on the
+3.  Run Open Remote Play Export on your PSP.  This will create a file on the
     memory stick called export.orp.  Copy this file to your PC.
 
-4 - Run the ORP GUI and click on Import, locate and import export.orp.  You
+4.  Run the ORP GUI and click on Import, locate and import export.orp.  You
     will have to manually change the IP address of your PS3, by default it
     will be set to 0.0.0.0.
 
     You can find your PS3's IP address from the XMB under:
     Settings > Network Settings > Setting & Connection Status List
 
-5 - Click Import again, this time locate and import keys.orp.  You only have
+5.  Click Import again, this time locate and import keys.orp.  You only have
     to do this once for a new installation, or if there is a key update.
 
-6 - Select a profile, cross your fingers, and click Launch!
+6.  Select a profile, cross your fingers, and click Launch!
 
 NOTE: You can duplicate a profile by changing the PS3 Name and clicking Save.
 This is useful if you wish to keep two profiles, one for the local LAN, and
 another for Internet connections.
 
 Known Issues
--------------------------------------------------------------------------------
+------------
 
-http://code.google.com/p/open-rp/issues/list
+https://github.com/uberushaximus/open-rp/issues
 
 Change Log
 -------------------------------------------------------------------------------
 
-http://code.google.com/p/open-rp/wiki/ChangeLog
+https://github.com/uberushaximus/open-rp/commits/master
 
-TODO
--------------------------------------------------------------------------------
+Compilation
+-----------
+TODO: Terribly incomplete, lacking in documentation here...
 
-http://code.google.com/p/open-rp/wiki/TODO
+When cloning this repository, ensure you enable recursive mode to ensure any
+required submodules (ex: FFMpeg) are included:
 
+    # git clone --recursive git@github.com:uberushaximus/open-rp.git
+
+Build against an alternate FFMPEG installation using pkg-config:
+- Assuming FFMPEG source is located in ./ffmpeg-build/
+- Assuming FFMPEG installation is location in ./ffmpeg-install
+
+    # ./configure PKG_CONFIG_LIBDIR=./ffmpeg-install/lib/pkgconfig PKG_CONFIG_SYSROOT_DIR=./ffmpeg-build/ --prefix=/usr
