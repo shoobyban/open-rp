@@ -148,3 +148,5 @@ Build against an alternate FFMPEG installation using pkg-config:
 
 
     # ./configure PKG_CONFIG_LIBDIR=./ffmpeg-install/lib/pkgconfig PKG_CONFIG_SYSROOT_DIR=./ffmpeg-build/ --prefix=/usr
+
+
