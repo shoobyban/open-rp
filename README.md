@@ -1,7 +1,7 @@
 Open Remote Play
 ================
 
-https://github.com/uberushaximus/open-rp
+https://github.com/dsokoloski/open-rp
 
 Previously: https://code.google.com/p/open-rp/
 
@@ -129,7 +129,7 @@ https://github.com/uberushaximus/open-rp/issues
 Change Log
 -------------------------------------------------------------------------------
 
-https://github.com/uberushaximus/open-rp/commits/master
+https://github.com/dsokoloski/open-rp/commits/master
 
 Compilation
 -----------
