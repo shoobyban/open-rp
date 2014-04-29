@@ -124,7 +124,7 @@ another for Internet connections.
 Known Issues
 ------------
 
-https://github.com/uberushaximus/open-rp/issues
+https://github.com/dsokoloski/open-rp/issues
 
 Change Log
 -------------------------------------------------------------------------------
