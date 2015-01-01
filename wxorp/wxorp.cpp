@@ -155,7 +155,7 @@ orpUIFrame::orpUIFrame(const wxString& title)
 	frame_sizer->Add(link, 0, wxALIGN_RIGHT | wxRIGHT, 5);
 	frame_sizer->Add(lb, 1, wxEXPAND | wxALL, 5);
 
-	wxStandardPaths sp;
+    wxStandardPaths &sp = wxStandardPaths::Get();
 	if (!::wxDirExists(sp.GetUserDataDir()))
 		::wxMkdir(sp.GetUserDataDir());
 	wxFileName path;
@@ -321,7 +321,7 @@ void orpUIFrame::OnLaunch(wxCommandEvent& WXUNUSED(event))
 	item.SetMask(wxLIST_MASK_TEXT);
 	if (!lb->GetItem(item)) return;
 
-	wxStandardPaths sp;
+    wxStandardPaths &sp = wxStandardPaths::Get();
 	wxFileName path = sp.GetExecutablePath();
 	wxFileName orp;
 	orp.AssignDir(path.GetPath());
