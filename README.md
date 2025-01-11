@@ -1,9 +1,11 @@
 Open Remote Play
 ================
 
-https://github.com/dsokoloski/open-rp
+https://github.com/shoobyban/open-rp
 
 Previously: https://code.google.com/p/open-rp/
+
+Originally forked from [@dsokoloski](https://github.com/dsokoloski)
 
 Wouldn't it be cool if you could run Remote Play from your laptop, desktop, or
 perhaps your phone?
@@ -124,12 +126,12 @@ another for Internet connections.
 Known Issues
 ------------
 
-https://github.com/dsokoloski/open-rp/issues
+https://github.com/shoobyban/open-rp/issues
 
 Change Log
 -------------------------------------------------------------------------------
 
-https://github.com/dsokoloski/open-rp/commits/master
+https://github.com/shoobyban/open-rp/commits/master
 
 Compilation
 -----------
@@ -138,7 +140,7 @@ TODO: Terribly incomplete, lacking in documentation here...
 When cloning this repository, ensure you enable recursive mode to ensure any
 required submodules (ex: FFMpeg) are included:
 
-    # git clone --recursive git@github.com:dsokoloski/open-rp.git
+    # git clone --recursive git@github.com:shoobyban/open-rp.git
 
 Running ./autogen.sh is required to create required build system files/scripts:
 
